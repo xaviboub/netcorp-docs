@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <meta name="author" content="Departament d'Informàtica">
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>M08 · Capítol 1: Xarxes i Commutació - ASIX 2n · Ciberseguretat — NetCorp S.L.</title>
+        <link href="../../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../../css/brands.min.css" rel="stylesheet">
+        <link href="../../css/solid.min.css" rel="stylesheet">
+        <link href="../../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="../..">ASIX 2n · Ciberseguretat — NetCorp S.L.</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="../.." class="nav-link">Inici</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Projectes</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../../projectes/" class="dropdown-item">Visió general</a>
+</li>
+                                    
+<li>
+    <a href="../../projectes/p1.html" class="dropdown-item">P1 · Posem en marxa la xarxa corporativa</a>
+</li>
+                                    
+<li>
+    <a href="../../projectes/p2.html" class="dropdown-item">P2 · Identitat corporativa: directori, VLANs i DNS</a>
+</li>
+                                    
+<li>
+    <a href="../../projectes/p3.html" class="dropdown-item">P3 · Publiquem serveis: web, FTP, correu i accés remot</a>
+</li>
+                                    
+<li>
+    <a href="../../projectes/p4.html" class="dropdown-item">P4 · Col·laboració, mobilitat i primera auditoria</a>
+</li>
+                                    
+<li>
+    <a href="../../projectes/p5.html" class="dropdown-item">P5 · Blindem el perímetre: tallafocs, VPN i monitoratge</a>
+</li>
+                                    
+<li>
+    <a href="../../projectes/p6.html" class="dropdown-item">P6 · Incident! Resposta, forense i resiliència</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle active" aria-current="page" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Teoria</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="./" class="dropdown-item active" aria-current="page">M08 · Capítol 1: Xarxes i Commutació</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../../projectes/p6.html" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" class="nav-link disabled">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#capitol-1-xarxes-i-commutacio-m08" class="nav-link">Capítol 1 · Xarxes i Commutació (M08)</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#1-com-viatja-un-missatge-el-model-de-capes" class="nav-link">1. Com viatja un missatge? El model de capes</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#11-el-problema-que-calia-resoldre" class="nav-link">1.1 El problema que calia resoldre</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#12-lanalogia-de-la-carta-postal" class="nav-link">1.2 L'analogia de la carta postal</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#13-el-model-osi-capa-a-capa" class="nav-link">1.3 El model OSI capa a capa</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="4"><a href="#capa-7-aplicacio" class="nav-link">Capa 7 — Aplicació</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="4"><a href="#capa-6-presentacio" class="nav-link">Capa 6 — Presentació</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="4"><a href="#capa-5-sessio" class="nav-link">Capa 5 — Sessió</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="4"><a href="#capa-4-transport" class="nav-link">Capa 4 — Transport</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="4"><a href="#capa-3-xarxa" class="nav-link">Capa 3 — Xarxa</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="4"><a href="#capa-2-enllac-de-dades" class="nav-link">Capa 2 — Enllaç de dades</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="4"><a href="#capa-1-fisica" class="nav-link">Capa 1 — Física</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#14-encapsulacio-el-proces-pas-a-pas" class="nav-link">1.4 Encapsulació: el procés pas a pas</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#15-el-model-tcpip-el-que-susa-a-la-practica" class="nav-link">1.5 El model TCP/IP: el que s'usa a la pràctica</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#2-adreces-mac-i-ethernet-qui-es-qui-a-la-xarxa-local" class="nav-link">2. Adreces MAC i Ethernet: qui és qui a la xarxa local</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#21-adreces-mac" class="nav-link">2.1 Adreces MAC</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#22-el-protocol-ethernet-i-les-trames" class="nav-link">2.2 El protocol Ethernet i les trames</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#3-el-commutador-switch-el-cor-de-la-xarxa-local" class="nav-link">3. El commutador (Switch): el cor de la xarxa local</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#31-del-hub-al-switch-per-que-importa-la-diferencia" class="nav-link">3.1 Del hub al switch: per què importa la diferència</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#32-la-taula-cam-com-apren-el-switch" class="nav-link">3.2 La taula CAM: com aprèn el switch</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#33-vlans-dividir-el-switch-en-multiples-xarxes-virtuals" class="nav-link">3.3 VLANs: dividir el switch en múltiples xarxes virtuals</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#34-spanning-tree-protocol-stp-evitant-els-bucles-de-xarxa" class="nav-link">3.4 Spanning Tree Protocol (STP): evitant els bucles de xarxa</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#35-seguretat-al-switch-cisco" class="nav-link">3.5 Seguretat al switch Cisco</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#4-adrecament-ipv4-la-logica-darrere-dels-numeros" class="nav-link">4. Adreçament IPv4: la lògica darrere dels números</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#41-per-que-necessitem-adreces-ip-si-ja-tenim-macs" class="nav-link">4.1 Per què necessitem adreces IP si ja tenim MACs?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#42-estructura-duna-adreca-ipv4" class="nav-link">4.2 Estructura d'una adreça IPv4</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#43-mascares-de-subxarxa-on-acaba-la-xarxa-i-on-comenca-lhost" class="nav-link">4.3 Màscares de subxarxa: on acaba la xarxa i on comença l'host</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#44-subnetting-dividint-una-xarxa-en-trossos-mes-petits" class="nav-link">4.4 Subnetting: dividint una xarxa en trossos més petits</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#45-vlsm-el-subnetting-intelligent" class="nav-link">4.5 VLSM: el subnetting intel·ligent</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#46-adreces-especials-i-rangs-privats" class="nav-link">4.6 Adreces especials i rangs privats</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#5-el-router-connectant-xarxes-entre-elles" class="nav-link">5. El router: connectant xarxes entre elles</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#51-quin-problema-resol-el-router" class="nav-link">5.1 Quin problema resol el router?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#52-la-taula-dencaminament" class="nav-link">5.2 La taula d'encaminament</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#53-rutes-estatiques-i-ruta-per-defecte" class="nav-link">5.3 Rutes estàtiques i ruta per defecte</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#54-router-on-a-stick-inter-vlan-routing-amb-un-sol-cable" class="nav-link">5.4 Router-on-a-stick: inter-VLAN routing amb un sol cable</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#6-nat-i-pat-com-sortim-a-internet-amb-ips-privades" class="nav-link">6. NAT i PAT: com sortim a Internet amb IPs privades</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#61-el-problema-que-va-originar-nat" class="nav-link">6.1 El problema que va originar NAT</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#62-tipus-de-nat" class="nav-link">6.2 Tipus de NAT</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#63-com-funciona-pat-en-detall" class="nav-link">6.3 Com funciona PAT en detall</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#7-diagnostic-de-xarxa-llegir-el-que-ens-diu-lequip" class="nav-link">7. Diagnòstic de xarxa: llegir el que ens diu l'equip</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="3"><a href="#71-filosofia-del-diagnostic" class="nav-link">7.1 Filosofia del diagnòstic</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#72-comandes-cisco-ios-imprescindibles" class="nav-link">7.2 Comandes Cisco IOS imprescindibles</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#73-interpretar-els-estats-de-les-interficies" class="nav-link">7.3 Interpretar els estats de les interfícies</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="3"><a href="#74-wireshark-veient-els-paquets-reals" class="nav-link">7.4 Wireshark: veient els paquets reals</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="capitol-1-xarxes-i-commutacio-m08">Capítol 1 · Xarxes i Commutació (M08)<a class="headerlink" href="#capitol-1-xarxes-i-commutacio-m08" title="Permanent link">&para;</a></h1>
+<div class="admonition abstract">
+<p class="admonition-title">Sobre aquest document</p>
+<p>Fonaments teòrics del <strong>Projecte 1 — Posem en marxa la xarxa corporativa</strong>.
+Mòdul <strong>M08 · Planificació i Administració de Xarxes</strong>.</p>
+</div>
+<h2 id="1-com-viatja-un-missatge-el-model-de-capes">1. Com viatja un missatge? El model de capes<a class="headerlink" href="#1-com-viatja-un-missatge-el-model-de-capes" title="Permanent link">&para;</a></h2>
+<h3 id="11-el-problema-que-calia-resoldre">1.1 El problema que calia resoldre<a class="headerlink" href="#11-el-problema-que-calia-resoldre" title="Permanent link">&para;</a></h3>
+<p>Als anys 70, els fabricants de xarxes (IBM, DEC, Honeywell...) construïen els seus sistemes de forma propietària: els ordinadors d'IBM no podien parlar amb els de DEC, i viceversa. Internet, tal com la coneixem, hauria sigut impossible. La ISO (International Organization for Standardization) va proposar el model OSI el 1984 com a estàndard universal que qualsevol fabricant podria implementar.</p>
+<p>La idea fonamental és elegant: dividir el problema de la comunicació en set subproblemes independents, cadascun resolt per una capa. Cada capa fa una feina concreta i no li importa com la fan les capes de sobre o de sota, sempre que compleixin el "contracte" que hi ha entre elles. Exactament com el sistema postal: el carter no necessita saber si la carta conté un amor o una factura. Ell simplement la porta de A a B.</p>
+<h3 id="12-lanalogia-de-la-carta-postal">1.2 L'analogia de la carta postal<a class="headerlink" href="#12-lanalogia-de-la-carta-postal" title="Permanent link">&para;</a></h3>
+<p>Per entendre l'encapsulació —el mecanisme central de les xarxes— imagina que vols enviar un contracte confidencial a un advocat d'una altra ciutat. El procés que fas és exactament el que fa un ordinador quan envia dades:</p>
+<table>
+<thead>
+<tr>
+<th><strong>El que fas tu (carta postal)</strong></th>
+<th><strong>El que fa l'ordinador (xarxa)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Escrius el document (el contingut)</td>
+<td>L'aplicació genera les dades (ex: una pàgina web)</td>
+</tr>
+<tr>
+<td>El poses en un sobre i escrius els noms de remitent i destinatari</td>
+<td>La capa de transport afegeix els ports origen i destí (ex: port 80 per HTTP)</td>
+</tr>
+<tr>
+<td>Poses el sobre dins d'un sobre de missatgeria amb el codi postal i l'adreça exacta</td>
+<td>La capa de xarxa afegeix les adreces IP origen i destí</td>
+</tr>
+<tr>
+<td>La missatgeria ho posa en una bossa amb la resta de paquets del camió</td>
+<td>La capa d'enllaç l'empaqueta en una trama Ethernet amb les MACs origen i destí</td>
+</tr>
+<tr>
+<td>El camió circula per la carretera portant els bits físicament</td>
+<td>La capa física transmet els bits pel cable com a senyals elèctrics</td>
+</tr>
+</tbody>
+</table>
+<p>Quan el paquet arriba al destinatari, el procés s'inverteix: la missatgeria obre la bossa, l'advocat obre el sobre exterior, obre el sobre interior i llegeix el document. Cada "capa" desempaqueta la seva part i passa la resta a la capa de sobre.</p>
+<p><strong>Conclusió clau:</strong> cada capa de l'ordinador emissor es comunica lògicament amb la capa equivalent de l'ordinador receptor, ignorant tot el que hi ha entre mig. La capa de transport del teu ordinador "parla" amb la capa de transport del servidor web, com si estiguessin connectats directament. Les capes inferiors (routers, switches, cables) només són el camió i la carretera.</p>
+<h3 id="13-el-model-osi-capa-a-capa">1.3 El model OSI capa a capa<a class="headerlink" href="#13-el-model-osi-capa-a-capa" title="Permanent link">&para;</a></h3>
+<p>Veiem ara cada capa en detall, sempre amb un exemple concret de per a què serveix:</p>
+<h4 id="capa-7-aplicacio">Capa 7 — Aplicació<a class="headerlink" href="#capa-7-aplicacio" title="Permanent link">&para;</a></h4>
+<p>És la capa amb la qual interactua l'usuari (o el programari de l'usuari). Defineix com l'aplicació empaqueta les dades que vol enviar i com les interpreta quan les rep. No és l'aplicació en sí (el teu navegador no és la capa 7), sinó el protocol que l'aplicació utilitza.</p>
+<p><strong>Exemples:</strong> Quan escrius una URL al navegador, el protocol HTTP (o HTTPS) de la capa 7 formata la petició. Quan el teu client de correu descarrega emails, usa IMAP o POP3. Quan un servidor Linux fa una còpia de seguretat remota, usa SSH o SFTP. Quan el teu ordinador busca la IP associada a "google.com", usa DNS.</p>
+<h4 id="capa-6-presentacio">Capa 6 — Presentació<a class="headerlink" href="#capa-6-presentacio" title="Permanent link">&para;</a></h4>
+<p>S'encarrega de la traducció, el xifratge i la compressió de les dades. La raó d'existir: dos sistemes poden representar les dades de forma diferent (un text en Windows usa codificació diferent a Unix; una imatge pot estar comprimida de diverses formes). La capa 6 garanteix que l'emissor i el receptor s'entenguin.</p>
+<p><strong>Exemple concret:</strong> Quan navegues per HTTPS, la capa de presentació és la que gestiona el xifrat TLS/SSL. Les teves dades es xifren a la capa 6 del teu ordinador i es desxifren a la capa 6 del servidor. Tot el que hi ha entre mig (routers, switches) veu paquets xifrats, incomprensibles.</p>
+<h4 id="capa-5-sessio">Capa 5 — Sessió<a class="headerlink" href="#capa-5-sessio" title="Permanent link">&para;</a></h4>
+<p>Gestiona l'establiment, manteniment i tancament de sessions de comunicació entre dues aplicacions. Una sessió és una conversa amb context: si baixa la connexió a la meitat d'una transferència de fitxers, la capa de sessió permet reprendre-la des d'on s'havia deixat en lloc de reiniciar des del principi.</p>
+<p><strong>Exemple concret:</strong> Quan fas una videotrucada, la capa de sessió gestiona que les dades d'àudio i vídeo vagin sincronitzades i que la sessió es pugui recuperar si hi ha una interrupció breu de xarxa.</p>
+<h4 id="capa-4-transport">Capa 4 — Transport<a class="headerlink" href="#capa-4-transport" title="Permanent link">&para;</a></h4>
+<p>Aquesta és una de les capes més importants i on apareix una de les decisions fonamentals de les xarxes: envio les dades de forma fiable o ràpida?</p>
+<p><strong>TCP (Transmission Control Protocol) — fiable i ordenat:</strong> Estableix una connexió entre els dos extrems abans d'enviar res (el famós "three-way handshake": SYN → SYN-ACK → ACK). Numera cada paquet (segments) i el receptor confirma cada segment rebut (ACK). Si un segment no arriba o arriba corrupte, TCP el retransmet automàticament. Els paquets sempre arriben en ordre.</p>
+<p><strong>Cost:</strong> latència afegida per les confirmacions. Usat quan la integritat és crítica: descàrregues, webs, correu, SSH.</p>
+<p><strong>UDP (User Datagram Protocol) — ràpid i sense garanties:</strong> Envia els paquets (datagrams) sense establir connexió ni confirmar la recepció. Si un paquet es perd, senzillament desapareix. No hi ha retransmissió ni reordenació.</p>
+<p><strong>Cost:</strong> possible pèrdua de dades. Usat quan la velocitat és crítica i una mica de pèrdua és acceptable: videoconferència (un frame perdut és millor que aturar el vídeo), jocs en línia, streaming, DNS.</p>
+<p><strong>Per quin motiu els ports TCP i UDP van del 0 al 65535?</strong></p>
+<pre><code>El camp de port a la capçalera TCP/UDP ocupa 16 bits. 2^16 = 65.536 valors possibles (0 a 65.535).
+Ports 0-1023: ports &quot;coneguts&quot; (well-known), reservats per a serveis estàndard (root requerit a Unix).
+- 22: SSH - 25: SMTP - 53: DNS - 67/68: DHCP - 80: HTTP - 443: HTTPS
+Ports 1024-49151: ports registrats per aplicacions (MySQL: 3306, RDP: 3389).
+Ports 49152-65535: ports efímers, assignats dinàmicament als clients per cada connexió.
+</code></pre>
+<h4 id="capa-3-xarxa">Capa 3 — Xarxa<a class="headerlink" href="#capa-3-xarxa" title="Permanent link">&para;</a></h4>
+<p>La capa de xarxa s'encarrega de l'encaminament (routing): decidir com enviar un paquet des d'un punt qualsevol de la xarxa fins a un altre, passant per múltiples dispositius intermedis. Utilitza adreces lògiques (IP) que, a diferència de les MACs, es poden estructurar jeràrquicament i encaminar de forma eficient.</p>
+<p><strong>El dispositiu de la capa 3 és el router.</strong> Quan un paquet ha de saltar de la teva xarxa local a Internet, o d'una VLAN a una altra, sempre passa per un router. Els routers llegeixen l'adreça IP destí, consulten la seva taula d'encaminament i decideixen per on enviar el paquet.</p>
+<h4 id="capa-2-enllac-de-dades">Capa 2 — Enllaç de dades<a class="headerlink" href="#capa-2-enllac-de-dades" title="Permanent link">&para;</a></h4>
+<p>La capa d'enllaç gestiona la comunicació entre dispositius dins d'una mateixa xarxa local (el mateix segment de xarxa). Utilitza adreces físiques (MAC) i organitza els bits en trames (frames). Inclou mecanismes de detecció d'errors (FCS - Frame Check Sequence).</p>
+<p><strong>El dispositiu de la capa 2 és el switch.</strong> El switch llegeix les adreces MAC de les trames i les envia al port corresponent, sense mirar les adreces IP. Per al switch, "IP" no existeix; ell només veu trames Ethernet amb MACs.</p>
+<h4 id="capa-1-fisica">Capa 1 — Física<a class="headerlink" href="#capa-1-fisica" title="Permanent link">&para;</a></h4>
+<p>La capa física és el cable (o l'aire, en el cas del Wi-Fi). Es limita a transmetre bits (0 i 1) en forma de senyals: variacions de tensió elèctrica al cable de coure, polsos de llum a la fibra òptica, ones de ràdio a l'aire. No entén trames, ni adreces, ni protocols. Simplement transmet bits.</p>
+<p><strong>Estàndard Ethernet (IEEE 802.3):</strong> defineix les característiques físiques del cablejat, els connectors (RJ-45), les velocitats (100 Mbps, 1 Gbps, 10 Gbps) i com es codifiquen els bits elèctricament.</p>
+<h3 id="14-encapsulacio-el-proces-pas-a-pas">1.4 Encapsulació: el procés pas a pas<a class="headerlink" href="#14-encapsulacio-el-proces-pas-a-pas" title="Permanent link">&para;</a></h3>
+<p>Quan envies una petició HTTP a un servidor web, el procés d'encapsulació és exactament aquest (de dalt a baix a l'emissor, de baix a dalt al receptor):</p>
+<table>
+<thead>
+<tr>
+<th><strong>Pas</strong></th>
+<th><strong>Capa</strong></th>
+<th><strong>Acció</strong></th>
+<th><strong>Unitat resultant</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Aplicació (7)</td>
+<td>El navegador crea la petició HTTP: 'GET /index.html HTTP/1.1'</td>
+<td>Dades HTTP</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Transport (4)</td>
+<td>TCP afegeix capçalera: port origen (efímer, ex: 54321), port destí (80), número de seqüència, flags.</td>
+<td>Segment TCP</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Xarxa (3)</td>
+<td>IP afegeix capçalera: IP origen (la teva), IP destí (del servidor), TTL=64, protocol=TCP.</td>
+<td>Paquet IP</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Enllaç (2)</td>
+<td>Ethernet afegeix capçalera (MAC origen, MAC destí del router) i FCS al final.</td>
+<td>Trama Ethernet</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Física (1)</td>
+<td>El bit es converteix a senyal elèctrica i viatja pel cable.</td>
+<td>Bits →→→→</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Observació important sobre les MACs en el camí</strong></p>
+<pre><code>Cada vegada que el paquet passa per un router, les adreces MAC CANVIEN.
+Les adreces IP origen i destí es mantenen igual durant tot el trajecte (excepte si hi ha NAT).
+Exemple: El teu PC envia una trama al router.
+MAC origen: \[MAC del teu PC\] → al router, la trama s'elimina i es crea una nova
+MAC destí: \[MAC del router\] → nova MAC origen: \[MAC interfície WAN del router\]
+IP origen: 192.168.10.5 (no canvia mai) MAC destí: \[MAC del proper router\]
+IP destí: 93.184.216.34 (no canvia mai)
+Per tant: MACs = comunicació local, port a port. IPs = comunicació extrema, end-to-end.
+</code></pre>
+<h3 id="15-el-model-tcpip-el-que-susa-a-la-practica">1.5 El model TCP/IP: el que s'usa a la pràctica<a class="headerlink" href="#15-el-model-tcpip-el-que-susa-a-la-practica" title="Permanent link">&para;</a></h3>
+<p>El model OSI és excel·lent per entendre i diagnosticar xarxes, però cap protocol l'implementa de forma estricta. En la pràctica s'utilitza el model TCP/IP (també llamat model d'Internet), que agrupa les 7 capes OSI en 4:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Model TCP/IP</strong></th>
+<th><strong>Capes OSI equivalents</strong></th>
+<th><strong>Protocols representatius</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Aplicació</td>
+<td>Sessió (5) + Presentació (6) + Aplicació (7)</td>
+<td>HTTP, HTTPS, FTP, SSH, SMTP, IMAP, DNS, DHCP, SNMP</td>
+</tr>
+<tr>
+<td>Transport</td>
+<td>Transport (4)</td>
+<td>TCP, UDP</td>
+</tr>
+<tr>
+<td>Internet</td>
+<td>Xarxa (3)</td>
+<td>IPv4, IPv6, ICMP, ARP</td>
+</tr>
+<tr>
+<td>Accés a la xarxa</td>
+<td>Física (1) + Enllaç (2)</td>
+<td>Ethernet, Wi-Fi (802.11), PPP</td>
+</tr>
+</tbody>
+</table>
+<p>A la pràctica, quan parlem de xarxes en un context professional, ens referirem a les capes TCP/IP, però usarem el model OSI per localitzar on és un problema. Si un ping falla (ICMP, capa 3), el problema és a la capa de xarxa o inferior. Si el ping funciona però no funciona HTTP, el problema és a la capa d'aplicació o transport.</p>
+<h2 id="2-adreces-mac-i-ethernet-qui-es-qui-a-la-xarxa-local">2. Adreces MAC i Ethernet: qui és qui a la xarxa local<a class="headerlink" href="#2-adreces-mac-i-ethernet-qui-es-qui-a-la-xarxa-local" title="Permanent link">&para;</a></h2>
+<h3 id="21-adreces-mac">2.1 Adreces MAC<a class="headerlink" href="#21-adreces-mac" title="Permanent link">&para;</a></h3>
+<p>Cada interfície de xarxa (la targeta de xarxa del teu ordinador, el port del switch, la targeta Wi-Fi) porta gravada de fàbrica una adreça MAC (Media Access Control). És un identificador físic únic a tot el món, com el número de sèrie d'un dispositiu.</p>
+<p>Una adreça MAC té 48 bits i s'escriu en hexadecimal, normalment en grups de dos dígits separats per dos punts o guions:</p>
+<p>AA:BB:CC:DD:EE:FF</p>
+<p>Els primers 24 bits (3 bytes) identifiquen el fabricant (OUI - Organizationally Unique Identifier). Els darrers 24 bits els assigna el fabricant per a cada dispositiu. Per exemple, adreces que comencen per 00:1A:A0 pertanyen a Dell; 00:50:56 és VMware.</p>
+<p><strong>Per què les MACs no poden encaminar el trànsit per Internet?</strong></p>
+<pre><code>Les MACs no tenen estructura jeràrquica: no hi ha cap relació entre la MAC d'un dispositiu de
+Barcelona i la d'un de Tokyo. Per saber on és una MAC, caldria una taula amb totes les MACs
+del món i el seu lloc. Impossible d'escalar.
+Les IPs, en canvi, SÍ estan estructurades jeràrquicament: 192.168.10.x és sempre una xarxa
+privada concreta, i tots els routers saben que 8.8.8.0/24 és a Google (USA).
+Conclusió: MACs per a la comunicació local. IPs per a la comunicació global.
+</code></pre>
+<h3 id="22-el-protocol-ethernet-i-les-trames">2.2 El protocol Ethernet i les trames<a class="headerlink" href="#22-el-protocol-ethernet-i-les-trames" title="Permanent link">&para;</a></h3>
+<p>Ethernet (IEEE 802.3) defineix com s'organitzen les dades en trames per viatjar per un segment de xarxa local. Una trama Ethernet té una estructura ben definida:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Camp</strong></th>
+<th><strong>Mida</strong></th>
+<th><strong>Contingut</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Preàmbul + SFD</td>
+<td>8 bytes</td>
+<td>Sincronització: bits alternats (1010...) per sincronitzar els rellotges. SFD (10101011) indica el final del preàmbul.</td>
+</tr>
+<tr>
+<td>MAC destí</td>
+<td>6 bytes</td>
+<td>Adreça MAC del receptor. Pot ser unicast (un dispositiu), multicast (grup) o broadcast (FF:FF:FF:FF:FF:FF = tots).</td>
+</tr>
+<tr>
+<td>MAC origen</td>
+<td>6 bytes</td>
+<td>Adreça MAC del transmissor.</td>
+</tr>
+<tr>
+<td>EtherType</td>
+<td>2 bytes</td>
+<td>Indica el protocol de capa 3 contingut: 0x0800 = IPv4, 0x0806 = ARP, 0x86DD = IPv6, 0x8100 = trama 802.1Q (VLAN).</td>
+</tr>
+<tr>
+<td>Dades (payload)</td>
+<td>46--1500 bytes</td>
+<td>El contingut: el paquet IP, o qualsevol altre protocol de capa 3. Mínim 46 bytes (s'emplena amb padding si cal).</td>
+</tr>
+<tr>
+<td>FCS</td>
+<td>4 bytes</td>
+<td>Frame Check Sequence: CRC-32 per detectar errors de transmissió. El receptor recalcula i compara.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>MTU (Maximum Transmission Unit):</strong> el camp de dades d'Ethernet estàndard pot contenir fins a 1.500 bytes. Aquest és el MTU d'Ethernet, i és el motiu pel qual el teu sistema operatiu fragmenta paquets IP grans en múltiples trames.</p>
+<h2 id="3-el-commutador-switch-el-cor-de-la-xarxa-local">3. El commutador (Switch): el cor de la xarxa local<a class="headerlink" href="#3-el-commutador-switch-el-cor-de-la-xarxa-local" title="Permanent link">&para;</a></h2>
+<h3 id="31-del-hub-al-switch-per-que-importa-la-diferencia">3.1 Del hub al switch: per què importa la diferència<a class="headerlink" href="#31-del-hub-al-switch-per-que-importa-la-diferencia" title="Permanent link">&para;</a></h3>
+<p>Per entendre el switch, primer cal entendre per què els hubs eren un problema. Un hub (concentrador) és un dispositiu extremadament simple: rep un senyal per un port i l'envia per TOTS els altres ports. Tots els dispositius connectats al hub comparteixen el mateix domini de col·lisió: si dos dispositius envien dades simultàniament, els senyals col·lideixen i s'han de retransmetre.</p>
+<p>El switch va ser la solució. Un switch aprèn quins dispositius estan connectats a cada port i envia cada trama únicament al port on es troba el destinatari. Resultat: cada port del switch té el seu propi domini de col·lisió, les col·lisions desapareixen pràcticament, i l'ample de banda s'aprofita molt millor.</p>
+<h3 id="32-la-taula-cam-com-apren-el-switch">3.2 La taula CAM: com aprèn el switch<a class="headerlink" href="#32-la-taula-cam-com-apren-el-switch" title="Permanent link">&para;</a></h3>
+<p>La taula CAM (Content Addressable Memory), també coneguda com a taula de MACs, és la base de dades del switch. Conté l'associació entre cada adreça MAC i el port per on s'ha vist aquella adreça. La gestió és totalment automàtica i dinàmica.</p>
+<p>El procés d'aprenentatge és senzill i elegant:</p>
+<ol>
+<li>
+<p><strong>Arribada d'una trama:</strong> El switch rep una trama per un port (ex: port 3). Llegeix la MAC origen (AA:BB:CC:DD:EE:01) i la registra a la taula CAM associada al port 3. Acaba d'aprendre on és aquest dispositiu.</p>
+</li>
+<li>
+<p><strong>Cerca del destinatari:</strong> Llegeix la MAC destí (AA:BB:CC:DD:EE:02) i busca a la taula CAM.</p>
+</li>
+<li>
+<p><strong>Si la troba (unicast forwarding):</strong> Envia la trama únicament per aquell port. Cap altre dispositiu veu la trama.</p>
+</li>
+<li>
+<p><strong>Si NO la troba (flooding):</strong> Envia la trama per tots els ports excepte el d'entrada. El dispositiu destí, quan respongui, donarà a conèixer la seva ubicació, i el switch aprendrà.</p>
+</li>
+<li>
+<p><strong>Caducitat:</strong> Les entrades de la taula CAM caduquen si no hi ha activitat (per defecte 300 segons = 5 minuts). Evita que la taula quedi obsoleta quan els dispositius es desconnecten o canvien de port.</p>
+</li>
+</ol>
+<p><strong>Broadcast:</strong> La MAC FF:FF:FF:FF:FF:FF és l'adreça de broadcast d'Ethernet. El switch SEMPRE inunda les trames de broadcast per tots els ports. Això és important: protocols com ARP i DHCP Discover usen broadcast per trobar dispositius. Tots els dispositius del segment veuen i processen les trames de broadcast.</p>
+<p><strong>Exemple pràctic: Taula CAM del switch de NetCorp (fragament)</strong></p>
+<pre><code>MAC Address VLAN Port Age
+AA:BB:CC:11:22:33 10 Gi0/1 45 s ← PC de Direcció
+AA:BB:CC:44:55:66 20 Gi0/5 12 s ← PC d'IT
+AA:BB:CC:77:88:99 20 Gi0/6 289 s ← PC d'IT
+AA:BB:CC:AA:BB:CC 99 Gi0/24 4 s ← Router Cisco
+Llegir: 'Si rebo una trama amb MAC destí AA:BB:CC:11:22:33, l'envio per Gi0/1'
+</code></pre>
+<h3 id="33-vlans-dividir-el-switch-en-multiples-xarxes-virtuals">3.3 VLANs: dividir el switch en múltiples xarxes virtuals<a class="headerlink" href="#33-vlans-dividir-el-switch-en-multiples-xarxes-virtuals" title="Permanent link">&para;</a></h3>
+<p>Imagina que a NetCorp tots els 45 empleats estan connectats al mateix switch. Si el servidor DHCP fa un broadcast, els 45 ordinadors l'han de processar, incloent-hi els de la direcció, els de logística i els de RRHH. Si algú del departament de vendes intenta fer un escaneig de la xarxa, podria veure trànsit de tots els departaments. Cap empresa acceptaria això.</p>
+<p>Les VLANs (Virtual Local Area Networks) resolen aquest problema creant múltiples xarxes lògiques completament independents dins del mateix switch físic. Cada VLAN és un domini de broadcast independent: el trànsit d'una VLAN no arriba mai als dispositius d'una altra VLAN (tret que passi per un router).</p>
+<p><strong>Beneficis concrets de les VLANs a NetCorp:</strong></p>
+<ul>
+<li>
+<p><strong>Seguretat:</strong> Un ordinador de Logística mai veurà el trànsit de RRHH, ni viceversa.</p>
+</li>
+<li>
+<p><strong>Rendiment:</strong> El broadcast de DHCP d'IT no molesta als usuaris de Vendes.</p>
+</li>
+<li>
+<p><strong>Flexibilitat:</strong> Pots moure un treballador de departament sense canviar el cablejat físic: simplement canvies la VLAN assignada al seu port.</p>
+</li>
+<li>
+<p><strong>Gestió:</strong> Pots aplicar polítiques de seguretat (ACLs, QoS) per VLAN de forma centralitzada.</p>
+</li>
+</ul>
+<p><strong>Ports d'accés (access ports)</strong></p>
+<p>Un port d'accés pertany a una única VLAN. S'utilitza per connectar dispositius finals: ordinadors, impressores, telèfons IP, càmeres. El dispositiu connectat no sap que existeix la VLAN, ni que la trama Ethernet porta una etiqueta. El switch afegeix l'etiqueta quan la trama entra i la treu quan surt. Per al dispositiu, és totalment transparent.</p>
+<p><strong>Ports trunk</strong></p>
+<p>Un port trunk transporta trànsit de múltiples VLANs simultàniament. S'usa per:</p>
+<ul>
+<li>
+<p>Connectar dos switches entre ells (uplink)</p>
+</li>
+<li>
+<p>Connectar un switch amb un router (per al router-on-a-stick)</p>
+</li>
+<li>
+<p>Connectar un switch amb un servidor (si el servidor és host de màquines virtuals de diverses VLANs)</p>
+</li>
+</ul>
+<p>Com sap el switch receptor a quina VLAN pertany cada trama en un trunk? Gràcies al protocol IEEE 802.1Q:</p>
+<p><strong>El protocol IEEE 802.1Q: l'etiqueta VLAN</strong></p>
+<p>IEEE 802.1Q defineix com s'etiqueten les trames Ethernet per identificar la VLAN. Insereix 4 bytes addicionals a la trama original, just ENTRE les adreces MAC i el camp EtherType:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Camp 802.1Q</strong></th>
+<th><strong>Mida</strong></th>
+<th><strong>Valor / Descripció</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TPID (Tag Protocol ID)</td>
+<td>2 bytes</td>
+<td>Sempre 0x8100. Indica al receptor que la trama porta etiqueta 802.1Q.</td>
+</tr>
+<tr>
+<td>PCP (Priority Code Point)</td>
+<td>3 bits</td>
+<td>Prioritat QoS (0-7). Permet prioritzar trànsit de veu o vídeo.</td>
+</tr>
+<tr>
+<td>DEI (Drop Eligible)</td>
+<td>1 bit</td>
+<td>Indica si la trama pot ser descartada en cas de congestió.</td>
+</tr>
+<tr>
+<td>VID (VLAN Identifier)</td>
+<td>12 bits</td>
+<td>L'identificador de la VLAN: valors de 0 a 4095 (1-4094 usables). 12 bits → 2^12 = 4096 VLANs possibles.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>La VLAN nativa:</strong> En un port trunk, la VLAN nativa és l'única que viatja sense etiqueta. Per defecte, Cisco usa la VLAN 1. Per seguretat (per evitar ataques de VLAN hopping, que veurem a C037), cal canviar la VLAN nativa a una VLAN específica i buida (ex: VLAN 999) que no s'usi per al trànsit de producció. Els dos extrems del trunk han de tenir la mateixa VLAN nativa configurada.</p>
+<h3 id="34-spanning-tree-protocol-stp-evitant-els-bucles-de-xarxa">3.4 Spanning Tree Protocol (STP): evitant els bucles de xarxa<a class="headerlink" href="#34-spanning-tree-protocol-stp-evitant-els-bucles-de-xarxa" title="Permanent link">&para;</a></h3>
+<p>Les xarxes ben dissenyades en producció inclouen connexions redundants: si cau un cable o un switch, hi ha un camí alternatiu i la xarxa continua funcionant. Però la redundància a la capa 2 crea un problema greu: els bucles.</p>
+<p><strong>El problema: broadcast storm</strong></p>
+<p>Imagina dos switches (A i B) connectats amb dos cables entre ells (redundància). Un PC envia una trama de broadcast (com un DHCP Discover):</p>
+<ol>
+<li>
+<p>El switch A rep la trama i la reenvía per tots els seus ports, incloent els dos cables cap a B.</p>
+</li>
+<li>
+<p>El switch B rep la trama pels dos cables i la torna a reenviar per tots els ports, incloent els dos cables cap a A.</p>
+</li>
+<li>
+<p>El switch A rep de nou les trames i les torna a reenviar... i així fins a l'infinit.</p>
+</li>
+</ol>
+<p>En pocs mil·lisegons, la xarxa s'omple completament de trames de broadcast circulant en bucle. És la "broadcast storm": la xarxa col·lapsa completament i cap dispositiu pot comunicar-se. STP (IEEE 802.1D) resol aquest problema bloqueig lògicament els ports redundants.</p>
+<p><strong>Com funciona STP: l'elecció del Root Bridge</strong></p>
+<p>STP construeix un arbre lliure de bucles a partir d'un punt de referència central: el Root Bridge. El procés d'elecció és automàtic:</p>
+<ol>
+<li>
+<p><strong>Tots els switches enviuen BPDUs:</strong> Un BPDU (Bridge Protocol Data Unit) és un missatge especial que els switches s'envien entre ells per intercanviar informació sobre STP. Contenen el Bridge ID del switch emissor.</p>
+</li>
+<li>
+<p><strong>Bridge ID = Prioritat + MAC:</strong> El Bridge ID és la combinació de la prioritat del switch (valor entre 0 i 61440, en múltiples de 4096; per defecte 32768) i la seva adreça MAC. Menor Bridge ID = guanya l'elecció de Root Bridge.</p>
+</li>
+<li>
+<p><strong>El switch amb el menor Bridge ID és el Root Bridge:</strong> Tots els altres switches calculen el "camí de menor cost" fins al Root Bridge i bloquegen els ports que crearien bucles.</p>
+</li>
+</ol>
+<p><strong>Implicació pràctica:</strong> A NetCorp, hauries de configurar manualment la prioritat del switch principal (el del rack del servidor) perquè sigui el Root Bridge. Si no ho fas, el Root Bridge podria ser qualsevol switch (el que tingui la MAC menor), i l'arbre resultant podria ser subòptim.</p>
+<p><strong>Els estats dels ports en STP</strong></p>
+<p>Un port STP no passa directament de "apagat" a "funcionant". Passa per diversos estats per assegurar-se que no crea un bucle:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Estat</strong></th>
+<th><strong>Durada típica</strong></th>
+<th><strong>Reenvia trames?</strong></th>
+<th><strong>Aprèn MACs?</strong></th>
+<th><strong>Descripció</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Blocking</td>
+<td>Indefinit</td>
+<td>No</td>
+<td>No</td>
+<td>El port és redundant i aporta risc de bucle. Bloquejat. Escolta BPDUs però no fa res més.</td>
+</tr>
+<tr>
+<td>Listening</td>
+<td>15 s (Forward Delay)</td>
+<td>No</td>
+<td>No</td>
+<td>Transició. El port es prepara per activar-se. Escolta i participa en STP per assegurar-se que no hi ha bucle.</td>
+</tr>
+<tr>
+<td>Learning</td>
+<td>15 s (Forward Delay)</td>
+<td>No</td>
+<td>SÍ</td>
+<td>Transició. Comença a aprendre adreces MAC de les trames que veu, però encara no reenvia. Evita flooding massiu quan s'activi.</td>
+</tr>
+<tr>
+<td>Forwarding</td>
+<td>Indefinit</td>
+<td>SÍ</td>
+<td>SÍ</td>
+<td>Estat operatiu normal. Reenvia trames i aprèn MACs.</td>
+</tr>
+<tr>
+<td>Disabled</td>
+<td>Indefinit</td>
+<td>No</td>
+<td>No</td>
+<td>Port apagat administrativament (shutdown).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Temps de convergència de STP clàssic:</strong> En cas de fallada d'un camí, STP tarda fins a 50 segons en activar el camí redundant (20 s de Max Age + 15 s Listening + 15 s Learning). Això és inacceptable en xarxes modernes. Per això Cisco usa RSTP (Rapid STP, IEEE 802.1w), que redueix la convergència a menys de 2 segons. Cisco PVST+ executa una instància de RSTP per cada VLAN.</p>
+<h3 id="35-seguretat-al-switch-cisco">3.5 Seguretat al switch Cisco<a class="headerlink" href="#35-seguretat-al-switch-cisco" title="Permanent link">&para;</a></h3>
+<p><strong>Port Security: qui pot connectar-se on</strong></p>
+<p>Port Security permet a l'administrador controlar exactament quins dispositius (MACs) poden usar cada port del switch. És la primera línia de defensa contra dispositius no autoritzats.</p>
+<p><strong>Funcionament:</strong> Configures un port d'accés amb un nombre màxim de MACs permeses (ex: màxim 1). Si un dispositiu no autoritzat intenta connectar-se (o si el nombre de MACs supera el límit), el port actua segons el mode de violació configurat:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Mode de violació</strong></th>
+<th><strong>Què passa quan es viola?</strong></th>
+<th><strong>Incrementa el comptador?</strong></th>
+<th><strong>Envia alerta (syslog/SNMP)?</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>protect</td>
+<td>Descarta les trames de la MAC no autoritzada. La xarxa continua funcionant per a les MACs autoritzades.</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>restrict</td>
+<td>Igual que protect, però registra l'incident.</td>
+<td>Sí</td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>shutdown (recomanat)</td>
+<td>Posa el port en estat err-disabled. Requereix intervenció manual per recuperar-lo: shutdown + no shutdown.</td>
+<td>Sí</td>
+<td>Sí</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sticky MAC:</strong> El mode sticky permet al switch aprendre dinàmicament les primeres MACs que veu al port i guardar-les a la configuració de forma permanent (running-config). Combina la comoditat de l'aprenentatge automàtic amb la seguretat d'una llista estàtica. Ideal en entorns on els dispositius no canvien sovint.</p>
+<p><strong>BPDU Guard: protegint l'arbre STP</strong></p>
+<p>El BPDU Guard és una mesura de seguretat que protegeix l'estructura STP de la xarxa. Un port d'accés (connectat a un PC, impressora...) mai hauria de rebre BPDUs STP, ja que els dispositius finals no participen en STP. Si un port d'accés rep un BPDU, significa que algú ha connectat un switch (potser no autoritzat) a aquell port.</p>
+<p><strong>Acció de BPDU Guard:</strong> Quan un port configurat amb BPDU Guard rep un BPDU, posa el port immediatament en err-disabled. Evita que un switch extern no autoritzat participi en STP i potencialment es converteixi en Root Bridge, canviant l'arbre de commutació de tota la xarxa.</p>
+<p><strong>Dynamic ARP Inspection (DAI) — context previ a C037</strong></p>
+<p>ARP (Address Resolution Protocol) resol la MAC associada a una IP dins la mateixa xarxa. El problema és que ARP no té autenticació: qualsevol dispositiu pot enviar respostes ARP falses. L'atac s'anomena ARP Spoofing i permet interceptar el trànsit de la xarxa. DAI valida les respostes ARP contra la taula de bindings DHCP Snooping per detectar i descartar respostes ARP fraudulentes. Ho veurem en profunditat al capítol de C037.</p>
+<h2 id="4-adrecament-ipv4-la-logica-darrere-dels-numeros">4. Adreçament IPv4: la lògica darrere dels números<a class="headerlink" href="#4-adrecament-ipv4-la-logica-darrere-dels-numeros" title="Permanent link">&para;</a></h2>
+<h3 id="41-per-que-necessitem-adreces-ip-si-ja-tenim-macs">4.1 Per què necessitem adreces IP si ja tenim MACs?<a class="headerlink" href="#41-per-que-necessitem-adreces-ip-si-ja-tenim-macs" title="Permanent link">&para;</a></h3>
+<p>Hem vist que les MACs identifiquen de forma única cada dispositiu de xarxa. Però hi ha un problema fonamental: les MACs no es poden encaminar. Imagina que vols enviar una carta (trama) a un dispositiu de Tokio. Amb MACs, el teu router hauria de tenir una taula amb les 20 mil milions de MACs de tots els dispositius del món i saber on es troba cadascuna. Impossible.</p>
+<p>Les adreces IP resoler aquest problema gràcies a la seva estructura jeràrquica. Una IP no és simplement un identificador únic: conté informació sobre la xarxa on es troba el dispositiu. Tots els routers del món poden saber que "93.184.216.0/24" és una xarxa als EUA sense necessitat de conèixer cada dispositiu individual. Encaminen els paquets a la xarxa correcta, i el router local de destí s'encarrega d'entregar-lo al dispositiu específic.</p>
+<h3 id="42-estructura-duna-adreca-ipv4">4.2 Estructura d'una adreça IPv4<a class="headerlink" href="#42-estructura-duna-adreca-ipv4" title="Permanent link">&para;</a></h3>
+<p>Una adreça IPv4 és un número de 32 bits. Per facilitar la lectura humana, s'escriu en notació decimal puntejada: quatre grups de 8 bits (octets), cadascun expressat en decimal (0--255), separats per punts.</p>
+<p><strong>Exemple:</strong> 192.168.10.50</p>
+<p>Cada adreça IPv4 té dues parts:</p>
+<ul>
+<li>
+<p><strong>Part de xarxa (network bits):</strong> identifica la xarxa a la qual pertany el dispositiu. Tots els dispositius de la mateixa xarxa comparteixen la mateixa part de xarxa.</p>
+</li>
+<li>
+<p><strong>Part d'host (host bits):</strong> identifica el dispositiu específic dins de la xarxa.</p>
+</li>
+</ul>
+<p>Quants bits formen la part de xarxa i quants la d'host? Això ho determina la màscara de subxarxa.</p>
+<h3 id="43-mascares-de-subxarxa-on-acaba-la-xarxa-i-on-comenca-lhost">4.3 Màscares de subxarxa: on acaba la xarxa i on comença l'host<a class="headerlink" href="#43-mascares-de-subxarxa-on-acaba-la-xarxa-i-on-comenca-lhost" title="Permanent link">&para;</a></h3>
+<p>La màscara de subxarxa és un altre número de 32 bits. Els bits a '1' indiquen la part de xarxa; els bits a '0' indiquen la part d'host. Sempre forma un bloc continu de '1' seguit d'un bloc continu de '0' (mai alternats).</p>
+<p>La notació CIDR (Classless Inter-Domain Routing) simplifica l'escriptura posant el nombre de bits a '1' com a sufix de l'adreça:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Màscara decimal</strong></th>
+<th><strong>Màscara en binari (últim octet)</strong></th>
+<th><strong>Notació CIDR</strong></th>
+<th><strong>Nre. d'hosts útils</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>255.255.255.0</td>
+<td>11111111.11111111.11111111.00000000</td>
+<td>/24</td>
+<td>254</td>
+</tr>
+<tr>
+<td>255.255.255.128</td>
+<td>11111111.11111111.11111111.10000000</td>
+<td>/25</td>
+<td>126</td>
+</tr>
+<tr>
+<td>255.255.255.192</td>
+<td>11111111.11111111.11111111.11000000</td>
+<td>/26</td>
+<td>62</td>
+</tr>
+<tr>
+<td>255.255.255.224</td>
+<td>11111111.11111111.11111111.11100000</td>
+<td>/27</td>
+<td>30</td>
+</tr>
+<tr>
+<td>255.255.255.240</td>
+<td>11111111.11111111.11111111.11110000</td>
+<td>/28</td>
+<td>14</td>
+</tr>
+<tr>
+<td>255.255.255.248</td>
+<td>11111111.11111111.11111111.11111000</td>
+<td>/29</td>
+<td>6</td>
+</tr>
+<tr>
+<td>255.255.255.252</td>
+<td>11111111.11111111.11111111.11111100</td>
+<td>/30</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>La fórmula dels hosts útils:</strong> Si hi ha n bits de host, el nombre total d'adreces és 2^n. Però dues adreces no es poden assignar a dispositius: la primera (adreça de xarxa, tots els bits d'host a 0) i l'última (broadcast, tots els bits d'host a 1). Per tant: hosts útils = 2^n - 2.</p>
+<p><strong>Per què /30 és l'ideal per als enllaços punt a punt entre routers?</strong></p>
+<pre><code>Un enllaç entre dos routers necessita exactament 2 adreces: una per a cada router.
+Amb /30: 2^2 - 2 = 2 hosts útils. Perfecte. Cap adreça es malgasta.
+Exemple: 10.0.0.0/30 → .0 = xarxa, .1 = router A, .2 = router B, .3 = broadcast
+Si usessis /24 per a aquest enllaç, malgastaríes 252 adreces que no s'usaran mai.
+</code></pre>
+<h3 id="44-subnetting-dividint-una-xarxa-en-trossos-mes-petits">4.4 Subnetting: dividint una xarxa en trossos més petits<a class="headerlink" href="#44-subnetting-dividint-una-xarxa-en-trossos-mes-petits" title="Permanent link">&para;</a></h3>
+<p>El subnetting és el procés de dividir una xarxa gran en subxarxes més petites. En comptes de tenir una sola xarxa 192.168.10.0/24 (254 hosts), pots crear 4 subxarxes de /26 (62 hosts cadascuna). Cada subxarxa pot correspondre a un departament, una VLAN, un pis d'un edifici, etc.</p>
+<p><strong>Pas 1: entendre el bloc de subxarxa</strong></p>
+<p>El primer pas és entendre la mida del bloc de cada màscara. El truc és senzill: 256 - valor_de_la_màscara_en_l'octet_interessant = mida del bloc.</p>
+<p><strong>Exemple amb /26:</strong> La màscara és 255.255.255.192. En l'últim octet, 256 - 192 = 64. Cada subxarxa /26 ocupa un bloc de 64 adreces: 0-63, 64-127, 128-191, 192-255.</p>
+<p><strong>Pas 2: calcular totes les subxarxes</strong></p>
+<p>Per a una xarxa pare 192.168.10.0, si la dividim en /26, les quatre subxarxes resultants son:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Subxarxa</strong></th>
+<th><strong>Rang complet</strong></th>
+<th><strong>Primera assignable</strong></th>
+<th><strong>Última assignable</strong></th>
+<th><strong>Broadcast</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>192.168.10.0/26</td>
+<td>0 -- 63</td>
+<td>192.168.10.1</td>
+<td>192.168.10.62</td>
+<td>192.168.10.63</td>
+</tr>
+<tr>
+<td>192.168.10.64/26</td>
+<td>64 -- 127</td>
+<td>192.168.10.65</td>
+<td>192.168.10.126</td>
+<td>192.168.10.127</td>
+</tr>
+<tr>
+<td>192.168.10.128/26</td>
+<td>128 -- 191</td>
+<td>192.168.10.129</td>
+<td>192.168.10.190</td>
+<td>192.168.10.191</td>
+</tr>
+<tr>
+<td>192.168.10.192/26</td>
+<td>192 -- 255</td>
+<td>192.168.10.193</td>
+<td>192.168.10.254</td>
+<td>192.168.10.255</td>
+</tr>
+</tbody>
+</table>
+<h3 id="45-vlsm-el-subnetting-intelligent">4.5 VLSM: el subnetting intel·ligent<a class="headerlink" href="#45-vlsm-el-subnetting-intelligent" title="Permanent link">&para;</a></h3>
+<p>El subnetting clàssic divideix una xarxa en subxarxes de la mateixa mida. Però a la pràctica, els departaments d'una empresa no tenen tots el mateix nombre d'empleats. Si fixes /26 per a tothom, el departament de Direcció (5 persones) malgastarà 57 adreces. VLSM (Variable Length Subnet Masking) permet usar màscares de mida diferent per a cada subxarxa.</p>
+<p><strong>Metodologia VLSM (pas a pas)</strong></p>
+<ol>
+<li>
+<p><strong>Llistar les subxarxes necessàries ordenades de MAJOR a MENOR</strong> nombre d'hosts requerits. Sempre comencem per la més gran.</p>
+</li>
+<li>
+<p><strong>Per a cada subxarxa, escollir la màscara mínima</strong> que cobreix el nombre d'hosts (2^n - 2 ≥ hosts requerits).</p>
+</li>
+<li>
+<p><strong>Assignar les adreces de forma contigua</strong>, sense deixar buits ni solapar subxarxes.</p>
+</li>
+</ol>
+<p><strong>Aplicació a NetCorp S.L.</strong></p>
+<p>NetCorp vol usar l'espai 192.168.0.0/16 i necessita les VLAN següents:</p>
+<table>
+<thead>
+<tr>
+<th><strong>VLAN</strong></th>
+<th><strong>Departament</strong></th>
+<th><strong>Hosts necessaris</strong></th>
+<th><strong>Màscara</strong></th>
+<th><strong>Hosts útils</strong></th>
+<th><strong>Xarxa assignada</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>30</td>
+<td>Logística</td>
+<td>50</td>
+<td>/26</td>
+<td>62</td>
+<td>192.168.30.0/26</td>
+</tr>
+<tr>
+<td>20</td>
+<td>IT</td>
+<td>20</td>
+<td>/27</td>
+<td>30</td>
+<td>192.168.20.0/27</td>
+</tr>
+<tr>
+<td>40</td>
+<td>Vendes</td>
+<td>15</td>
+<td>/27</td>
+<td>30</td>
+<td>192.168.40.0/27</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Direcció</td>
+<td>5</td>
+<td>/29</td>
+<td>6</td>
+<td>192.168.10.0/29</td>
+</tr>
+<tr>
+<td>50</td>
+<td>RRHH</td>
+<td>5</td>
+<td>/29</td>
+<td>6</td>
+<td>192.168.50.0/29</td>
+</tr>
+<tr>
+<td>99</td>
+<td>Gestió (switches/routers)</td>
+<td>10</td>
+<td>/28</td>
+<td>14</td>
+<td>192.168.99.0/28</td>
+</tr>
+<tr>
+<td>—</td>
+<td>VPN WireGuard (tunnel)</td>
+<td>2</td>
+<td>/30</td>
+<td>2</td>
+<td>10.200.0.0/30</td>
+</tr>
+</tbody>
+</table>
+<p>Amb VLSM assignem a cada departament exactament el que necessita. Si haguéssim usat /24 per a tots, hauríem malbaratat 5 × (254 - hosts_usats) = centenars d'adreces.</p>
+<h3 id="46-adreces-especials-i-rangs-privats">4.6 Adreces especials i rangs privats<a class="headerlink" href="#46-adreces-especials-i-rangs-privats" title="Permanent link">&para;</a></h3>
+<p>No totes les adreces IPv4 es poden assignar lliurement als dispositius. Hi ha diverses categories d'adreces reservades per a usos específics:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Rang / Adreça</strong></th>
+<th><strong>Ús</strong></th>
+<th><strong>RFC</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10.0.0.0/8</td>
+<td>Xarxa privada (classe A). Comú en grans empreses i operadors.</td>
+<td>RFC 1918</td>
+</tr>
+<tr>
+<td>172.16.0.0/12</td>
+<td>Xarxa privada (classe B). Rang 172.16.x.x fins 172.31.x.x.</td>
+<td>RFC 1918</td>
+</tr>
+<tr>
+<td>192.168.0.0/16</td>
+<td>Xarxa privada (classe C). El més usat en LANs domèstiques i de PIME.</td>
+<td>RFC 1918</td>
+</tr>
+<tr>
+<td>127.0.0.0/8</td>
+<td>Loopback. 127.0.0.1 és el dispositiu local. Mai surt per la xarxa.</td>
+<td>RFC 5735</td>
+</tr>
+<tr>
+<td>169.254.0.0/16</td>
+<td>APIPA (Automatic Private IP Addressing). El SO s'autoassigna una adreça quan no troba DHCP.</td>
+<td>RFC 3927</td>
+</tr>
+<tr>
+<td>0.0.0.0/0</td>
+<td>Ruta per defecte ("qualsevol destí"). Usada en taules d'encaminament.</td>
+<td>—</td>
+</tr>
+<tr>
+<td>255.255.255.255</td>
+<td>Broadcast limitat. Envia a tots els dispositius del segment local. No travessa routers.</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Per què les IPs privades no funcionen a Internet?</strong> Els routers d'Internet estan configurats per no encaminar trànsit de les rangs RFC 1918. Si un paquet amb IP origen 192.168.1.5 arriba a un router d'Internet, el descarrega. Per sortir a Internet, els dispositius privats necessiten NAT (que veurem a la secció 6).</p>
+<h2 id="5-el-router-connectant-xarxes-entre-elles">5. El router: connectant xarxes entre elles<a class="headerlink" href="#5-el-router-connectant-xarxes-entre-elles" title="Permanent link">&para;</a></h2>
+<h3 id="51-quin-problema-resol-el-router">5.1 Quin problema resol el router?<a class="headerlink" href="#51-quin-problema-resol-el-router" title="Permanent link">&para;</a></h3>
+<p>Un switch gestiona la comunicació dins d'una xarxa local (una VLAN): tot el que queda al mateix segment. Però quan el PC d'IT (192.168.20.5) vol enviar un missatge a un PC de Logística (192.168.30.10), les dues màquines estan en xarxes IP completament diferents. Un switch de capa 2 no entén d'IPs: no pot prendre aquesta decisió.</p>
+<p>El router és el dispositiu que resol exactament aquest problema. Opera a la capa 3 (xarxa) i s'encarrega de:</p>
+<ul>
+<li>
+<p>Interconnectar xarxes IP diferents (inter-VLAN routing, connexió a Internet)</p>
+</li>
+<li>
+<p>Mantenir una taula d'encaminament: sap per on enviar paquets destinats a cada xarxa</p>
+</li>
+<li>
+<p>Decrementar el TTL de cada paquet (Time To Live), i descartar-lo si arriba a zero (evita bucles infinits)</p>
+</li>
+<li>
+<p>Modificar les adreces MAC de les trames en cada salt (hop)</p>
+</li>
+</ul>
+<h3 id="52-la-taula-dencaminament">5.2 La taula d'encaminament<a class="headerlink" href="#52-la-taula-dencaminament" title="Permanent link">&para;</a></h3>
+<p>La taula d'encaminament (routing table) és la llista de xarxes que el router coneix i les instruccions per arribar-hi. Cada entrada conté: la xarxa destí (amb màscara), la mètrica (cost del camí), el next-hop (adreça IP del proper router), i la interfície de sortida.</p>
+<p>Les rutes es classifiquen per origen:</p>
+<ul>
+<li>
+<p><strong>Directament connectades (C):</strong> el router coneix les xarxes de les seves pròpies interfícies. S'afegeixen automàticament quan s'activa una interfície amb IP.</p>
+</li>
+<li>
+<p><strong>Estàtiques (S):</strong> configurades manualment per l'administrador. Simples i previsibles, però no s'adapten a canvis automàticament.</p>
+</li>
+<li>
+<p><strong>Dinàmiques (O, R, B...):</strong> apreses automàticament de protocols d'encaminament com OSPF (O) o RIP (R). El router intercanvia informació amb els routers veïns i construeix la taula sol. En xarxes grans és imprescindible.</p>
+</li>
+</ul>
+<p><strong>Com llegir la taula d'encaminament Cisco (show ip route)</strong></p>
+<pre><code>C 192.168.10.0/29 is directly connected, GigabitEthernet0/0.10
+→ Xarxa directament connectada. Arribo per la subinterfície .10.
+S 0.0.0.0/0 \[1/0\] via 10.0.1.1
+→ Ruta estàtica per defecte. Tot el que no sé on és, ho envio a 10.0.1.1.
+→ \[distància administrativa / mètrica\]. 1 = estàtica.
+O 172.16.1.0/24 \[110/2\] via 192.168.99.2
+→ Ruta apresa per OSPF. Cost = 2. Next-hop: 192.168.99.2.
+→ \[110 = distància adm. d'OSPF / 2 = mètrica OSPF\]
+</code></pre>
+<h3 id="53-rutes-estatiques-i-ruta-per-defecte">5.3 Rutes estàtiques i ruta per defecte<a class="headerlink" href="#53-rutes-estatiques-i-ruta-per-defecte" title="Permanent link">&para;</a></h3>
+<p><strong>Ruta estàtica:</strong> una entrada a la taula d'encaminament configurada manualment. Forma bàsica a Cisco IOS:</p>
+<blockquote>
+<p>ip route [xarxa_destí] [màscara] [adreça_next-hop]</p>
+<p>ip route 172.16.1.0 255.255.255.0 192.168.99.2</p>
+<p>→ Per arribar a 172.16.1.0/24, envia els paquets a 192.168.99.2</p>
+</blockquote>
+<p><strong>Ruta per defecte (default route):</strong> captura tots els paquets amb destí desconegut. És l'última línia de la taula d'encaminament, i correspon a "si no sé on anar, tira cap aquí". A Cisco:</p>
+<blockquote>
+<p>ip route 0.0.0.0 0.0.0.0 [IP_del_proveïdor_o_gateway]</p>
+</blockquote>
+<h3 id="54-router-on-a-stick-inter-vlan-routing-amb-un-sol-cable">5.4 Router-on-a-stick: inter-VLAN routing amb un sol cable<a class="headerlink" href="#54-router-on-a-stick-inter-vlan-routing-amb-un-sol-cable" title="Permanent link">&para;</a></h3>
+<p>El router-on-a-stick és la solució per encaminar trànsit entre VLANs amb una sola interfície física del router (o amb els ports físics limitats que tenim). En lloc d'usar una interfície física per a cada VLAN, creem subinterfícies lògiques sobre la mateixa interfície física, que es connecta a un port trunk del switch.</p>
+<p><strong>Com funciona, pas a pas</strong></p>
+<p>Suposem que un PC de VLAN 20 (IT, 192.168.20.5) vol comunicar-se amb un PC de VLAN 30 (Logística, 192.168.30.8):</p>
+<ol>
+<li>
+<p>El PC d'IT veu que 192.168.30.8 no és la seva xarxa (diferent subxarxa). Envia el paquet al seu gateway: 192.168.20.1.</p>
+</li>
+<li>
+<p>El switch rep la trama i la posa en un port trunk cap al router, afegint l'etiqueta VLAN 20.</p>
+</li>
+<li>
+<p>El router rep la trama etiquetada amb VLAN 20 per la subinterfície .20. Li treu l'etiqueta.</p>
+</li>
+<li>
+<p>El router consulta la taula d'encaminament: 192.168.30.8 pertany a la subxarxa 192.168.30.0/26, connectada a la subinterfície .30.</p>
+</li>
+<li>
+<p>El router envia el paquet per la subinterfície .30 cap al switch, amb l'etiqueta VLAN 30.</p>
+</li>
+<li>
+<p>El switch llegeix l'etiqueta VLAN 30, elimina l'etiqueta i envia la trama al port d'accés on és 192.168.30.8.</p>
+</li>
+</ol>
+<p><strong>Punt clau:</strong> el paquet ha viatjat del PC d'IT al router i del router al PC de Logística pel MATEIX cable físic entre switch i router. El truc és que les dues VLANs viatgen com trames etiquetades pel trunk i el router les processa de forma independent per cada subinterfície.</p>
+<p><strong>Exemple de subinterfícies al Router Cisco per a NetCorp</strong></p>
+<pre><code>interface GigabitEthernet0/0
+no ip address
+no shutdown
+interface GigabitEthernet0/0.10
+description VLAN10-Direccio
+encapsulation dot1Q 10
+ip address 192.168.10.1 255.255.255.248
+interface GigabitEthernet0/0.20
+description VLAN20-IT
+encapsulation dot1Q 20
+ip address 192.168.20.1 255.255.255.224
+interface GigabitEthernet0/0.30
+description VLAN30-Logistica
+encapsulation dot1Q 30
+ip address 192.168.30.1 255.255.255.192
+</code></pre>
+<h2 id="6-nat-i-pat-com-sortim-a-internet-amb-ips-privades">6. NAT i PAT: com sortim a Internet amb IPs privades<a class="headerlink" href="#6-nat-i-pat-com-sortim-a-internet-amb-ips-privades" title="Permanent link">&para;</a></h2>
+<h3 id="61-el-problema-que-va-originar-nat">6.1 El problema que va originar NAT<a class="headerlink" href="#61-el-problema-que-va-originar-nat" title="Permanent link">&para;</a></h3>
+<p>A finals dels anys 90 va quedar clar que les adreces IPv4 (32 bits = 4.294.967.296 adreces totals) s'esgotarien aviat. Amb l'explosió d'Internet i la proliferació de dispositius, no hi havia prou IPs públiques per a tothom. La solució provisional —que encara és la dominant avui dia— va ser el NAT.</p>
+<p>La idea és simple: les xarxes privades (empreses, cases) usen adreces privades (RFC 1918) internament, que no necessiten ser úniques a escala global. Un router amb NAT fa de traductor: quan un dispositiu intern vol comunicar-se amb Internet, el router substitueix la IP privada per la IP pública del router. Des d'Internet, sembla que totes les comunicacions provenen d'una sola IP.</p>
+<h3 id="62-tipus-de-nat">6.2 Tipus de NAT<a class="headerlink" href="#62-tipus-de-nat" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th><strong>Tipus</strong></th>
+<th><strong>Funcionament</strong></th>
+<th><strong>Cas d'ús típic</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NAT estàtic</td>
+<td>Mapeja de forma permanent una IP privada a una IP pública. Relació 1 a 1.</td>
+<td>Servidors interns que cal publicar a Internet (web, FTP, correu): sempre han de ser accessibles des de la mateixa IP pública.</td>
+</tr>
+<tr>
+<td>NAT dinàmic</td>
+<td>Pool d'IPs públiques. Les IPs privades prenen IPs públiques del pool mentre les necessiten. Quan acaben, les alliberen.</td>
+<td>Empreses que disposen de múltiples IPs públiques però no necessiten que cada dispositiu tingui sempre la mateixa.</td>
+</tr>
+<tr>
+<td>PAT (Port Address Translation) = NAT Overload</td>
+<td>Moltes IPs privades comparteixen UNA SOLA IP pública. Les connexions es distingeixen pel port TCP/UDP.</td>
+<td>La immensa majoria d'empreses, cases i xarxes mòbils. El cas pràctic de NetCorp.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63-com-funciona-pat-en-detall">6.3 Com funciona PAT en detall<a class="headerlink" href="#63-com-funciona-pat-en-detall" title="Permanent link">&para;</a></h3>
+<p>PAT és el mecanisme que permet que literalment milers de dispositius d'una empresa comparteixin una única IP pública. El secret és el camp de port TCP/UDP:</p>
+<ol>
+<li>
+<p>El PC d'IT (192.168.20.5) obre una connexió HTTP al servidor 93.184.216.34:80. El SO assigna un port efímer origen, ex: 54321.</p>
+</li>
+<li>
+<p>El paquet arriba al router: IP origen 192.168.20.5, port origen 54321.</p>
+</li>
+<li>
+<p>El router crea una entrada a la taula NAT: IP_privada:port_privat ↔ IP_pública:port_nou. Ex: 192.168.20.5:54321 ↔ 80.20.1.1:40001.</p>
+</li>
+<li>
+<p>El router reescriu el paquet: canvia l'IP origen per la pública (80.20.1.1) i el port origen per 40001. L'envia a Internet.</p>
+</li>
+<li>
+<p>El servidor 93.184.216.34 respon a 80.20.1.1:40001.</p>
+</li>
+<li>
+<p>El router rep la resposta, consulta la taula NAT i tradueix 80.20.1.1:40001 → 192.168.20.5:54321. Envia la resposta al PC.</p>
+</li>
+</ol>
+<p><strong>Per què PAT funciona amb milers de dispositius simultàniament?</strong></p>
+<pre><code>El port és un número de 16 bits → 65.535 valors possibles.
+Cada connexió oberta pel router usa un port diferent al costat públic.
+Un router pot gestionar fins a \~65.000 connexions simultànies amb una sola IP pública.
+A la pràctica, les connexions es tanquen ràpidament, alliberant ports per a noves connexions.
+Limitació de NAT: els dispositius externs NO poden iniciar connexions cap a dispositius interns
+sense una regla NAT estàtica explícita. Això és un problema per a servidors, però una
+avantatge de seguretat per als dispositius clients.
+</code></pre>
+<h2 id="7-diagnostic-de-xarxa-llegir-el-que-ens-diu-lequip">7. Diagnòstic de xarxa: llegir el que ens diu l'equip<a class="headerlink" href="#7-diagnostic-de-xarxa-llegir-el-que-ens-diu-lequip" title="Permanent link">&para;</a></h2>
+<h3 id="71-filosofia-del-diagnostic">7.1 Filosofia del diagnòstic<a class="headerlink" href="#71-filosofia-del-diagnostic" title="Permanent link">&para;</a></h3>
+<p>Quan una xarxa no funciona, la temptació és provar coses a l'atzar esperant que alguna solucioni el problema. El bon tècnic, en canvi, segueix una metodologia: comença per la capa 1 (el cable) i puja cap a les capes superiors fins a trobar on falla. La majoria de problemes es troben a les primeres capes.</p>
+<p><strong>El mètode en cinc passos:</strong> (1) El cable està ben connectat i les llums del port estan actives? (2) ping al gateway de la mateixa VLAN? (3) ping al gateway de l'altra VLAN? (4) ping a una IP d'Internet? (5) resolució DNS funciona? Si un pas falla, el problema és en aquella capa o les inferiors.</p>
+<h3 id="72-comandes-cisco-ios-imprescindibles">7.2 Comandes Cisco IOS imprescindibles<a class="headerlink" href="#72-comandes-cisco-ios-imprescindibles" title="Permanent link">&para;</a></h3>
+<p>Cisco IOS té un conjunt de comandes de diagnòstic que cal dominar. S'executen des del mode EXEC privilegiat (després del símbol #):</p>
+<table>
+<thead>
+<tr>
+<th><strong>Comanda</strong></th>
+<th><strong>Informació clau que mostra</strong></th>
+<th><strong>Quan usar-la</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>show ip interface brief</td>
+<td>Llista totes les interfícies: nom, IP, estat (up/down) i protocol (up/down). En un cop d'ull veus si totes les interfícies estan actives.</td>
+<td>Primer pas sempre. Si una interfície mostra 'administratively down' és perquè té un shutdown.</td>
+</tr>
+<tr>
+<td>show vlan brief</td>
+<td>Llista totes les VLANs i els ports assignats a cada una. Permet veure si un port ha estat assignat a la VLAN correcta.</td>
+<td>Quan un PC no obté IP o no es comunica amb la seva VLAN.</td>
+</tr>
+<tr>
+<td>show interfaces Gi0/1</td>
+<td>Detall complet d'una interfície: MAC, velocitat, errors de transmissió/recepció, estadístiques.</td>
+<td>Quan hi ha errors de cable o de compatibilitat de velocitat/duplex.</td>
+</tr>
+<tr>
+<td>show ip route</td>
+<td>Taula d'encaminament completa: xarxes directes, estàtiques, dinàmiques.</td>
+<td>Quan un paquet no arriba a la seva destinació (routing problem).</td>
+</tr>
+<tr>
+<td>show spanning-tree</td>
+<td>Estat de STP: qui és el Root Bridge, quins ports estan en Forwarding/Blocking.</td>
+<td>Quan hi ha problemes de convergència o sospita de bucles.</td>
+</tr>
+<tr>
+<td>show mac address-table</td>
+<td>Taula CAM: MAC → port. Permet verificar on estan connectats els dispositius.</td>
+<td>Quan una MAC no és accessible o hi ha sospita de Port Security.</td>
+</tr>
+<tr>
+<td>show port-security</td>
+<td>Resum de Port Security: MACs apreses, violations.</td>
+<td>Quan un port s'ha posat en err-disabled.</td>
+</tr>
+<tr>
+<td>show running-config</td>
+<td>Configuració activa en memòria RAM. La configuració real en ús ara mateix.</td>
+<td>Per verificar qualsevol configuració que s'hagi aplicat.</td>
+</tr>
+<tr>
+<td>ping [IP]</td>
+<td>Envia 5 paquets ICMP Echo i mostra quants han rebut resposta.</td>
+<td>Verificar connectivitat capa 3 entre dos punts.</td>
+</tr>
+<tr>
+<td>traceroute [IP]</td>
+<td>Mostra tots els routers (hops) en el camí fins al destí i la latència a cadascun.</td>
+<td>Localitzar on s'atura el trànsit en una ruta d'encaminament.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73-interpretar-els-estats-de-les-interficies">7.3 Interpretar els estats de les interfícies<a class="headerlink" href="#73-interpretar-els-estats-de-les-interficies" title="Permanent link">&para;</a></h3>
+<p>La comanda show ip interface brief mostra per a cada interfície dos estats: el primer és el estat físic (capa 1), el segon és el protocol (capa 2). Les combinacions possibles:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Estat físic</strong></th>
+<th><strong>Estat protocol</strong></th>
+<th><strong>Interpretació</strong></th>
+<th><strong>Acció</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>up</td>
+<td>up</td>
+<td>Tot correcte. La interfície funciona.</td>
+<td>Cap</td>
+</tr>
+<tr>
+<td>up</td>
+<td>down</td>
+<td>Problema de capa 2. El cable està connectat però no s'estableix l'encapsulació.</td>
+<td>Verificar tipus d'encapsulació, configuració del trunk, VLAN nativa.</td>
+</tr>
+<tr>
+<td>down</td>
+<td>down</td>
+<td>Problema de capa 1. El cable no és actiu, no hi ha senyal.</td>
+<td>Verificar cable, port del switch, NIC del dispositiu.</td>
+</tr>
+<tr>
+<td>administratively down</td>
+<td>down</td>
+<td>Interfície apagada manualment (shutdown).</td>
+<td>Aplicar 'no shutdown' a la interfície.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="74-wireshark-veient-els-paquets-reals">7.4 Wireshark: veient els paquets reals<a class="headerlink" href="#74-wireshark-veient-els-paquets-reals" title="Permanent link">&para;</a></h3>
+<p>Wireshark és l'analitzador de protocols de xarxa de referència. Captura les trames que passen per una interfície de xarxa i les mostra desglossades capa a capa en temps real. És imprescindible per entendre com funcionen realment els protocols i per diagnosticar problemes complexos.</p>
+<p>Filtres bàsics de Wireshark que usaràs al projecte:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Filtre Wireshark</strong></th>
+<th><strong>Mostra...</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>arp</td>
+<td>Totes les trames ARP. Per veure qui demana quines MACs i detectar ARP spoofing.</td>
+</tr>
+<tr>
+<td>bootp o dhcp</td>
+<td>Trànsit DHCP (Discover, Offer, Request, ACK).</td>
+</tr>
+<tr>
+<td>icmp</td>
+<td>Pings. Per veure si els ICMP arriben i hi ha resposta.</td>
+</tr>
+<tr>
+<td>ip.addr == 192.168.20.5</td>
+<td>Tot el trànsit d'una IP específica.</td>
+</tr>
+<tr>
+<td>tcp.port == 80</td>
+<td>Connexions HTTP.</td>
+</tr>
+<tr>
+<td>ip.src == 192.168.20.0/24</td>
+<td>Tot el trànsit originat a la VLAN 20.</td>
+</tr>
+<tr>
+<td>not arp and not icmp</td>
+<td>Filtra tot excepte ARP i ICMP (per veure el trànsit rellevant).</td>
+</tr>
+</tbody>
+</table></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js"></script>
+        <script src="../../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

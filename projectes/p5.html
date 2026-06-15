@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P5 — Blindem el perímetre: tallafocs, VPN i monitoratge</title>
+<style>
+  :root {
+    --bg: #0A0E1A; --panel: #111827; --border: #1E2D40;
+    --accent: #00C2FF; --green: #00E5A0; --orange: #FF8C42;
+    --yellow: #FFD166; --red: #FF4D6D; --purple: #A855F7;
+    --text: #E2E8F0; --muted: #64748B; --white: #FFFFFF;
+    --M06: #3B82F6; --M07: #22C55E; --M08: #F97316; --C037: #A855F7; --C038: #EF4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+  .header { background: linear-gradient(180deg,#0F1827 0%,var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 20px 24px 0; }
+  .header-inner { max-width: 960px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 16px; }
+  .header-title { font-size: 21px; font-weight: 900; color: var(--white); letter-spacing: -0.5px; margin: 8px 0 4px; }
+  .header-sub { color: var(--muted); font-size: 12px; }
+  .header-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .header-stats { display: flex; flex-direction: column; gap: 5px; text-align: right; }
+  .stat-row { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+  .stat-val { font-weight: 800; font-size: 20px; line-height: 1; }
+  .stat-lbl { color: var(--muted); font-size: 11px; }
+  .tabs { display: flex; gap: 2px; }
+  .tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px 6px 0 0; transition: all .15s; }
+  .tab-btn.active { background: rgba(0,194,255,.1); border-bottom-color: var(--accent); color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.05); }
+  .content { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .panel + .panel, .panel + .fase-wrap, .fase-wrap + .fase-wrap { margin-top: 10px; }
+  .panel-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .badge { display: inline-block; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; letter-spacing: .4px; white-space: nowrap; }
+  .badge-lg { padding: 4px 12px; font-size: 12px; }
+  .section-title { margin-bottom: 20px; }
+  .section-title h2 { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--white); letter-spacing: -.5px; }
+  .section-title p { margin: 4px 0 0 30px; color: var(--muted); font-size: 13px; }
+  .ra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+  .ra-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .ra-card-inner { display: flex; gap: 8px; align-items: flex-start; }
+  .ra-name { color: var(--white); font-weight: 700; font-size: 11px; margin-bottom: 4px; }
+  .ra-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .ra-tag { color: var(--muted); font-size: 10px; background: rgba(255,255,255,.05); border-radius: 3px; padding: 1px 5px; }
+  .crono { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .crono-item { flex: 1; min-width: 120px; border-radius: 10px; padding: 12px 10px; text-align: center; }
+  .crono-icon { font-size: 20px; margin-bottom: 4px; }
+  .crono-num { font-weight: 800; font-size: 12px; }
+  .crono-name { font-weight: 700; font-size: 11px; margin: 4px 0; line-height: 1.3; color: var(--white); }
+  .crono-weeks { color: var(--muted); font-size: 10px; }
+  .arch-item { border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .arch-label { color: var(--white); font-weight: 700; font-size: 12px; }
+  .arch-desc { color: var(--muted); font-size: 11px; }
+  .teoria-mod { margin-bottom: 16px; }
+  .teoria-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .teoria-icon { font-size: 26px; }
+  .teoria-title { font-weight: 800; font-size: 15px; }
+  .teoria-badges { display: flex; gap: 8px; margin-top: 4px; }
+  .teoria-bloc { border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px; }
+  .teoria-sess { font-weight: 700; font-size: 11px; margin-bottom: 6px; }
+  .teoria-item { display: flex; gap: 6px; margin-bottom: 3px; font-size: 12px; line-height: 1.6; color: var(--text); }
+  .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .infra-card { background: var(--panel); border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; }
+  .infra-icon { font-size: 20px; }
+  .infra-name { color: var(--white); font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+  .infra-desc { color: var(--muted); font-size: 11px; line-height: 1.5; margin-bottom: 5px; }
+  .infra-section-title { color: var(--white); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  .fase-wrap { margin-bottom: 10px; }
+  .fase-header { border-radius: 12px; padding: 14px 18px; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: background .15s; }
+  .fase-header.open { border-radius: 12px 12px 0 0; }
+  .fase-icon { font-size: 22px; }
+  .fase-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+  .fase-num { font-weight: 800; font-size: 13px; }
+  .fase-name { color: var(--white); font-weight: 700; font-size: 15px; }
+  .fase-preview { color: var(--muted); font-size: 12px; }
+  .fase-arrow { color: var(--muted); font-size: 18px; margin-left: auto; flex-shrink: 0; transition: transform .2s; }
+  .fase-arrow.open { transform: rotate(180deg); }
+  .fase-body { border-radius: 0 0 12px 12px; overflow: hidden; }
+  .fase-desc { padding: 12px 18px 8px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; line-height: 1.6; }
+  .tasca-header { padding: 12px 18px; cursor: pointer; border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; transition: background .15s; }
+  .tasca-id { font-weight: 800; font-size: 11px; border-radius: 4px; padding: 2px 7px; flex-shrink: 0; margin-top: 1px; }
+  .tasca-name { color: var(--white); font-weight: 700; font-size: 13px; }
+  .tasca-preview { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .tasca-arrow { color: var(--muted); font-size: 14px; flex-shrink: 0; margin-left: auto; transition: transform .2s; }
+  .tasca-arrow.open { transform: rotate(180deg); }
+  .tasca-detail { padding: 0 18px 16px; }
+  .tasca-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .tasca-passos { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .tasca-passos-title { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .tasca-pas { display: flex; gap: 10px; margin-bottom: 5px; color: var(--text); font-size: 12px; line-height: 1.5; }
+  .tasca-pas-num { font-weight: 800; flex-shrink: 0; font-size: 11px; }
+  .tasca-footer { display: grid; grid-template-columns: 1fr 1fr; }
+  .tasca-footer-block { padding: 12px 16px; }
+  .tasca-footer-block + .tasca-footer-block { border-left: 1px solid var(--border); }
+  .tasca-footer-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .tasca-entregable { font-size: 12px; font-weight: 600; line-height: 1.4; color: #00E5A0; }
+  .tasca-responsable { font-size: 12px; font-weight: 600; color: var(--yellow); }
+  .aval-card { margin-bottom: 10px; }
+  .aval-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .aval-area { color: var(--white); font-weight: 800; font-size: 14px; }
+  .aval-pes { border-radius: 20px; padding: 4px 14px; font-weight: 800; font-size: 18px; }
+  .aval-bar-bg { border-radius: 4px; height: 5px; margin-bottom: 10px; }
+  .aval-bar { border-radius: 4px; height: 100%; }
+  .aval-note { display: flex; gap: 8px; color: var(--text); font-size: 12px; margin-bottom: 5px; }
+  .p1-link { background: rgba(0,194,255,.08); border: 1px solid rgba(0,194,255,.2); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .p1-link-icon { font-size: 22px; }
+  .p1-link-text { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .p1-link-text strong { color: var(--accent); }
+  code { background: rgba(0,0,0,.2); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-badges">
+          <span class="badge badge-lg" style="background:rgba(26,58,74,.4);color:#5FD3E8;border:1px solid rgba(26,58,74,.6)">P5</span>
+          <span class="badge badge-lg" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">5–6 setmanes</span>
+          <span class="badge badge-lg" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">DMZ + Tallafocs</span>
+          <span class="badge badge-lg" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">VPN teletreball</span>
+          <span class="badge badge-lg" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">IDS/IPS + Re-test</span>
+        </div>
+        <div class="header-title">Blindem el perímetre: tallafocs, VPN i monitoratge</div>
+        <div class="header-sub">ASIX Ciberseguretat · 2n Curs · Grups de 3 · C037 + C038 + M06 + M08</div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-row"><span class="stat-lbl">RA coberts</span><span class="stat-val" style="color:#00C2FF">5</span></div>
+        <div class="stat-row"><span class="stat-lbl">Mòduls</span><span class="stat-val" style="color:#00E5A0">4</span></div>
+        <div class="stat-row"><span class="stat-lbl">Tasques</span><span class="stat-val" style="color:#FFD166">17</span></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('resum',this)">📋 Resum</button>
+      <button class="tab-btn" onclick="showTab('teoria',this)">📚 Teoria</button>
+      <button class="tab-btn" onclick="showTab('infra',this)">🛠️ Recursos</button>
+      <button class="tab-btn" onclick="showTab('fases',this)">🔧 Pràctica</button>
+      <button class="tab-btn" onclick="showTab('avaluacio',this)">📊 Avaluació</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══ RESUM ═══ -->
+<div id="view-resum" class="view active">
+
+  <div class="p1-link">
+    <span class="p1-link-icon">🔗</span>
+    <div class="p1-link-text">
+      <strong>Continua des del P4.</strong> L'informe de pentest del P4 ha identificat vulnerabilitats reals a la infraestructura de NetCorp (P1-P4): serveis exposats sense necessitat, manca de detecció d'intrusions, manca de centralització de logs, i cap solució de VPN per a teletreball. Aquest projecte és la <strong>remediació</strong>: es reorganitza la xarxa en zones de seguretat (DMZ), s'implementa un tallafocs centralitzat, una VPN per als empleats, detecció d'intrusions i monitoratge amb alertes. Al final, es repeteix l'auditoria per <strong>mesurar la millora real</strong>.
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> Objectiu del projecte</h2></div>
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel-grid2">
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Situació inicial (herència del P1-P4)</div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Tots els serveis operatius</div><div class="arch-desc">Xarxa, AD, DNS, web/FTP/correu, missatgeria, impressió, VLAN IoT</div></div></div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Informe de pentest del P4</div><div class="arch-desc">Llista priorizada de vulnerabilitats amb CVSS i pla de remediació</div></div></div>
+        <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Problemes que cal resoldre ara</div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Serveis publicats sense zona aïllada</div><div class="arch-desc">El web i FTP publicats al P3 estan a la mateixa VLAN que la resta de servidors. Si es comprometen, l'atacant ja és "dins".</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense tallafocs centralitzat</div><div class="arch-desc">Només hi ha ACLs al router. No hi ha inspecció amb estat (stateful) ni registre centralitzat de connexions.</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense VPN per a empleats</div><div class="arch-desc">L'únic túnel és el del P1 entre seus. Els comercials no tenen manera segura d'accedir des de fora.</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense detecció d'intrusions ni logs centralitzats</div><div class="arch-desc">Si algú ataca un servei, ningú se n'assabenta fins que és massa tard. Cada servidor té els seus propis logs dispersos.</div></div></div>
+      </div>
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Arquitectura al final del P5</div>
+        <div class="arch-item" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25)"><span style="font-size:18px">🏰</span><div><div class="arch-label">VLAN DMZ (70)</div><div class="arch-desc">Web i FTP migrats a una zona aïllada. Si es comprometen, no poden saltar a la LAN.</div></div></div>
+        <div class="arch-item" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25)"><span style="font-size:18px">🧱</span><div><div class="arch-label">Tallafocs amb nftables/iptables</div><div class="arch-desc">Inspecció amb estat (stateful), polítiques per zona (LAN/DMZ/WAN), logs de connexions.</div></div></div>
+        <div class="arch-item" style="background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25)"><span style="font-size:18px">🔐</span><div><div class="arch-label">VPN per a teletreball (OpenVPN/WireGuard)</div><div class="arch-desc">Empleats es connecten des de casa amb accés controlat a recursos interns.</div></div></div>
+        <div class="arch-item" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25)"><span style="font-size:18px">🚨</span><div><div class="arch-label">IDS/IPS (Suricata)</div><div class="arch-desc">Detecció (i bloqueig) d'intents d'atac en temps real, amb regles personalitzades.</div></div></div>
+        <div class="arch-item" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25)"><span style="font-size:18px">📊</span><div><div class="arch-label">Centralització de logs i alertes</div><div class="arch-desc">ELK/Graylog amb tots els logs dels servidors. Scripts d'alerta automàtica per correu/Telegram.</div></div></div>
+        <div class="arch-item" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25)"><span style="font-size:18px">📈</span><div><div class="arch-label">Re-test i informe comparatiu</div><div class="arch-desc">Repetició de l'auditoria del P4 per quantificar la millora real (P4 vs P5).</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> RA coberts</h2></div>
+  <div class="ra-grid">
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3);flex-shrink:0">M08</span><div><div class="ra-name">RA5 · VLANs de seguretat (DMZ, revisió)</div><div class="ra-tags"><span class="ra-tag">VLAN DMZ</span><span class="ra-tag">Segmentació avançada</span><span class="ra-tag">ACLs revisades</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);flex-shrink:0">M06</span><div><div class="ra-name">RA7 · Scripts de monitoratge i resposta automàtica</div><div class="ra-tags"><span class="ra-tag">Alertes Telegram/correu</span><span class="ra-tag">Resposta automàtica</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3);flex-shrink:0">C037</span><div><div class="ra-name">RA2 · Assegurament complet de serveis de xarxa</div><div class="ra-tags"><span class="ra-tag">Tallafocs centralitzat</span><span class="ra-tag">IDS/IPS</span><span class="ra-tag">Logs centralitzats</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3);flex-shrink:0">C037</span><div><div class="ra-name">RA4 · Seguretat perimètrica, VPN i anti-DoS</div><div class="ra-tags"><span class="ra-tag">OpenVPN/WireGuard</span><span class="ra-tag">DMZ</span><span class="ra-tag">Mitigació DoS</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3);flex-shrink:0">C038</span><div><div class="ra-name">RA2 · Hacking ètic: verificació post-bastionament</div><div class="ra-tags"><span class="ra-tag">Re-test</span><span class="ra-tag">Informe P4 vs P5</span></div></div></div></div>
+  </div>
+
+  <div class="section-title"><h2><span>📅</span> Cronograma — 5–6 setmanes</h2></div>
+  <div class="panel">
+    <div class="crono">
+      <div class="crono-item" style="background:rgba(0,194,255,.12);border:1px solid rgba(0,194,255,.3)"><div class="crono-icon">📐</div><div class="crono-num" style="color:#00C2FF">F1</div><div class="crono-name">Disseny i priorització</div><div class="crono-weeks">S1</div></div>
+      <div class="crono-item" style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3)"><div class="crono-icon">🏰</div><div class="crono-num" style="color:#F97316">F2</div><div class="crono-name">DMZ i segmentació</div><div class="crono-weeks">S2</div></div>
+      <div class="crono-item" style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3)"><div class="crono-icon">🧱</div><div class="crono-num" style="color:#A855F7">F3</div><div class="crono-name">Tallafocs i VPN</div><div class="crono-weeks">S2–S3</div></div>
+      <div class="crono-item" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3)"><div class="crono-icon">🚨</div><div class="crono-num" style="color:#EF4444">F4</div><div class="crono-name">IDS/IPS i logs centralitzats</div><div class="crono-weeks">S3–S4</div></div>
+      <div class="crono-item" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3)"><div class="crono-icon">📈</div><div class="crono-num" style="color:#22C55E">F5</div><div class="crono-name">Monitoratge, re-test i informe</div><div class="crono-weeks">S4–S6</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TEORIA ═══ -->
+<div id="view-teoria" class="view">
+  <div class="section-title"><h2><span>📚</span> Contingut teòric per mòdul</h2><p>Sessions impartides per cada professor just abans que la pràctica les necessiti.</p></div>
+
+  <!-- M08 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🏰</span>
+      <div>
+        <div class="teoria-title" style="color:#F97316">VLAN DMZ i segmentació avançada</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">M08</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">3 sessions · ~6h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S1 — Per què els serveis publicats no haurien d'estar a la LAN</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Revisió de l'arquitectura del P3: el servidor web i FTP, accessibles des d'Internet via NAT, conviuen a la mateixa VLAN que els servidors interns (DHCP, DNS, AD).</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Escenari de risc: si un atacant explota una vulnerabilitat del servidor web (com les que es busquen al P4), obté accés a una màquina que està a la MATEIXA xarxa que el controlador de domini. Un sol salt el separa de tota la informació de l'empresa.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Principi de "defensa en profunditat" (defense in depth): cap mesura de seguretat és infal·lible; cal capes addicionals perquè un fallo no impliqui el compromís total. La DMZ és una capa de contenció.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S2 — Disseny de la VLAN DMZ (70)</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Una DMZ és una VLAN/subxarxa diferenciada on s'ubiquen els serveis accessibles des de l'exterior (web, FTP, correu si calgués). Es connecta al mateix router/firewall però amb regles pròpies.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Política de tres zones: Internet (no fiable) → DMZ (semi-fiable, accessible des d'Internet però sense accés a la LAN) → LAN (fiable, mai accessible directament des d'Internet).</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Regles de tràfic típiques en una DMZ: Internet → DMZ permès (només els ports dels serveis publicats); DMZ → LAN denegat (excepte excepcions molt concretes i justificades, ex: consulta a una BD interna pel port exacte); LAN → DMZ permès (per a administració/manteniment).</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Migració dels serveis del P3: el servidor web i FTP es traslladaran a la VLAN 70 (DMZ). El correu (Postfix/Dovecot) i Samba es queden a la LAN (accés només intern, no calen a la DMZ).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S3 — Revisió global de l'arquitectura de xarxa</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Amb 4 projectes acumulats, és el moment de fer una auditoria d'arquitectura: revisar totes les VLANs (10,20,30,40,50,60-IoT,70-DMZ,99-Gestió), totes les ACLs i si segueixen tenint sentit.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Documentar la matriu d'accessos completa i actualitzada: quina VLAN pot arribar a quina, i pel motiu de negoci concret. Qualsevol regla que "ja no recordem per què hi és" és candidata a eliminar (principi de mínim privilegi).</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>VLAN de Gestió (99): revisió de qui hi té accés. Els equips de xarxa (switch, router, firewall) només haurien de ser administrables des d'aquesta VLAN, mai des de la LAN general ni la DMZ.</span></div>
+    </div>
+  </div>
+
+  <!-- C037 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🧱</span>
+      <div>
+        <div class="teoria-title" style="color:#A855F7">Tallafocs, VPN, IDS/IPS i centralització de logs</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">C037</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">9 sessions · ~18h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S1–S2 — Tallafocs: iptables i nftables</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Diferència entre les ACLs del router (Cisco, sense estat - stateless) i un tallafocs amb estat (stateful): un tallafocs stateful recorda les connexions establertes i permet automàticament el trànsit de retorn, sense necessitat de regles explícites en ambdues direccions.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>iptables: l'eina clàssica de Linux per a tallafocs, basada en taules (filter, nat, mangle) i cadenes (INPUT, OUTPUT, FORWARD). Cada paquet recorre les cadenes i s'avalua contra les regles en ordre.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>nftables: successor modern d'iptables (substitueix iptables, ip6tables, arptables i ebtables en una sola eina). Sintaxi més clara, millor rendiment. Conceptes: taules, cadenes, regles - similars a iptables però amb sintaxi pròpia.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Estats de connexió (conntrack): NEW (primer paquet d'una connexió), ESTABLISHED (connexió ja establerta), RELATED (connexió relacionada amb una altra, ex: FTP dades). Una regla típica: permetre NEW només en certs ports, i ESTABLISHED/RELATED sempre.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Disseny de política per zones a NetCorp: cadenes/regles separades per a trànsit LAN↔DMZ, DMZ↔Internet, LAN↔Internet, VPN↔LAN. Política per defecte: DROP (denegar tot el que no estigui explícitament permès).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S3–S4 — VPN per a teletreball: OpenVPN i WireGuard</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Diferència respecte al túnel del P1: el túnel WireGuard del P1 connecta dues SEUS (xarxa-a-xarxa, site-to-site). La VPN d'aquest projecte connecta un USUARI individual des de qualsevol lloc (client-a-xarxa, road warrior / remote access VPN).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>OpenVPN: VPN basada en SSL/TLS, molt estesa, suporta autenticació amb certificats (PKI) i/o usuari+contrasenya (integrable amb AD del P2 via RADIUS/LDAP). Funciona sobre TCP o UDP, fàcil de fer passar per tallafocs restrictius (port 443).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>WireGuard per a accés remot: més senzill i ràpid que OpenVPN, però la gestió d'usuaris és més manual (cada client necessita un parell de claus configurat al servidor). Eines com wg-easy simplifiquen la gestió per a múltiples usuaris.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Split tunneling vs full tunneling: amb full tunneling, TOT el trànsit de l'usuari remot passa per la VPN (més segur, però tot el trànsit d'Internet de l'usuari "surt" per NetCorp). Amb split tunneling, només el trànsit cap a xarxes de NetCorp passa per la VPN (més eficient, menys sobrecàrrega).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Integració amb el firewall: els clients VPN han d'aparèixer com una "zona" més al tallafocs (similar a una VLAN), amb les seves pròpies regles d'accés (per exemple: accés a la intranet i correu, però no a la DMZ ni a la gestió de xarxa).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S5 — Proxy i proxy invers</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Proxy directe (forward proxy, ex: Squid): es situa entre els clients interns i Internet. Permet filtrar contingut (bloquejar webs), cachejar contingut i registrar l'activitat de navegació dels usuaris.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Proxy invers (reverse proxy, ex: Nginx): es situa davant d'un o més servidors interns i rep les peticions en nom seu. Avantatges: amaga la topologia interna real, pot centralitzar el TLS (terminar HTTPS al proxy), distribuir càrrega entre múltiples backends.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Aplicació a NetCorp: el firewall/proxy invers a la DMZ rep totes les peticions HTTP/S i les reenvia al servidor web real (que pot quedar amb una IP encara més restringida). Capa addicional abans que la petició arribi al servidor.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S6 — Atacs DoS/DDoS i tècniques de mitigació</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>DoS (Denial of Service) vs DDoS (Distributed DoS): DoS prové d'una sola font; DDoS de moltes fonts simultànies (sovint una botnet), molt més difícil de bloquejar amb una sola regla.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Tipus d'atacs: volumètrics (saturar l'ample de banda, ex: amplificació DNS vista al P2), de protocol (SYN flood: moltes connexions TCP a mig fer, esgoten recursos del servidor), d'aplicació (peticions HTTP costoses repetides massivament).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Mitigacions a nivell de tallafocs: limitació de taxa (rate limiting) per IP origen amb iptables/nftables (mòdul limit/hashlimit), SYN cookies al kernel (mitiga SYN flood sense consumir memòria per connexió), connection tracking límits per IP.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Mitigació a nivell d'aplicació: fail2ban (vist al P3) ja és una forma de mitigació de DoS dirigit a serveis específics (SSH, web). Per a atacs volumètrics greus, sovint cal serveis externs especialitzats (fora de l'abast d'aquest projecte, però es documenta com a limitació).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S7–S8 — IDS/IPS: Suricata</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>IDS (Intrusion Detection System) vs IPS (Intrusion Prevention System): un IDS analitza el trànsit i GENERA ALERTES quan detecta patrons sospitosos (mode passiu, normalment connectat a un port mirror/SPAN). Un IPS, a més, pot BLOQUEJAR el trànsit en temps real (mode actiu, en línia amb el trànsit).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Suricata: motor IDS/IPS de codi lliure d'alt rendiment. Usa regles (similars a les de Snort, l'IDS clàssic) que descriuen patrons de trànsit maliciós: signatures de malware, exploits coneguts, escaneigs de port, etc.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Regles de Suricata: format <code>alert tcp any any -> $HOME_NET 22 (msg:"Possible SSH bruteforce"; ...)</code>. El conjunt ET Open (Emerging Threats) proporciona milers de regles actualitzades per a amenaces conegudes.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Ubicació a la xarxa: idealment, Suricata analitza el trànsit que travessa el firewall (tant cap a la DMZ com des de la VPN). En mode IPS (inline), pot bloquejar directament; en mode IDS (passiu, amb una còpia del trànsit), només alerta i cal una acció externa (script de resposta, vist a M06).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Regles personalitzades per a NetCorp: a partir de les troballes del P4 (ex: si Hydra va aconseguir alguna cosa, o si hi havia un servei amb credencials per defecte), es poden crear regles específiques que detectin intents similars en el futur.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S9 — Centralització de logs: ELK Stack / Graylog</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>El problema dels logs dispersos: cada servidor (web, FTP, correu, AD, firewall, Suricata...) té els seus propis fitxers de log en formats diferents. Detectar un atac coordinat (que toca diversos serveis) revisant cada log per separat és inviable.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>ELK Stack: Elasticsearch (emmagatzematge i cerca), Logstash (recollida i processament de logs), Kibana (visualització). Alternativa més lleugera: Graylog (basat també en Elasticsearch, interfície més senzilla per a equips petits).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Syslog com a transport universal: la majoria de serveis Linux (i el propi Suricata, i fins i tot alguns equips Cisco) poden enviar els seus logs via syslog (UDP/TCP 514) a un servidor central. Els servidors es configuren com a "clients syslog" que apunten al servidor de logs.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Casos d'ús per a NetCorp: cercar tots els intents d'autenticació fallits de totes les fonts (SSH, FTP, correu, AD, VPN) en un sol lloc; correlacionar un atac que primer escaneja (detectat per Suricata) i després intenta autenticar-se (detectat per fail2ban en diversos serveis).</span></div>
+    </div>
+  </div>
+
+  <!-- M06 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">📊</span>
+      <div>
+        <div class="teoria-title" style="color:#3B82F6">Monitoratge avançat i resposta automàtica</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">M06</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">4 sessions · ~8h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S1 — De la monitorització bàsica a les alertes intel·ligents</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Repàs del monitoratge SNMP/Zabbix del P1: detectava si un servei estava actiu/inactiu. Ara cal anar més enllà: detectar PATRONS anòmals (pics de trànsit, múltiples fallades d'autenticació, ús de CPU anòmal en hores de poca activitat).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Llindars (thresholds) i finestres temporals: una alerta no hauria de disparar-se per un sol esdeveniment puntual, sinó per un patró sostingut (ex: "més de 10 intents fallits de login en 5 minuts").</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Fatiga d'alertes (alert fatigue): massa alertes (o falsos positius) fan que l'equip deixi d'atendre-les. Cal ajustar els llindars perquè les alertes siguin accionables i poc freqüents en condicions normals.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S2 — Alertes automàtiques: correu i Telegram</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Enviament d'alertes per correu des d'un script: ús de msmtp/ssmtp (vist al P1) o integració directa amb el Postfix del P3 per enviar correus des dels scripts de monitoratge.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Bots de Telegram per a alertes: creació d'un bot via @BotFather, obtenció d'un token d'API, i enviament de missatges via crida HTTP simple (curl a l'API de Telegram). Avantatge sobre el correu: notificació immediata al mòbil.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Disseny del missatge d'alerta: ha de contenir què ha passat, quan, on (host/servei concret) i severitat. Un missatge "Alerta!" sense context és inútil per a qui rep la notificació a les 3 de la matinada.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S3–S4 — Resposta automàtica a anomalies</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Resposta automàtica vs notificació: una alerta NOMÉS notifica (un humà decideix què fer). Una resposta automàtica EXECUTA una acció (bloquejar una IP, aturar un servei, fer una còpia de seguretat d'emergència) sense intervenció humana.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>fail2ban com a exemple de resposta automàtica (ja vist als P3-P4): detecta un patró (X intents fallits) i executa una acció (afegir regla de firewall que bloqueja la IP). El mateix principi es pot aplicar amb scripts propis a altres situacions.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Disseny d'un script de resposta: ha de ser idempotent (executar-lo diverses vegades no causa problemes), ha de registrar QUÈ ha fet i QUAN (per poder revertir-ho i per a l'auditoria), i ha de tenir un mecanisme de "kill switch" (desactivació manual) per si la resposta automàtica causa més problemes que el propi incident (fals positiu que bloqueja un usuari legítim, per exemple).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Cas d'ús per a NetCorp: un script que monitoritza els logs de Suricata; si detecta un escaneig de ports des d'una IP externa (no de la VPN ni de la xarxa pròpia), afegeix automàticament aquella IP a una llista negra del tallafocs durant 1 hora, i envia una alerta per Telegram amb la IP i el motiu.</span></div>
+    </div>
+  </div>
+
+  <!-- C038 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">📈</span>
+      <div>
+        <div class="teoria-title" style="color:#EF4444">Re-test i verificació de la millora de seguretat</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">C038</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">2 sessions · ~4h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S1 — Metodologia del re-test</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>En auditoria professional, el re-test (o retest) és la repetició de les proves d'una auditoria anterior DESPRÉS que el client hagi aplicat les correccions, per verificar que les vulnerabilitats s'han resolt realment (i no han introduït de noves).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Per a cada troballa de l'informe del P4, el re-test ha de respondre: s'ha corregit? (Sí/No/Parcialment). Si "Sí", quina evidència ho demostra (la mateixa prova que abans triomfava, ara ha de fallar).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Noves troballes: el re-test també ha de comprovar si els NOUS components (DMZ, VPN, IDS/IPS) introdueixen vulnerabilitats pròpies (ex: la VPN accepta contrasenyes febles? El tallafocs té alguna regla massa permissiva per error?).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S2 — Documentar la millora de la postura de seguretat</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>"Postura de seguretat" (security posture): l'estat general de seguretat d'una organització en un moment donat. Es pot resumir amb mètriques: nombre de vulnerabilitats per severitat, superfície d'atac exposada (ports/serveis accessibles des d'Internet), temps mitjà de detecció d'un incident.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Informe comparatiu P4 vs P5: taula amb cada vulnerabilitat del P4, el seu estat al re-test, i les noves capacitats afegides (DMZ, IDS/IPS, VPN, logs centralitzats) encara que no corresponguin a una vulnerabilitat concreta del P4.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Comunicació a Direcció: un resum executiu que mostri visualment la millora (per exemple: "Superfície d'atac reduïda de X a Y serveis exposats; 8 de 10 vulnerabilitats crítiques resoltes; temps de detecció d'un escaneig: abans indefinit, ara <1 minut amb Suricata+alertes").</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RECURSOS ═══ -->
+<div id="view-infra" class="view">
+  <div class="section-title"><h2><span>🛠️</span> Recursos i infraestructura</h2><p>Es reorganitza la infraestructura existent. Els recursos nous són sobretot VMs de seguretat.</p></div>
+
+  <div class="infra-section-title">🔌 Infraestructura existent a reorganitzar (herència P1-P4)</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(255,209,102,.3)"><span class="infra-icon">🔀</span><div><div class="infra-name">Switch Cisco</div><div class="infra-desc">Nova VLAN 70 (DMZ). Reassignació de ports del servidor web i FTP a la nova VLAN.</div><span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Reconfiguració</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,209,102,.3)"><span class="infra-icon">📡</span><div><div class="infra-name">Router Cisco</div><div class="infra-desc">Nova subinterfície VLAN 70. Les regles NAT del P3 (cap a la DMZ) i ACLs revisades.</div><span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Reconfiguració</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,209,102,.3)"><span class="infra-icon">🌐</span><div><div class="infra-name">Servidor Web i FTP (del P3)</div><div class="infra-desc">Migració de VLAN: canvi d'IP a l'espai de la VLAN 70 i actualització de registres DNS i regles NAT.</div><span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Migració de xarxa</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📋</span><div><div class="infra-name">Informe de pentest del P4</div><div class="infra-desc">Document de referència per a tota la fase de planificació (F1) i el re-test final (F5).</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Imprescindible tenir-lo a mà</span></div></div>
+  </div>
+
+  <div class="infra-section-title">🖥️ Proxmox — VMs noves per al P5</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🧱</span><div><div class="infra-name">VM Tallafocs/Firewall (Ubuntu Server 24)</div><div class="infra-desc">1 GB RAM, 15 GB disc, 3 interfícies de xarxa (LAN, DMZ, i interfície per a la VPN). nftables + OpenVPN/WireGuard server.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🚨</span><div><div class="infra-name">VM IDS/IPS (Ubuntu Server 24)</div><div class="infra-desc">2 GB RAM, 20 GB disc. Suricata. Pot ser la mateixa VM del tallafocs si els recursos del Proxmox compartit són limitats (documentar la decisió).</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📊</span><div><div class="infra-name">VM Centralització de logs (Ubuntu Server 24)</div><div class="infra-desc">2 GB RAM, 30 GB disc (els logs creixen). Graylog (recomanat per simplicitat) o ELK Stack.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+  </div>
+
+  <div class="infra-section-title" style="color:var(--orange)">📋 Recursos addicionals i decisions a prendre</div>
+
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px;margin-bottom:12px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">🔢</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Interfícies de xarxa addicionals a Proxmox</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">La VM del tallafocs necessita estar connectada a múltiples xarxes (LAN, DMZ, i possiblement una interfície "externa" per a la VPN). Cal afegir vNICs addicionals a la VM i connectar-les als bridges/VLANs corresponents a Proxmox.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Configuració a Proxmox, sense cost</span>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Passos</div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">1.</span><span>A la configuració de la VM del tallafocs, afegir una segona (i tercera, si cal) interfície de xarxa</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">2.</span><span>Connectar cada interfície al bridge/VLAN corresponent (vmbr[N] per LAN, nova VLAN 70 per DMZ)</span></div>
+      <div style="display:flex;gap:10px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">3.</span><span>Dins de la VM, configurar cada interfície amb la IP corresponent a cada zona (netplan/ifupdown)</span></div>
+    </div>
+  </div>
+
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px;margin-bottom:12px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">🤖</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Bot de Telegram per a alertes</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Gratuït i ràpid de configurar. Cada membre del grup pot crear el seu propi bot per a les proves, o usar-ne un compartit del grup.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït</span>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Passos</div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">1.</span><span>Obrir Telegram, buscar <strong>@BotFather</strong> i enviar <code>/newbot</code></span></div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">2.</span><span>Seguir les instruccions per triar nom i usuari del bot. Es rep un <strong>token d'API</strong></span></div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">3.</span><span>Obtenir el <code>chat_id</code> propi enviant un missatge al bot i consultant <code>api.telegram.org/bot[TOKEN]/getUpdates</code></span></div>
+      <div style="display:flex;gap:10px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">4.</span><span>Enviar missatges des dels scripts amb una simple crida curl a l'API</span></div>
+    </div>
+  </div>
+
+  <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:18px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">⚠️</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Recordatori d'abast — el Re-test (F5) segueix les mateixes normes que el P4</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">El re-test és, de nou, una activitat de hacking ètic. S'aplica el mateix document de Rules of Engagement del P4 (o un nou, si el professor ho prefereix), i les mateixes restriccions: només la infraestructura pròpia del grup.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">Abast: només infraestructura pròpia del grup</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRÀCTICA ═══ -->
+<div id="view-fases" class="view">
+  <div class="section-title"><h2><span>🔧</span> Pràctica detallada per fases</h2><p>Clica una fase i després cada tasca per veure tots els passos.</p></div>
+  <div id="fases-container"></div>
+</div>
+
+<!-- ═══ AVALUACIÓ ═══ -->
+<div id="view-avaluacio" class="view">
+  <div class="section-title"><h2><span>📊</span> Rúbrica d'avaluació</h2><p>Grups de 3 alumnes. Cadascú ha de poder defensar qualsevol part del projecte.</p></div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">DMZ i segmentació</div><div class="aval-pes" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(249,115,22,.15)"><div class="aval-bar" style="background:#F97316;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">VLAN 70 (DMZ) creada, servidor web i FTP migrats correctament (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">DMZ no pot iniciar connexions cap a la LAN; LAN pot accedir a la DMZ per administració (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Matriu d'accessos completa (totes les VLANs) revisada i documentada (4%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Tallafocs i VPN</div><div class="aval-pes" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">30%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(168,85,247,.15)"><div class="aval-bar" style="background:#A855F7;width:30%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Tallafocs nftables/iptables amb política per defecte DROP i regles documentades per zona (10%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">VPN (OpenVPN o WireGuard) funcional: client extern es connecta i accedeix a recursos interns autoritzats (12%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Mitigació bàsica de DoS (rate limiting) configurada i provada (8%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">IDS/IPS i logs centralitzats</div><div class="aval-pes" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(239,68,68,.15)"><div class="aval-bar" style="background:#EF4444;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Suricata actiu, detectant un escaneig de port de prova (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Almenys 1 regla personalitzada basada en una troballa del P4 (6%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Graylog/ELK rebent logs d'almenys 4 fonts diferents (web, firewall, SSH, Suricata) (6%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Monitoratge i resposta automàtica</div><div class="aval-pes" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">15%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(59,130,246,.15)"><div class="aval-bar" style="background:#3B82F6;width:15%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Alertes per correu o Telegram funcionant amb una prova en directe (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Script de resposta automàtica (bloqueig d'IP) demostrat, amb kill switch documentat (7%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Re-test i informe comparatiu</div><div class="aval-pes" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">15%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(34,197,94,.15)"><div class="aval-bar" style="background:#22C55E;width:15%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Re-test de totes les troballes del P4 amb evidència (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Informe comparatiu P4 vs P5 amb resum executiu per a Direcció (7%)</li></ul>
+  </div>
+
+  <div class="panel" style="border-color:rgba(255,209,102,.3);background:rgba(255,209,102,.05);margin-top:10px">
+    <div style="color:#FFD166;font-weight:800;font-size:13px;margin-bottom:10px">📝 Condicions d'avaluació</div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>El dia de la demo es realitzarà una connexió VPN en directe des d'un dispositiu fora de la xarxa de l'aula i es verificarà l'accés als recursos autoritzats (i el bloqueig dels no autoritzats).</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>Es realitzarà un escaneig de port de prova des de la VM Kali i s'haurà de mostrar l'alerta corresponent a Suricata i a Graylog/ELK en temps real.</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>El re-test del P4 ha de seguir el mateix document de Rules of Engagement (abast limitat a la infraestructura pròpia).</span></div>
+    <div class="aval-note"><span style="color:#00E5A0">+</span><span><strong style="color:#00E5A0">Bonus +5%:</strong> si es demostra que una alerta de Suricata dispara automàticament l'script de resposta (bloqueig d'IP) sense intervenció manual, end-to-end.</span></div>
+    <div class="aval-note"><span style="color:#FF4D6D">-</span><span><strong style="color:#FF4D6D">Malus -10%:</strong> si la migració a la DMZ trenca algun servei que funcionava al P3 (per exemple, el correu deixa de funcionar perquè s'han canviat IPs sense actualitzar la configuració).</span></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+const FASES = [
+  { id:"F1", nom:"Disseny i priorització a partir del P4", setmanes:"S1", color:"#00C2FF", icon:"📐",
+    desc:"Es revisa l'informe de pentest del P4 i es prioritzen les accions de remediació. Es dissenya l'arquitectura completa amb DMZ, tallafocs, VPN i monitoratge, definint la nova matriu d'accessos global.",
+    tasques:[
+      { id:"T1.1", nom:"Anàlisi del pla de remediació del P4", responsable:"Tot el grup",
+        entregable:"Taula priorizada: cada vulnerabilitat del P4 → mesura del P5 que la corregeix",
+        passos:["Recuperar l'informe de pentest del P4 i revisar la taula de troballes amb CVSS","Per a cada troballa, identificar quina mesura d'aquest projecte la corregirà (DMZ, tallafocs, IDS/IPS, VPN, monitoratge)","Si alguna troballa NO es pot corregir en aquest projecte, documentar-ho i justificar-ho (per exemple, queda per a un projecte futur)","Ordenar les mesures per prioritat segons el CVSS de les vulnerabilitats que aborden"] },
+      { id:"T1.2", nom:"Disseny de l'arquitectura completa P5", responsable:"Tot el grup",
+        entregable:"Diagrama d'arquitectura final (P1-P5) + taula d'adreçament actualitzada amb VLAN 70 i xarxa VPN",
+        passos:["Afegir la VLAN 70 (DMZ) i la xarxa de clients VPN al pla d'adreçament (VLSM)","Dibuixar el diagrama complet: Internet → Router (NAT) → Tallafocs (3 interfícies: LAN, DMZ, VPN) → LAN/DMZ","Decidir la ubicació exacta del tallafocs respecte al router: el router Cisco fa NAT cap a una IP del tallafocs, i el tallafocs gestiona la resta (DMZ, VPN, IDS/IPS)","Definir la matriu d'accessos global actualitzada (totes les VLANs + DMZ + VPN), revisant les regles existents dels P1-P4"] },
+      { id:"T1.3", nom:"Planificació del calendari de re-test", responsable:"Tot el grup",
+        entregable:"Calendari amb les dates previstes per a cada fase i la data del re-test (F5)",
+        passos:["Estimar quants dies caldrà per a cada fase (F2-F5) segons la complexitat","Reservar temps suficient a F5 per al re-test: ha de ser una repetició acurada, no apressada","El professor revisa i aprova la planificació abans de continuar"] },
+    ]
+  },
+  { id:"F2", nom:"DMZ i segmentació avançada", setmanes:"S2", color:"#F97316", icon:"🏰",
+    desc:"Es crea la VLAN DMZ i es migren els serveis web i FTP del P3. Es revisa i actualitza la matriu d'accessos global de tota la infraestructura.",
+    tasques:[
+      { id:"T2.1", nom:"Creació de la VLAN 70 (DMZ) al switch i router", responsable:"Responsable de xarxa",
+        entregable:"VLAN 70 creada, subinterfície al router amb gateway configurat",
+        passos:["Crear la VLAN 70 al switch (vlan 70, name DMZ) i assignar els ports on es connectaran els servidors web/FTP","Crear la subinterfície corresponent al router amb l'IP gateway segons el disseny de F1","Configurar el trunk cap al servidor del tallafocs (o cap als servidors directament, segons l'arquitectura triada)","Verificar connectivitat bàsica abans de migrar els serveis"] },
+      { id:"T2.2", nom:"Migració del servidor web i FTP a la DMZ", responsable:"Responsable de servidors",
+        entregable:"Servidors web i FTP operatius amb les noves IPs de la VLAN 70, serveis verificats",
+        passos:["Canviar la configuració de xarxa de les VMs del servidor web i FTP (del P3) a la nova subxarxa de la VLAN 70","Actualitzar els registres DNS (intranet, www, ftp) a les noves IPs","Actualitzar les regles NAT del router (P3) perquè apuntin a les noves IPs de la DMZ","Verificar que tots els serveis (HTTP/S, FTP) segueixen funcionant des de dins i des de fora (NAT)"] },
+      { id:"T2.3", nom:"Revisió i documentació de la matriu d'accessos global", responsable:"Responsable de xarxa",
+        entregable:"Document amb la matriu d'accessos completa (totes les VLANs + DMZ) i les ACLs/regles que la implementen",
+        passos:["Llistar totes les VLANs existents (10,20,30,40,50,60-IoT,70-DMZ,99-Gestió) i les seves regles d'accés actuals","Per a cada parella de VLANs, confirmar si la regla actual encara té sentit de negoci; eliminar les que no","Afegir explícitament les noves regles per a la DMZ: Internet→DMZ (només els ports publicats), DMZ→LAN (denegat), LAN→DMZ (permès per a gestió)","Aplicar els canvis necessaris a ACLs del router i documentar el resultat final"] },
+    ]
+  },
+  { id:"F3", nom:"Tallafocs centralitzat i VPN per a teletreball", setmanes:"S2–S3", color:"#A855F7", icon:"🧱",
+    desc:"Es desplega una VM tallafocs amb nftables/iptables que implementa la política de zones definida a F1, i s'hi instal·la un servidor VPN (OpenVPN o WireGuard) per a l'accés remot d'empleats.",
+    tasques:[
+      { id:"T3.1", nom:"Desplegament de la VM tallafocs amb múltiples interfícies", responsable:"Responsable de xarxa",
+        entregable:"VM tallafocs operativa amb 3 interfícies (LAN, DMZ, VPN) i IP forwarding activat",
+        passos:["Crear la VM Ubuntu Server 24 (1 GB RAM, 15 GB disc) amb 3 interfícies de xarxa connectades als bridges/VLANs corresponents","Configurar cada interfície amb la IP corresponent segons el pla d'adreçament de F1 (netplan)","Activar IP forwarding al kernel: net.ipv4.ip_forward=1 a /etc/sysctl.conf","Instal·lar nftables (o iptables-persistent si es prefereix iptables)"] },
+      { id:"T3.2", nom:"Configuració de la política de tallafocs per zones", responsable:"Responsable de seguretat",
+        entregable:"Fitxer de configuració nftables/iptables aplicat i persistent, amb política DROP per defecte",
+        passos:["Definir les cadenes/taules per a cada direcció de trànsit: LAN→Internet, Internet→DMZ, DMZ→Internet, LAN→DMZ, DMZ→LAN (denegat), VPN→LAN","Establir política per defecte DROP a totes les cadenes FORWARD/INPUT, amb regles explícites de permís per al trànsit necessari","Configurar regles d'estat (ESTABLISHED,RELATED ACCEPT) per a totes les cadenes","Verificar amb proves de connectivitat per cada zona que la política coincideix amb la matriu d'accessos de F2","Fer persistent la configuració (que sobrevisca a un reinici)"] },
+      { id:"T3.3", nom:"Desplegament del servidor VPN (OpenVPN o WireGuard)", responsable:"Responsable de xarxa",
+        entregable:"Servidor VPN operatiu, fitxer de configuració de client generat per a almenys 2 usuaris",
+        passos:["Instal·lar OpenVPN (apt install openvpn easy-rsa) o WireGuard (apt install wireguard) a la VM tallafocs","Si OpenVPN: generar la PKI (CA, certificat de servidor, certificats de client) amb easy-rsa","Si WireGuard: generar el parell de claus del servidor i configurar wg0.conf amb la xarxa de clients VPN (definida al pla d'adreçament de F1)","Generar la configuració de client per a 2 usuaris de prova (es poden associar a usuaris del P2, ex: un comercial de Vendes)","Configurar el firewall (T3.2) per permetre el trànsit VPN entrant (port UDP/TCP corresponent) i definir la zona VPN dins de la política"] },
+      { id:"T3.4", nom:"Prova de connexió VPN externa i mitigació bàsica de DoS", responsable:"Tot el grup",
+        entregable:"Captura/demostració de connexió VPN des de fora de la xarxa de l'aula + regles de rate limiting aplicades",
+        passos:["Des d'un dispositiu fora de la xarxa de l'aula (mòbil amb dades, compartint connexió a un portàtil, o una altra xarxa), configurar el client VPN i connectar-se","Un cop connectat, verificar l'accés als recursos autoritzats segons la política (ex: intranet i correu, però NO la VLAN de Gestió ni la DMZ d'administració)","Afegir regles de rate limiting al tallafocs per a serveis exposats (ex: limitar connexions noves per IP per segon al servidor web de la DMZ amb el mòdul hashlimit)","Provar l'efecte: generar moltes connexions ràpides de prova i verificar que el tallafocs comença a descartar-les a partir del llindar configurat"] },
+    ]
+  },
+  { id:"F4", nom:"IDS/IPS i centralització de logs", setmanes:"S3–S4", color:"#EF4444", icon:"🚨",
+    desc:"Es desplega Suricata per detectar (i opcionalment bloquejar) trànsit maliciós, incloent regles personalitzades basades en les troballes del P4. Es centralitzen els logs de tots els serveis en Graylog o ELK.",
+    tasques:[
+      { id:"T4.1", nom:"Desplegament de Suricata en mode IDS", responsable:"Responsable de seguretat",
+        entregable:"Suricata actiu, escoltant el trànsit que travessa el tallafocs, amb el ruleset ET Open activat",
+        passos:["Instal·lar Suricata (apt install suricata) a la VM tallafocs (o una VM dedicada, segons recursos)","Configurar la interfície a monitoritzar a /etc/suricata/suricata.yaml (la interfície que rep el trànsit entre zones)","Descarregar i activar el ruleset Emerging Threats Open (suricata-update)","Iniciar Suricata en mode IDS (alert-only) i verificar que genera entrades a eve.json quan hi ha trànsit"] },
+      { id:"T4.2", nom:"Prova de detecció amb un escaneig de port", responsable:"Responsable de seguretat",
+        entregable:"Captura de l'alerta de Suricata generada per un escaneig Nmap des de la VM Kali",
+        passos:["Des de la VM Kali (reaprofitada del P1/P4), executar un escaneig de ports (nmap -sS) contra un host de la DMZ","Verificar que Suricata genera una alerta corresponent (port scan detected) a eve.json","Documentar el temps transcorregut entre l'escaneig i l'alerta (ha de ser pràcticament immediat)"] },
+      { id:"T4.3", nom:"Creació de regles personalitzades a partir del P4", responsable:"Responsable de seguretat",
+        entregable:"Almenys 1 regla Suricata personalitzada + prova que es dispara",
+        passos:["Revisar les troballes del P4 (T1.1): identificar un patró d'atac concret que es vulgui detectar específicament (ex: intents d'accés a la interfície d'administració d'un servei, o patrons de l'atac Hydra del P4)","Escriure una regla Suricata personalitzada en local.rules amb la sintaxi adequada (alert [protocol] [origen] [port_origen] -> [destí] [port_destí] (msg:\"...\"; [condicions]; sid:[ID propi]; rev:1;))","Provar que la regla es dispara repetint l'acció corresponent (per exemple, un intent d'accés a l'endpoint sospitós)","Documentar la regla i el seu propòsit a l'informe final"] },
+      { id:"T4.4", nom:"Desplegament de Graylog/ELK i recollida de logs", responsable:"Responsable de servidors",
+        entregable:"Dashboard amb logs d'almenys 4 fonts: servidor web, SSH (firewall o un altre servidor), Suricata, i un servei addicional",
+        passos:["Crear la VM (2 GB RAM, 30 GB disc) i instal·lar Graylog (o ELK Stack, segons la decisió presa)","Configurar un input syslog (UDP/TCP 514) a Graylog","A cada servidor a monitoritzar (web de la DMZ, tallafocs, AD/DC, correu), configurar rsyslog perquè reenviï els logs rellevants (auth.log, access.log) cap a la IP del servidor de logs","Configurar Suricata per enviar eve.json també cap a Graylog (via filebeat o syslog, segons el mètode triat)","Crear una cerca/dashboard bàsic que mostri els últims esdeveniments de totes les fonts juntes"] },
+    ]
+  },
+  { id:"F5", nom:"Monitoratge avançat, re-test i informe final", setmanes:"S4–S6", color:"#22C55E", icon:"📈",
+    desc:"Es configuren alertes automàtiques i un script de resposta. Es repeteix l'auditoria del P4 (re-test) per verificar les correccions i es redacta l'informe comparatiu final P4 vs P5.",
+    tasques:[
+      { id:"T5.1", nom:"Configuració d'alertes per correu/Telegram", responsable:"Responsable de servidors",
+        entregable:"Demostració d'una alerta rebuda en directe (correu o Telegram) davant d'un esdeveniment de prova",
+        passos:["Decidir el canal d'alerta (correu via Postfix del P3, o Telegram via bot)","Si Telegram: crear el bot, obtenir token i chat_id (vegeu pestanya Recursos)","Escriure un script que consulti periòdicament Graylog (via la seva API) o els logs de Suricata, i detecti una condició d'alerta (ex: més de N alertes de Suricata en M minuts)","Provar: generar la condició (ex: repetir un escaneig) i verificar que arriba la notificació en menys de 5 minuts"] },
+      { id:"T5.2", nom:"Script de resposta automàtica (bloqueig d'IP)", responsable:"Responsable de servidors",
+        entregable:"Script de resposta documentat + demostració + mecanisme de kill switch",
+        passos:["Escriure un script bash que, davant d'una alerta de Suricata d'un escaneig des d'una IP externa, afegeixi automàticament una regla al tallafocs bloquejant aquella IP durant un temps determinat (ex: 1 hora, amb una entrada temporal a nftables o usant un set amb timeout)","El script ha de registrar a un log: IP bloquejada, motiu, data/hora, i data de desbloqueig previst","Implementar el 'kill switch': un fitxer o variable que, si existeix/és true, fa que el script NOMÉS registri l'acció sense executar-la (mode simulació) — útil si el script causa problemes inesperats","Demostració: generar l'escaneig de prova (T4.2) i verificar que, en menys d'un minut, la IP de la VM Kali queda bloquejada pel tallafocs i s'envia l'alerta de T5.1"] },
+      { id:"T5.3", nom:"Re-test de les troballes del P4", responsable:"Tot el grup",
+        entregable:"Taula de re-test: cada troballa del P4, estat (Corregit/Parcial/No corregit) amb evidència",
+        passos:["Per a cada troballa de l'informe del P4 (escaneigs de vulnerabilitats, intents de Metasploit, Hydra, anàlisi web), repetir EXACTAMENT la mateixa prova","Documentar el resultat: si abans triomfava i ara falla, és una correcció verificada; si segueix triomfant, cal documentar per què (i si és intencionat o un oblit)","Provar també els NOUS components: intentar connectar-se a la VPN amb credencials incorrectes (ha de fallar), intentar accedir a la DMZ des d'Internet a serveis no publicats (ha de fallar), intentar accedir des de la DMZ a la LAN (ha de fallar)","Compilar la taula comparativa completa"] },
+      { id:"T5.4", nom:"Informe comparatiu P4 vs P5 i presentació final", responsable:"Tot el grup",
+        entregable:"Informe comparatiu (PDF) + presentació 15 min amb demo en directe",
+        passos:["Resum executiu: comparar la postura de seguretat abans (P4) i després (P5) amb mètriques concretes (nombre de vulnerabilitats resoltes, nous controls implementats, superfície d'atac)","Taula de re-test completa (T5.3)","Documentació de l'arquitectura final: diagrama amb DMZ, tallafocs, VPN, IDS/IPS, centralització de logs","Configuracions clau com a annexos: regles del tallafocs, configuració VPN, regles Suricata personalitzades, configuració de Graylog/ELK","Presentació (15+5 min): 3 min recordatori de les troballes del P4, 5 min demo en directe (connexió VPN externa, escaneig detectat per Suricata amb alerta i bloqueig automàtic en temps real), 5 min resultats del re-test, 2 min conclusions i propers passos"] },
+    ]
+  },
+];
+
+function buildFases() {
+  const container = document.getElementById('fases-container');
+  FASES.forEach(f => {
+    const wrap = document.createElement('div');
+    wrap.className = 'fase-wrap';
+    let tascuesHtml = `<div class="fase-body" id="fb-${f.id}" style="display:none;border:1px solid ${f.color};border-top:none;background:${f.color}06">
+      <div class="fase-desc">${f.desc}</div>`;
+    f.tasques.forEach(t => {
+      const passosHtml = t.passos.map((p,i) => `<div class="tasca-pas"><span class="tasca-pas-num" style="color:${f.color}">${i+1}.</span><span>${p}</span></div>`).join('');
+      tascuesHtml += `
+        <div class="tasca-header" id="th-${t.id}" onclick="toggleTasca('${t.id}')">
+          <span class="tasca-id" style="background:${f.color}22;color:${f.color}">${t.id}</span>
+          <div style="flex:1"><div class="tasca-name">${t.nom}</div><div class="tasca-preview" id="tp-${t.id}">${t.passos[0].substring(0,90)}…</div></div>
+          <span class="tasca-arrow" id="ta-${t.id}">▾</span>
+        </div>
+        <div class="tasca-detail" id="td-${t.id}" style="display:none">
+          <div class="tasca-inner">
+            <div class="tasca-passos">
+              <div class="tasca-passos-title">📋 Passos detallats</div>${passosHtml}
+            </div>
+            <div class="tasca-footer">
+              <div class="tasca-footer-block"><div class="tasca-footer-label">📦 Entregable</div><div class="tasca-entregable">${t.entregable}</div></div>
+              <div class="tasca-footer-block"><div class="tasca-footer-label">👤 Responsable</div><div class="tasca-responsable">${t.responsable}</div></div>
+            </div>
+          </div>
+        </div>`;
+    });
+    tascuesHtml += '</div>';
+    wrap.innerHTML = `
+      <div class="fase-header" id="fh-${f.id}" onclick="toggleFase('${f.id}')"
+           style="background:rgba(0,0,0,.3);border:1px solid ${f.color}33">
+        <span class="fase-icon">${f.icon}</span>
+        <div style="flex:1">
+          <div class="fase-meta">
+            <span class="fase-num" style="color:${f.color}">${f.id}</span>
+            <span class="fase-name">${f.nom}</span>
+            <span class="badge" style="background:${f.color}22;color:${f.color};border:1px solid ${f.color}44">${f.setmanes}</span>
+            <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">${f.tasques.length} tasques</span>
+          </div>
+          <div class="fase-preview">${f.desc.substring(0,110)}…</div>
+        </div>
+        <span class="fase-arrow" id="fa-${f.id}">▾</span>
+      </div>${tascuesHtml}`;
+    container.appendChild(wrap);
+  });
+}
+
+function toggleFase(id) {
+  const body = document.getElementById('fb-'+id);
+  const arrow = document.getElementById('fa-'+id);
+  const header = document.getElementById('fh-'+id);
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  const faseColor = FASES.find(f=>f.id===id).color;
+  header.style.background = isOpen ? 'rgba(0,0,0,.3)' : `${faseColor}18`;
+  header.classList.toggle('open', !isOpen);
+}
+
+function toggleTasca(id) {
+  const detail = document.getElementById('td-'+id);
+  const arrow = document.getElementById('ta-'+id);
+  const preview = document.getElementById('tp-'+id);
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  if(preview) preview.style.display = isOpen ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', buildFases);
+</script>
+</body>
+</html>

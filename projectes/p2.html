@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P2 — Identitat corporativa: directori, VLANs i DNS</title>
+<style>
+  :root {
+    --bg: #0A0E1A; --panel: #111827; --border: #1E2D40;
+    --accent: #00C2FF; --green: #00E5A0; --orange: #FF8C42;
+    --yellow: #FFD166; --red: #FF4D6D; --purple: #A855F7;
+    --text: #E2E8F0; --muted: #64748B; --white: #FFFFFF;
+    --M06: #3B82F6; --M07: #22C55E; --M08: #F97316; --C037: #A855F7;
+    --p2: #1A6FA8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+  .header { background: linear-gradient(180deg,#0F1827 0%,var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 20px 24px 0; }
+  .header-inner { max-width: 960px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 16px; }
+  .header-title { font-size: 21px; font-weight: 900; color: var(--white); letter-spacing: -0.5px; margin: 8px 0 4px; }
+  .header-sub { color: var(--muted); font-size: 12px; }
+  .header-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .header-stats { display: flex; flex-direction: column; gap: 5px; text-align: right; }
+  .stat-row { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+  .stat-val { font-weight: 800; font-size: 20px; line-height: 1; }
+  .stat-lbl { color: var(--muted); font-size: 11px; }
+  .tabs { display: flex; gap: 2px; }
+  .tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px 6px 0 0; transition: all .15s; }
+  .tab-btn.active { background: rgba(0,194,255,.1); border-bottom-color: var(--accent); color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.05); }
+  .content { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .panel + .panel, .panel + .fase-wrap, .fase-wrap + .fase-wrap { margin-top: 10px; }
+  .panel-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .badge { display: inline-block; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; letter-spacing: .4px; white-space: nowrap; }
+  .badge-lg { padding: 4px 12px; font-size: 12px; }
+  .section-title { margin-bottom: 20px; }
+  .section-title h2 { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--white); letter-spacing: -.5px; }
+  .section-title p { margin: 4px 0 0 30px; color: var(--muted); font-size: 13px; }
+  .ra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+  .ra-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .ra-card-inner { display: flex; gap: 8px; align-items: flex-start; }
+  .ra-name { color: var(--white); font-weight: 700; font-size: 11px; margin-bottom: 4px; }
+  .ra-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .ra-tag { color: var(--muted); font-size: 10px; background: rgba(255,255,255,.05); border-radius: 3px; padding: 1px 5px; }
+  .crono { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .crono-item { flex: 1; min-width: 120px; border-radius: 10px; padding: 12px 10px; text-align: center; }
+  .crono-icon { font-size: 20px; margin-bottom: 4px; }
+  .crono-num { font-weight: 800; font-size: 12px; }
+  .crono-name { font-weight: 700; font-size: 11px; margin: 4px 0; line-height: 1.3; color: var(--white); }
+  .crono-weeks { color: var(--muted); font-size: 10px; }
+  .arch-item { border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .arch-label { color: var(--white); font-weight: 700; font-size: 12px; }
+  .arch-desc { color: var(--muted); font-size: 11px; }
+  .teoria-mod { margin-bottom: 16px; }
+  .teoria-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .teoria-icon { font-size: 26px; }
+  .teoria-title { font-weight: 800; font-size: 15px; }
+  .teoria-badges { display: flex; gap: 8px; margin-top: 4px; }
+  .teoria-bloc { border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px; }
+  .teoria-sess { font-weight: 700; font-size: 11px; margin-bottom: 6px; }
+  .teoria-item { display: flex; gap: 6px; margin-bottom: 3px; font-size: 12px; line-height: 1.6; color: var(--text); }
+  .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .infra-card { background: var(--panel); border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; }
+  .infra-icon { font-size: 20px; }
+  .infra-name { color: var(--white); font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+  .infra-desc { color: var(--muted); font-size: 11px; line-height: 1.5; margin-bottom: 5px; }
+  .infra-section-title { color: var(--white); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  .fase-wrap { margin-bottom: 10px; }
+  .fase-header { border-radius: 12px; padding: 14px 18px; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: background .15s; }
+  .fase-header.open { border-radius: 12px 12px 0 0; }
+  .fase-icon { font-size: 22px; }
+  .fase-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+  .fase-num { font-weight: 800; font-size: 13px; }
+  .fase-name { color: var(--white); font-weight: 700; font-size: 15px; }
+  .fase-preview { color: var(--muted); font-size: 12px; }
+  .fase-arrow { color: var(--muted); font-size: 18px; margin-left: auto; flex-shrink: 0; transition: transform .2s; }
+  .fase-arrow.open { transform: rotate(180deg); }
+  .fase-body { border-radius: 0 0 12px 12px; overflow: hidden; }
+  .fase-desc { padding: 12px 18px 8px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; line-height: 1.6; }
+  .tasca-header { padding: 12px 18px; cursor: pointer; border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; transition: background .15s; }
+  .tasca-id { font-weight: 800; font-size: 11px; border-radius: 4px; padding: 2px 7px; flex-shrink: 0; margin-top: 1px; }
+  .tasca-name { color: var(--white); font-weight: 700; font-size: 13px; }
+  .tasca-preview { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .tasca-arrow { color: var(--muted); font-size: 14px; flex-shrink: 0; margin-left: auto; transition: transform .2s; }
+  .tasca-arrow.open { transform: rotate(180deg); }
+  .tasca-detail { padding: 0 18px 16px; }
+  .tasca-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .tasca-passos { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .tasca-passos-title { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .tasca-pas { display: flex; gap: 10px; margin-bottom: 5px; color: var(--text); font-size: 12px; line-height: 1.5; }
+  .tasca-pas-num { font-weight: 800; flex-shrink: 0; font-size: 11px; }
+  .tasca-footer { display: grid; grid-template-columns: 1fr 1fr; }
+  .tasca-footer-block { padding: 12px 16px; }
+  .tasca-footer-block + .tasca-footer-block { border-left: 1px solid var(--border); }
+  .tasca-footer-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .tasca-entregable { font-size: 12px; font-weight: 600; line-height: 1.4; color: #00E5A0; }
+  .tasca-responsable { font-size: 12px; font-weight: 600; color: var(--yellow); }
+  .aval-card { margin-bottom: 10px; }
+  .aval-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .aval-area { color: var(--white); font-weight: 800; font-size: 14px; }
+  .aval-pes { border-radius: 20px; padding: 4px 14px; font-weight: 800; font-size: 18px; }
+  .aval-bar-bg { border-radius: 4px; height: 5px; margin-bottom: 10px; }
+  .aval-bar { border-radius: 4px; height: 100%; }
+  .aval-note { display: flex; gap: 8px; color: var(--text); font-size: 12px; margin-bottom: 5px; }
+  /* Connexió P1 */
+  .p1-link { background: rgba(0,194,255,.08); border: 1px solid rgba(0,194,255,.2); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .p1-link-icon { font-size: 22px; }
+  .p1-link-text { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .p1-link-text strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-badges">
+          <span class="badge badge-lg" style="background:rgba(26,111,168,.25);color:#5BC8F5;border:1px solid rgba(26,111,168,.4)">P2</span>
+          <span class="badge badge-lg" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">5–6 setmanes</span>
+          <span class="badge badge-lg" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">AD / LDAP</span>
+          <span class="badge badge-lg" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">DNS intern</span>
+          <span class="badge badge-lg" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">VLANs + Router</span>
+        </div>
+        <div class="header-title">Identitat corporativa: directori, VLANs i DNS</div>
+        <div class="header-sub">ASIX Ciberseguretat · 2n Curs · Grups de 3 · M08 + M06 + M07 + C037</div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-row"><span class="stat-lbl">RA coberts</span><span class="stat-val" style="color:#00C2FF">6</span></div>
+        <div class="stat-row"><span class="stat-lbl">Mòduls</span><span class="stat-val" style="color:#00E5A0">4</span></div>
+        <div class="stat-row"><span class="stat-lbl">Tasques</span><span class="stat-val" style="color:#FFD166">16</span></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('resum',this)">📋 Resum</button>
+      <button class="tab-btn" onclick="showTab('teoria',this)">📚 Teoria</button>
+      <button class="tab-btn" onclick="showTab('infra',this)">🛠️ Recursos</button>
+      <button class="tab-btn" onclick="showTab('fases',this)">🔧 Pràctica</button>
+      <button class="tab-btn" onclick="showTab('avaluacio',this)">📊 Avaluació</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══ RESUM ═══ -->
+<div id="view-resum" class="view active">
+
+  <div class="p1-link">
+    <span class="p1-link-icon">🔗</span>
+    <div class="p1-link-text">
+      <strong>Continua des del P1.</strong> La xarxa física de NetCorp S.L. ja és operativa: switches Cisco, router, VMs a Proxmox i seu remota a Azure. En aquest projecte l'empresa adquireix <strong>identitat</strong>: qui és qui, a quina VLAN pertany, i com s'anomenen els serveis.
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> Objectiu del projecte</h2></div>
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel-grid2">
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Situació inicial (herència del P1)</div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Xarxa física operativa</div><div class="arch-desc">Switch Cisco + Router Cisco + DHCP a Proxmox</div></div></div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Connectivitat bàsica</div><div class="arch-desc">Tots els PCs obtenen IP. Hi ha accés a internet.</div></div></div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Seu Azure operativa</div><div class="arch-desc">VM Ubuntu + túnel VPN WireGuard actiu</div></div></div>
+        <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Problemes que cal resoldre ara</div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense segmentació per departament</div><div class="arch-desc">Tots els PCs a la mateixa xarxa. IT veu trànsit de RRHH.</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense identitat centralitzada</div><div class="arch-desc">Cada PC té els seus propis usuaris. No hi ha un compte únic per empleat.</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense resolució de noms</div><div class="arch-desc">Per connectar-se al servidor cal saber la IP. No hi ha "servidor.netcorp.local".</div></div></div>
+      </div>
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Arquitectura al final del P2</div>
+        <div class="arch-item" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25)"><span style="font-size:18px">🔀</span><div><div class="arch-label">VLANs per departament</div><div class="arch-desc">Cada VLAN al seu segment. Router gestiona inter-VLAN. ACLs entre elles.</div></div></div>
+        <div class="arch-item" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25)"><span style="font-size:18px">🏢</span><div><div class="arch-label">Active Directory / LDAP</div><div class="arch-desc">Un compte d'usuari per cada empleat. GPOs per departament. Script d'alta massiva.</div></div></div>
+        <div class="arch-item" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25)"><span style="font-size:18px">🌐</span><div><div class="arch-label">DNS intern (netcorp.local)</div><div class="arch-desc">Tots els servidors accessibles per nom. Zones directa i inversa. Bastionat.</div></div></div>
+        <div class="arch-item" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25)"><span style="font-size:18px">🔒</span><div><div class="arch-label">Assegurament DNS</div><div class="arch-desc">Protecció contra cache poisoning i amplification. DNSSEC bàsic.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> RA coberts</h2></div>
+  <div class="ra-grid">
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3);flex-shrink:0">M08</span><div><div class="ra-name">RA4 · Administració d'encaminadors</div><div class="ra-tags"><span class="ra-tag">Router-on-a-stick avançat</span><span class="ra-tag">ACLs inter-VLAN</span><span class="ra-tag">Rutes estàtiques</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3);flex-shrink:0">M08</span><div><div class="ra-name">RA5 · VLANs i enllaços troncals</div><div class="ra-tags"><span class="ra-tag">VLANs per departament</span><span class="ra-tag">Trunks 802.1Q</span><span class="ra-tag">Router-on-a-stick</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);flex-shrink:0">M06</span><div><div class="ra-name">RA1 · Servei de directori (AD/LDAP)</div><div class="ra-tags"><span class="ra-tag">AD DS instal·lació</span><span class="ra-tag">OUs i GPOs</span><span class="ra-tag">Usuaris i grups</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);flex-shrink:0">M06</span><div><div class="ra-name">RA7 · Scripting: altes massives</div><div class="ra-tags"><span class="ra-tag">PowerShell / bash</span><span class="ra-tag">Bucles i CSV</span><span class="ra-tag">New-ADUser</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);flex-shrink:0">M07</span><div><div class="ra-name">RA1 · Servei DNS: zones i registres</div><div class="ra-tags"><span class="ra-tag">BIND9 / Windows DNS</span><span class="ra-tag">Zones directa+inversa</span><span class="ra-tag">Registres A, CNAME, PTR</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3);flex-shrink:0">C037</span><div><div class="ra-name">RA2 · Assegurament del servei DNS</div><div class="ra-tags"><span class="ra-tag">Cache poisoning</span><span class="ra-tag">DNS amplification</span><span class="ra-tag">DNSSEC bàsic</span></div></div></div></div>
+  </div>
+
+  <div class="section-title"><h2><span>📅</span> Cronograma — 5–6 setmanes</h2></div>
+  <div class="panel">
+    <div class="crono">
+      <div class="crono-item" style="background:rgba(0,194,255,.12);border:1px solid rgba(0,194,255,.3)"><div class="crono-icon">📐</div><div class="crono-num" style="color:#00C2FF">F1</div><div class="crono-name">Disseny i planificació</div><div class="crono-weeks">S1</div></div>
+      <div class="crono-item" style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3)"><div class="crono-icon">🔀</div><div class="crono-num" style="color:#F97316">F2</div><div class="crono-name">VLANs i router</div><div class="crono-weeks">S2</div></div>
+      <div class="crono-item" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3)"><div class="crono-icon">🏢</div><div class="crono-num" style="color:#3B82F6">F3</div><div class="crono-name">Directori AD/LDAP</div><div class="crono-weeks">S3–S4</div></div>
+      <div class="crono-item" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3)"><div class="crono-icon">🌐</div><div class="crono-num" style="color:#22C55E">F4</div><div class="crono-name">DNS intern</div><div class="crono-weeks">S4–S5</div></div>
+      <div class="crono-item" style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3)"><div class="crono-icon">🛡️</div><div class="crono-num" style="color:#A855F7">F5</div><div class="crono-name">Seguretat DNS i validació</div><div class="crono-weeks">S5–S6</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TEORIA ═══ -->
+<div id="view-teoria" class="view">
+  <div class="section-title"><h2><span>📚</span> Contingut teòric per mòdul</h2><p>Sessions impartides per cada professor just abans que la pràctica les necessiti.</p></div>
+
+  <!-- M08 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🌐</span>
+      <div>
+        <div class="teoria-title" style="color:#F97316">VLANs avançades, Router-on-a-Stick i ACLs</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">M08</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">5 sessions · ~10h</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">Prerequisit: P1 completat</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S1 — VLANs per departament i disseny de l'adreçament</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Revisió del pla d'adreçament del P1 i extensió per a 5 VLANs de producció + VLAN de gestió (99) + VLAN nativa (999).</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Creació de VLANs al switch: comandes <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">vlan [id]</code>, <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">name</code>, assignació de ports d'accés.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Configuració del port trunk entre switch i router: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">switchport mode trunk</code>, gestió de VLANs permeses, VLAN nativa.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Verificació amb <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">show vlan brief</code>, <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">show interfaces trunk</code>.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S2–S3 — Router-on-a-stick complet i Inter-VLAN routing</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Subinterfícies Cisco IOS: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">encapsulation dot1Q [vlan-id]</code>, assignació d'IPs (gateways de cada VLAN).</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Flux d'un paquet inter-VLAN pas a pas: PC → switch (tag) → router (desencapsulat, decision de routing, re-encapsulat) → switch → PC destí.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Diagnòstic: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">show ip route</code>, <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">show ip interface brief</code>, ping des del router a cada gateway.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S4–S5 — ACLs: matriu d'accessos entre VLANs</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Repàs d'ACLs estàndard vs exteses. Regla implicit deny. Processament seqüencial.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Disseny de la matriu d'accessos: IT accedeix a tot; Direcció accedeix a Vendes i RRHH; Logística i Vendes entre elles; RRHH no accedeix a Logística ni Vendes.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Implementació: ACLs exteses named, aplicació a les subinterfícies del router (inbound), verificació i troubleshooting.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Regles especials: permetre DHCP (UDP 67/68) i DNS (UDP/TCP 53) independentment de la matriu d'accessos.</span></div>
+    </div>
+  </div>
+
+  <!-- M06 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🏢</span>
+      <div>
+        <div class="teoria-title" style="color:#3B82F6">Active Directory, LDAP, GPOs i scripting PowerShell</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">M06</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">6 sessions · ~12h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S1–S2 — LDAP i Active Directory: arquitectura i conceptes</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Necessitat d'un directori centralitzat: problema de les N×M credencials (N usuaris × M serveis). El directori resol: un compte → accés a tots els serveis autoritzats.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>LDAP (Lightweight Directory Access Protocol): protocol estàndard per consultar i modificar directoris. Estructura jeràrquica (DIT - Directory Information Tree). DN (Distinguished Name): <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">CN=Joan Garcia,OU=IT,DC=netcorp,DC=local</code>.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Active Directory Domain Services (AD DS): implementació Microsoft d'un directori basat en LDAP + Kerberos. Conceptes: domini, forest, arbre, controlador de domini (DC), catàleg global.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Objectes AD: Usuaris (User), Grups (Group), Equips (Computer), Unitats organitzatives (OU). Atributs: sAMAccountName, userPrincipalName, memberOf, distinguishedName.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S3 — Instal·lació AD DS i estructura d'OUs</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Instal·lació del rol AD DS a Windows Server: Server Manager → Add Roles → Promote to Domain Controller. Elecció del nom de domini intern (netcorp.local).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Disseny de l'estructura d'OUs per a NetCorp: OU per departament (Direccio, IT, Logistica, Vendes, RRHH) + OUs funcionals (Servidors, Grups, GPOs). Criteris de disseny: per geografia, per departament o per funció.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Grups de seguretat vs grups de distribució. Àmbit dels grups: Domain Local, Global, Universal. Bones pràctiques: estratègia AGDLP (Account → Global → Domain Local → Permission).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S4 — Group Policy Objects (GPO)</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Què és una GPO: conjunt de configuracions que s'apliquen automàticament als usuaris i equips d'una OU quan inician sessió o arrenquen. Evita la configuració manual de cada PC.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Aplicació de GPOs: vinculació a Site, Domini o OU. Herència i precedència (LSDOU). Filtratge de seguretat. Forçar actualització: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">gpupdate /force</code>.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Exemples de GPOs útils per a NetCorp: mapeig de unitats de xarxa per departament, restricció del panell de control, política de contrasenyes, bloqueig de USB, fons d'escriptori corporatiu, configuració del servidor DNS als clients.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S5–S6 — PowerShell i scripting per a gestió massiva</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>PowerShell per a AD: mòdul ActiveDirectory. Cmdlets fonamentals: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">New-ADUser</code>, <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">Get-ADUser</code>, <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">Set-ADUser</code>, <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">Add-ADGroupMember</code>.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Lectura de fitxers CSV amb <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">Import-Csv</code>. Bucle <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">ForEach-Object</code> per processar cada fila. Generació automàtica de contrasenyes i noms de login (<code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">nom.cognom</code>).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Gestió d'errors en PowerShell: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">Try/Catch</code>, <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">-ErrorAction</code>, log de resultats a fitxer. Script idempotent: si l'usuari ja existeix, no falla.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Alternativa bash + ldap-utils per a entorns Linux (OpenLDAP): <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">ldapadd</code>, <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">ldapmodify</code>, fitxers LDIF.</span></div>
+    </div>
+  </div>
+
+  <!-- M07 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🌐</span>
+      <div>
+        <div class="teoria-title" style="color:#22C55E">DNS: zones, registres i resolució de noms</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">M07</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">4 sessions · ~8h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S1 — Com funciona DNS: el sistema de noms d'Internet</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>El problema: els humans recorden noms (google.com), els ordinadors treballen amb IPs (142.250.185.46). DNS (Domain Name System, RFC 1034/1035) és el sistema que tradueix entre ells.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Jerarquia DNS: arrel (.) → TLD (.com, .cat, .org) → domini de segon nivell (google.com) → subdominis (mail.google.com). Cada nivell té servidors autoritaris responsables.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Resolució recursiva vs iterativa: el resolver del client demana al servidor DNS local (recursiu), que fa les consultes iteratives fins als servidors autoritaris i retorna la resposta. Caché: les respostes es guarden el temps indicat pel TTL.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>DNS per a xarxes internes: el domini <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">netcorp.local</code> és un domini privat que no existeix a Internet. El servidor DNS intern el resol per als clients de la xarxa local.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S2–S3 — Zones DNS i tipus de registres</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span><strong>Zona directa (Forward zone):</strong> resol noms → IPs. Ex: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">dc.netcorp.local → 192.168.20.10</code>.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span><strong>Zona inversa (Reverse zone):</strong> resol IPs → noms (PTR records). Ex: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">10.20.168.192.in-addr.arpa → dc.netcorp.local</code>. Necessari per a molts serveis (correu, SSH, autenticació).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Registres DNS fonamentals: <strong>A</strong> (nom → IPv4), <strong>AAAA</strong> (nom → IPv6), <strong>CNAME</strong> (àlies → nom canònic), <strong>MX</strong> (servidor de correu del domini), <strong>PTR</strong> (zona inversa), <strong>NS</strong> (servidors de noms de la zona), <strong>SOA</strong> (inici d'autoritat, paràmetres de la zona), <strong>TXT</strong> (text lliure; usat per SPF, DKIM).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>TTL (Time To Live): temps en segones que un registre es pot guardar en caché. TTL baix = canvis ràpids; TTL alt = menys càrrega als servidors. Per a servidors interns: 3600 s és habitual.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Zones primàries vs secundàries: la primària té l'arxiu de zona en lectura/escriptura. La secundària és una còpia de seguretat, actualitzada mitjançant transferències de zona (AXFR, IXFR).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S4 — BIND9 a Linux i DNS dinàmic</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>BIND9 (Berkeley Internet Name Domain): el servidor DNS de codi lliure de referència. Fitxers de configuració: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">named.conf</code> (configuració principal), <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">named.conf.local</code> (zones), fitxers de zona (format RFC 1035).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>DNS dinàmic (DDNS): el servidor DHCP actualitza automàticament el DNS quan assigna una IP. Integra DHCP i DNS perquè els noms dels clients sempre resolvin correctament sense configuració manual.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Diagnòstic DNS: <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">dig</code> (consultes detallades), <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">nslookup</code> (Windows i Linux), <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">host</code>, <code style="background:rgba(0,0,0,.2);padding:1px 4px;border-radius:3px;font-size:11px">named-checkzone</code> (validar fitxer de zona).</span></div>
+    </div>
+  </div>
+
+  <!-- C037 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🔒</span>
+      <div>
+        <div class="teoria-title" style="color:#A855F7">Amenaces i assegurament del servei DNS</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">C037</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">3 sessions · ~6h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S1 — Atacs al DNS: com funcionen i per què són perillosos</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>DNS Cache Poisoning:</strong> l'atacant aconsegueix que el servidor DNS guardi en caché una resposta falsa (ex: google.com → IP de l'atacant). Tots els clients que consultin aquell servidor seran redirigits al lloc fals sense saber-ho. Atac de Kaminsky (2008): explotava la previsibilitat del port UDP i l'ID de transacció.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>DNS Amplification (DDoS):</strong> l'atacant fa consultes DNS amb IP origen falsificada (la IP víctima). El servidor DNS respon amb paquets molt més grans a la víctima. Amplificació: una consulta de 40 bytes pot generar una resposta de 4000 bytes (factor ×100). Usat en atacs DDoS massius.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>DNS Hijacking:</strong> modificació dels registres DNS legítims al servidor autoritari (per accés no autoritzat) per redirigir el trànsit. Diferent del cache poisoning: afecta el servidor original, no la caché.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>DNS Tunneling:</strong> ús del protocol DNS com a canal de comunicació encobert. Les dades s'encapsulen en consultes DNS (subdominins llargs). Evasió de firewalls que permeten DNS però bloquegen altres protocols.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S2 — Configuració segura de BIND9 i Windows DNS</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Recursivitat restringida: configurar el servidor DNS intern perquè només faci resolució recursiva per als clients de la xarxa local, no per a qualsevol IP de l'exterior (evita ser usat com a amplificador DDoS).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Transferències de zona restringides (allow-transfer): permetre les transferències de zona (AXFR) únicament a les IPs dels servidors DNS secundaris autoritzats. Evita que qualsevol entitat descarregui tots els registres del domini intern.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Randomització del port origen (port randomization): cada consulta DNS usa un port UDP origen aleatori, dificultant els atacs de cache poisoning basats en predir el port.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Separació DNS intern / extern (split-horizon DNS): el servidor DNS intern resol les IPs privades per als clients interns, però mai exposa els registres interns a l'exterior. El servidor DNS públic (si n'hi ha) publica únicament els serveis públics.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S3 — DNSSEC: autenticació dels registres DNS</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Problema que resol DNSSEC: DNS original no té autenticació. Un client no pot saber si la resposta DNS que rep és legítima o ha estat manipulada. DNSSEC afegeix signatura digital als registres DNS.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Funcionament: cada zona té un parell de claus (KSK - Key Signing Key i ZSK - Zone Signing Key). Els registres DNS es signen digitalment amb la ZSK. El client pot verificar la signatura i detectar si la resposta ha estat manipulada.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Registres DNSSEC nous: RRSIG (signatura del registre), DNSKEY (clau pública de la zona), DS (delegació de signatura, a la zona pare), NSEC/NSEC3 (prova de no existència autenticada).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Limitacions pràctiques: DNSSEC no xifra les respostes (continuen sent llegibles), no protegeix contra DDoS. Increment de la mida de les respostes. Complexitat de gestió de claus i renovació.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RECURSOS ═══ -->
+<div id="view-infra" class="view">
+  <div class="section-title"><h2><span>🛠️</span> Recursos i infraestructura</h2><p>Tot el que es necessita per executar el P2. La infraestructura física ve del P1.</p></div>
+
+  <div class="infra-section-title">🔌 Infraestructura física (herència del P1)</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🔀</span><div><div class="infra-name">Switch Cisco (1 per grup)</div><div class="infra-desc">Configuració nova: 5 VLANs de producció + gestió + nativa. Ports reassignats per departament.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P1</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📡</span><div><div class="infra-name">Router Cisco físic (1 per grup)</div><div class="infra-desc">Noves subinterfícies per a les VLANs de producció. ACLs inter-VLAN.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P1</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">💻</span><div><div class="infra-name">PCs/portàtils (1 per alumne)</div><div class="infra-desc">RSAT (Remote Server Admin Tools) per gestionar AD des del PC. Packet Tracer per simulació prèvia.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P1</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">☁️</span><div><div class="infra-name">VM Azure (seu Tarragona)</div><div class="infra-desc">S'afegirà un registre DNS apuntant a la IP pública d'Azure. VPN WireGuard ja activa.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P1</span></div></div>
+  </div>
+
+  <div class="infra-section-title">🖥️ Proxmox — VMs noves per al P2</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🏢</span><div><div class="infra-name">VM Windows Server 2022 (DC)</div><div class="infra-desc">4 GB RAM, 60 GB disc, 2 vCPU. Rol AD DS + DNS de Windows. 1 per grup.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,140,66,.3)"><span class="infra-icon">🌐</span><div><div class="infra-name">VM Ubuntu DNS (BIND9) — alternativa</div><div class="infra-desc">512 MB RAM, 10 GB disc. Per a grups que prefereixin Linux. BIND9 + integració amb AD via Kerberos.</div><span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Decidir opció (Win vs Linux)</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,140,66,.3)"><span class="infra-icon">🖥️</span><div><div class="infra-name">Llicències Windows Server 2022</div><div class="infra-desc">Disponible per a centres educatius via Microsoft Imagine (Azure Dev Tools for Teaching).</div><span class="badge" style="background:rgba(255,140,66,.15);color:#FF8C42;border:1px solid rgba(255,140,66,.3)">→ Verificar llicències</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🖥️</span><div><div class="infra-name">VMs clients Windows 10/11</div><div class="infra-desc">Per unir al domini AD i provar GPOs. 2 GB RAM cadascuna. Opcional si el PC d'alumne pot unir-se.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible</span></div></div>
+  </div>
+
+  <div class="infra-section-title" style="color:var(--orange)">📋 Software i recursos addicionals</div>
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px;margin-bottom:12px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">🎓</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Microsoft Azure Dev Tools for Teaching</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Inclou llicències gratuïtes de Windows Server per a centres educatius. Si el centre té Microsoft Campus Agreement, inclou llicències il·limitades de Windows Server per a us educatiu.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït amb compte educatiu</span>
+          <span class="badge" style="background:rgba(255,140,66,.15);color:#FF8C42;border:1px solid rgba(255,140,66,.3)">Verificar amb el centre</span>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Com obtenir-les</div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">1.</span><span>Accedir a <strong>azureforeducation.microsoft.com</strong> → Dev Tools for Teaching</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">2.</span><span>Iniciar sessió amb el correu institucional del centre</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">3.</span><span>Cercar "Windows Server 2022" i descarregar la ISO + clau de producte</span></div>
+      <div style="display:flex;gap:10px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">4.</span><span>Pujar la ISO a Proxmox (local storage) per a la creació de VMs</span></div>
+    </div>
+  </div>
+
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">📦</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">RSAT (Remote Server Administration Tools)</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Permet gestionar AD, DNS i GPOs des d'un PC Windows 10/11 sense accedir directament al servidor. Imprescindible per a l'alumne que gestiona AD des del seu PC.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït — inclòs a Windows 10/11</span>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Instal·lació</div>
+      <div style="color:var(--text);font-size:12px;font-family:monospace;background:rgba(0,0,0,.3);padding:8px;border-radius:6px">Settings → Apps → Optional Features → Add a feature → cercar "RSAT"</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRÀCTICA ═══ -->
+<div id="view-fases" class="view">
+  <div class="section-title"><h2><span>🔧</span> Pràctica detallada per fases</h2><p>Clica una fase i després cada tasca per veure tots els passos.</p></div>
+  <div id="fases-container"></div>
+</div>
+
+<!-- ═══ AVALUACIÓ ═══ -->
+<div id="view-avaluacio" class="view">
+  <div class="section-title"><h2><span>📊</span> Rúbrica d'avaluació</h2><p>Grups de 3 alumnes. Cadascú ha de poder defensar qualsevol part del projecte.</p></div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">VLANs i encaminament inter-VLAN</div><div class="aval-pes" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">25%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(249,115,22,.15)"><div class="aval-bar" style="background:#F97316;width:25%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">5 VLANs de producció configurades amb ports d'accés correctes (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Router-on-a-stick funcional: ping entre totes les VLANs (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">ACLs inter-VLAN correctes i justificades: matriu d'accessos respectada (9%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Active Directory i gestió d'usuaris</div><div class="aval-pes" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">30%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(59,130,246,.15)"><div class="aval-bar" style="background:#3B82F6;width:30%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Domini AD instal·lat i operatiu amb estructura d'OUs correcta (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Almenys 3 GPOs aplicades i verificades per departament (10%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Script d'alta massiva d'usuaris des de CSV funcional i documentat (12%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Servei DNS intern</div><div class="aval-pes" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">25%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(34,197,94,.15)"><div class="aval-bar" style="background:#22C55E;width:25%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Zona directa netcorp.local: tots els servidors resolts per nom (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Zona inversa funcional: resolució invers de tots els servidors (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Tots els clients de la xarxa usen el servidor DNS intern (GPO o DHCP) (9%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Seguretat i bastionament DNS</div><div class="aval-pes" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">10%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(168,85,247,.15)"><div class="aval-bar" style="background:#A855F7;width:10%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Recursivitat restringida als clients interns configurada (5%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Informe d'assegurament DNS: mesures aplicades i vulnerabilitats mitigades (5%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Documentació i presentació</div><div class="aval-pes" style="background:rgba(0,194,255,.15);color:#00C2FF;border:1px solid rgba(0,194,255,.3)">10%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(0,194,255,.15)"><div class="aval-bar" style="background:#00C2FF;width:10%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Diagrama d'arquitectura actualitzat (P1 + P2), taula IP, estructura AD (5%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Presentació oral amb demo en directe (5%)</li></ul>
+  </div>
+
+  <div class="panel" style="border-color:rgba(255,209,102,.3);background:rgba(255,209,102,.05);margin-top:10px">
+    <div style="color:#FFD166;font-weight:800;font-size:13px;margin-bottom:10px">📝 Condicions d'avaluació</div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>El dia de la demo, el professor demanarà connectar un PC nou a una VLAN concreta: ha d'obtenir IP per DHCP, resoldre un nom per DNS i poder accedir únicament als recursos permesos per les ACLs.</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>El dossier tècnic s'entrega 48h abans. Ha d'incloure les running-configs del switch i router, els fitxers de zona DNS i el script d'alta d'usuaris.</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>Cada membre del grup ha de poder explicar en detall qualsevol decisió de disseny (per exemple: per què s'han definit les ACLs d'aquella manera).</span></div>
+    <div class="aval-note"><span style="color:#00E5A0">+</span><span><strong style="color:#00E5A0">Bonus +5%:</strong> si el DNS dinàmic (DDNS) actualitza automàticament els registres quan el DHCP assigna una nova IP.</span></div>
+    <div class="aval-note"><span style="color:#FF4D6D">-</span><span><strong style="color:#FF4D6D">Malus -10%:</strong> si un client del domini no pot iniciar sessió amb les seves credencials AD el dia de la demo.</span></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+const FASES = [
+  { id:"F1", nom:"Disseny i planificació del P2", setmanes:"S1", color:"#00C2FF", icon:"📐",
+    desc:"Abans de tocar cap configuració, els alumnes actualitzen el diagrama de xarxa heredat del P1 per incloure les 5 VLANs de departament, l'estructura AD i el DNS. El disseny ha de ser aprovat pel professor.",
+    tasques:[
+      { id:"T1.1", nom:"Revisió i actualització del pla d'adreçament IP", responsable:"Responsable de xarxa",
+        entregable:"Taula d'adreçament actualitzada amb VLANs de producció + gestió + nativa",
+        passos:["Revisar la taula IP del P1 i identificar quines VLANs ja existien","Definir les 5 VLANs de producció: 10 Direccio, 20 IT, 30 Logistica, 40 Vendes, 50 RRHH","Definir VLAN 99 (Gestió: switches, routers, servidors) i VLAN 999 (Nativa, no usada per dades)","Calcular amb VLSM els rangs per a cada VLAN (seguint la metodologia del P1)","Identificar les IPs fixes dels nous serveis: DC/AD, servidor DNS, servidor DHCP (si s'actualitza)"] },
+      { id:"T1.2", nom:"Disseny de l'estructura AD i matriu d'accessos", responsable:"Tot el grup",
+        entregable:"Diagrama jeràrquic de l'AD (OUs, grups) + Matriu d'accessos inter-VLAN aprovada",
+        passos:["Definir l'estructura d'OUs: una OU per cada departament + OUs funcionals (Servidors, GPOs)","Definir els grups de seguretat per a cada OU (ex: GRP_IT, GRP_Logistica)","Elaborar la matriu d'accessos: quina VLAN pot comunicar-se amb quines (per raons de negoci justificades)","Concretar quines GPOs s'aplicaran a cada OU (mínim 2 GPOs funcionals per OU)","El professor ha de validar el disseny ABANS de passar a F2"] },
+    ]
+  },
+  { id:"F2", nom:"VLANs i encaminament inter-VLAN", setmanes:"S2", color:"#F97316", icon:"🔀",
+    desc:"Es reconfigura el switch amb les 5 VLANs de producció i s'actualitza el router amb les subinterfícies corresponents. S'implementen les ACLs que respecten la matriu d'accessos dissenyada al F1.",
+    tasques:[
+      { id:"T2.1", nom:"Configuració de VLANs al Switch Cisco", responsable:"Responsable de xarxa",
+        entregable:"Running-config del switch + show vlan brief + show interfaces trunk",
+        passos:["Accedir al switch per consola. Eliminar la configuració de VLANs anterior si cal (write erase + reload per reiniciar net o modificar les VLANs existents)","Crear les 7 VLANs: vlan 10 (name Direccio), vlan 20 (name IT), vlan 30 (name Logistica), vlan 40 (name Vendes), vlan 50 (name RRHH), vlan 99 (name Gestio), vlan 999 (name Nativa)","Assignar ports d'accés a cada VLAN (switchport mode access + switchport access vlan X) seguint la taula elaborada al F1","Configurar el port trunk cap al router: switchport mode trunk, native vlan 999, allowed vlan 10,20,30,40,50,99,999","Verificar: show vlan brief (tots els ports a la VLAN correcta), show interfaces trunk (trunk actiu amb les VLANs permeses)"] },
+      { id:"T2.2", nom:"Subinterfícies al Router Cisco i inter-VLAN routing", responsable:"Responsable de xarxa",
+        entregable:"Running-config del router + proves de ping inter-VLAN des de cada VLAN",
+        passos:["Crear una subinterfície per a cada VLAN de producció i gestió: interface Gi0/0.10, encapsulation dot1Q 10, ip address [gateway VLAN 10]","Repetir per a VLANs 20, 30, 40, 50 i 99 amb les IPs corresponents del pla d'adreçament","Verificar que les xarxes directament connectades apareixen a la taula d'encaminament (show ip route)","Prova 1: ping des del router a cada gateway (ha de funcionar)","Prova 2: connectar un PC a cada VLAN i verificar que el ping inter-VLAN funciona sense ACLs"] },
+      { id:"T2.3", nom:"Implementació d'ACLs inter-VLAN", responsable:"Responsable de xarxa",
+        entregable:"ACLs al running-config + taula de proves de la matriu d'accessos (esperat vs obtingut)",
+        passos:["Crear les ACLs exteses named per a cada VLAN origen. Exemple per RRHH: ip access-list extended RRHH_IN","Per RRHH: deny ip 192.168.50.0/mask 192.168.30.0/mask (no accedeix a Logística), deny a Vendes, permit ip any any (accedeix a tot the resta)","Aplicar cada ACL inbound a la subinterfície corresponent: interface Gi0/0.50 → ip access-group RRHH_IN in","ATENCIÓ: afegir regles permit explícites per a DHCP (UDP 67/68) i DNS (UDP/TCP 53) ABANS de les denies, si cal","Provar CADA cel·la de la matriu d'accessos: ping entre cada parell de VLANs i verificar que el resultat coincideix amb la matriu dissenyada"] },
+    ]
+  },
+  { id:"F3", nom:"Active Directory i gestió d'usuaris", setmanes:"S3–S4", color:"#3B82F6", icon:"🏢",
+    desc:"Es desplega el controlador de domini Active Directory, s'estructura per OUs i departaments, s'apliquen GPOs funcionals i s'automatitzen les altes d'usuaris amb un script PowerShell.",
+    tasques:[
+      { id:"T3.1", nom:"Instal·lació del Controlador de Domini (DC)", responsable:"Responsable de servidors",
+        entregable:"DC operatiu + proves d'unió al domini des d'un PC client",
+        passos:["Crear VM Windows Server 2022 a Proxmox (VLAN 20 - IT, IP estàtica: gateway de VLAN20 + 1 o seguint la taula IP)","Configurar: hostname (ex: DC01-NETCORP), IP estàtica, DNS apuntat a si mateix (127.0.0.1 i 192.168.20.X)","Instal·lar rol AD DS: Server Manager → Add Roles and Features → Active Directory Domain Services","Promoure a Controlador de Domini: 'Add a new forest', nom de domini: netcorp.local, nivell funcional: Windows Server 2016 o superior, DSRM password","Verificar: dcdiag /test:netlogon, nslookup netcorp.local (ha de resoldre la IP del DC)","Unir un PC Windows client al domini: System Properties → Computer Name → Change → Domain: netcorp.local"] },
+      { id:"T3.2", nom:"Estructura d'OUs i grups de seguretat", responsable:"Responsable de servidors",
+        entregable:"Captura de l'AD Users and Computers amb l'estructura completa d'OUs i grups",
+        passos:["Obrir Active Directory Users and Computers (des del DC o des del PC amb RSAT)","Crear estructura d'OUs: OU=Netcorp → dins, OUs per departament (Direccio, IT, Logistica, Vendes, RRHH) + OUs funcionals (Servidors, Grups_Seguretat)","Per a cada OU de departament, crear un grup de seguretat global: GRP_Direccio, GRP_IT, GRP_Logistica, GRP_Vendes, GRP_RRHH","Crear manualment 2-3 usuaris de prova per departament per verificar les GPOs","Verificar: get-aduser -filter * | select Name,DistinguishedName (mostra tots els usuaris amb la seva ubicació a l'AD)"] },
+      { id:"T3.3", nom:"Script PowerShell d'alta massiva d'usuaris des de CSV", responsable:"Responsable de servidors",
+        entregable:"Script Import-ADUsers.ps1 funcional + log d'execució + 45 usuaris creats a l'AD",
+        passos:["Preparar el fitxer CSV de NetCorp (45 empleats): columnes Nom, Cognom, Departament, Càrrec. El professor proporciona el CSV o l'alumne el genera de manera realista","El script ha de: llegir el CSV amb Import-Csv, generar el login com 'nom.cognom', crear la contrasenya inicial (Netcorp2025! + forçar canvi en primer login), determinar la OU de destí basant-se en la columna Departament, crear l'usuari amb New-ADUser, afegir-lo al grup GRP_[Departament] corresponent","Gestió d'errors: si l'usuari ja existeix (login duplicat), afegir un número (joan.garcia2), registrar a un log","El script ha de ser idempotent: executar-lo dues vegades no duplica usuaris","Provar executant el script complet i verificar que els 45 usuaris apareixen a l'AD a les OUs correctes"] },
+      { id:"T3.4", nom:"Implementació de GPOs per departament", responsable:"Responsable de servidors",
+        entregable:"Almenys 3 GPOs documentades, vinculades i verificades amb gpresult",
+        passos:["Obrir Group Policy Management (gpmc.msc)","GPO 1 - Mapeig d'unitats de xarxa per departament: vincular a cada OU, User Configuration → Preferences → Drive Maps → Map drive Z: a \\\\DC01\\[departament]$. Crea les carpetes compartides al DC.","GPO 2 - Configuració del servidor DNS: vincular a tota la OU Netcorp, Computer Configuration → Administrative Templates → Network → DNS Client → DNS Server List: IP del servidor DNS","GPO 3 - Política de contrasenyes: vincular al domini, Default Domain Policy → Computer Configuration → Windows Settings → Account Policies → Password Policy: mínim 8 caràcters, historial de 5, caducitat 90 dies","Verificar GPOs: iniciar sessió amb un usuari del domini en un PC client, executar gpresult /r (mostra les GPOs aplicades)"] },
+    ]
+  },
+  { id:"F4", nom:"DNS intern (netcorp.local)", setmanes:"S4–S5", color:"#22C55E", icon:"🌐",
+    desc:"Es configura el servei DNS intern per a la zona netcorp.local. Tots els servidors i serveis de NetCorp han de ser accessibles per nom. S'integra amb el DHCP perquè els registres s'actualitzin automàticament.",
+    tasques:[
+      { id:"T4.1", nom:"Zones DNS directa i inversa a Windows DNS (o BIND9)", responsable:"Responsable de servidors",
+        entregable:"Zones DNS creades + resolució de tots els servidors per nom des de qualsevol PC de la xarxa",
+        passos:["Si s'usa Windows DNS (integrat a AD): el domini netcorp.local ja té zona DNS creada automàticament per AD DS. Obrir DNS Manager i verificar","Afegir registres A per a tots els servidors i serveis: DC01 (IP), DHCP-SRV, ZABBIX, WIREGUARD-GW, AZURE-SEU (IP privada del tunnel)","Crear un registre CNAME per a serveis amb noms de conveniència: ldap.netcorp.local → DC01.netcorp.local","Crear la zona inversa (Reverse Lookup Zone) per a cada subxarxa (/24 o la corresponent). Afegir registres PTR per a cada servidor","Integrar DNS amb DHCP: al servidor DHCP, configurar les opcions de DNS dinàmic per actualitzar registres A i PTR automàticament quan s'assigni una IP","Verificació des de cada VLAN: nslookup dc01.netcorp.local, nslookup 192.168.20.10 (zona inversa), dig @192.168.20.10 dc01.netcorp.local"] },
+      { id:"T4.2", nom:"Configurar clients per usar el DNS intern", responsable:"Responsable de servidors",
+        entregable:"Tots els PCs resolent noms interns. Verificació amb nslookup / dig.",
+        passos:["Mètode 1 - Via DHCP: al fitxer dhcpd.conf de cada àmbit, opció 'option domain-name-servers [IP del DC/DNS]'. Reiniciar DHCP als clients per agafar el nou DNS","Mètode 2 - Via GPO (per als PCs del domini): GPO ja creada al T3.4 que configura el servidor DNS als clients","Verificar que la resolució funciona: des d'un PC de cada VLAN, nslookup dc01.netcorp.local ha de retornar la IP correcta","Verificar resolució externa: nslookup google.com ha de seguir funcionant (el DNS intern ha de fer forwarding a 8.8.8.8 per a dominis externs no locals)","Afegir registre DNS per a la seu Azure: azure-seu.netcorp.local → IP privada del túnel WireGuard (172.16.X.X)"] },
+    ]
+  },
+  { id:"F5", nom:"Assegurament DNS i validació final", setmanes:"S5–S6", color:"#A855F7", icon:"🛡️",
+    desc:"S'apliquen les mesures de bastionament del servei DNS, es verifica tot el sistema de forma integral i es prepara la presentació tècnica.",
+    tasques:[
+      { id:"T5.1", nom:"Bastionament del servei DNS", responsable:"Responsable de seguretat",
+        entregable:"Informe d'assegurament DNS + captures de configuració",
+        passos:["Restringir la recursivitat: configurar el servidor DNS perquè únicament faci resolució recursiva per als clients de les VLANs internes (no per a qualsevol IP)","Restringir les transferències de zona: allow-transfer únicament a les IPs dels servidors DNS secundaris (si n'hi ha) o deny all","Configurar el DNS forwarder: el servidor DNS intern reenviarà les consultes de dominis externs a un DNS públic fiable (1.1.1.1 o 9.9.9.9), no directament a l'arrel","Verificar que el servidor DNS intern NO és accessible des de l'exterior (no respon a consultes des de la VM Azure sense autenticació)","Provar: des de la VM Kali (simulant atacant extern), intentar fer una consulta recursiva al servidor DNS intern → ha de ser rebutjada"] },
+      { id:"T5.2", nom:"Prova d'integració completa P1+P2", responsable:"Tot el grup",
+        entregable:"Taula de proves d'integració (20 proves mínimes, cada una amb resultat esperat i obtingut)",
+        passos:["Prova 1: PC nou connectat a VLAN 30 → obté IP per DHCP del rang correcte","Prova 2: el PC resol dc01.netcorp.local per DNS → IP correcta","Prova 3: el PC pot iniciar sessió al domini AD amb credencials d'un usuari de Logística","Prova 4: l'usuari de Logística veu l'unitat de xarxa Z: apuntant a la seva carpeta","Prova 5: PC de VLAN 50 (RRHH) NO pot fer ping a VLAN 30 (Logística) → ACL bloqueja","Prova 6: PC de VLAN 20 (IT) pot fer ping a TOTES les VLANs","Prova 7: resolució inversa (PTR) funciona per a tots els servidors","Prova 8: afegir un nou usuari al CSV i executar el script → apareix a AD a la OU correcta","Prova 9: modificar una GPO i verificar que els clients l'apliquen en <10 min","Prova 10: connectivitat amb la seu Azure (ping azure-seu.netcorp.local des de VLAN IT)"] },
+      { id:"T5.3", nom:"Documentació tècnica i presentació", responsable:"Tot el grup",
+        entregable:"Dossier tècnic (PDF) + presentació 15 min amb demo en directe",
+        passos:["Actualitzar el diagrama d'arquitectura: incloure VLANs, AD, DNS, ACLs i connexió Azure","Documentar: running-configs de switch i router, fitxers de zona DNS, script PowerShell comentat, estructura AD (captura), GPOs aplicades (gpresult)","Matriu d'accessos final amb les ACLs que la implementen","Problemes trobats durant el projecte i com es van resoldre (secció obligatòria)","Presentació (15+5 min): 3 min context i objectius, 6 min demo en directe (connectar PC nou, iniciar sessió AD, verificar ACLs, resoldre noms DNS), 4 min decisions tècniques i problemes, 2 min conclusions"] },
+    ]
+  },
+];
+
+function buildFases() {
+  const container = document.getElementById('fases-container');
+  FASES.forEach(f => {
+    const wrap = document.createElement('div');
+    wrap.className = 'fase-wrap';
+    let tascuesHtml = `<div class="fase-body" id="fb-${f.id}" style="display:none;border:1px solid ${f.color};border-top:none;background:${f.color}06">
+      <div class="fase-desc">${f.desc}</div>`;
+    f.tasques.forEach(t => {
+      const passosHtml = t.passos.map((p,i) => `<div class="tasca-pas"><span class="tasca-pas-num" style="color:${f.color}">${i+1}.</span><span>${p}</span></div>`).join('');
+      tascuesHtml += `
+        <div class="tasca-header" id="th-${t.id}" onclick="toggleTasca('${t.id}')">
+          <span class="tasca-id" style="background:${f.color}22;color:${f.color}">${t.id}</span>
+          <div style="flex:1"><div class="tasca-name">${t.nom}</div><div class="tasca-preview" id="tp-${t.id}">${t.passos[0].substring(0,90)}…</div></div>
+          <span class="tasca-arrow" id="ta-${t.id}">▾</span>
+        </div>
+        <div class="tasca-detail" id="td-${t.id}" style="display:none">
+          <div class="tasca-inner">
+            <div class="tasca-passos">
+              <div class="tasca-passos-title">📋 Passos detallats</div>${passosHtml}
+            </div>
+            <div class="tasca-footer">
+              <div class="tasca-footer-block"><div class="tasca-footer-label">📦 Entregable</div><div class="tasca-entregable">${t.entregable}</div></div>
+              <div class="tasca-footer-block"><div class="tasca-footer-label">👤 Responsable</div><div class="tasca-responsable">${t.responsable}</div></div>
+            </div>
+          </div>
+        </div>`;
+    });
+    tascuesHtml += '</div>';
+    wrap.innerHTML = `
+      <div class="fase-header" id="fh-${f.id}" onclick="toggleFase('${f.id}')"
+           style="background:rgba(0,0,0,.3);border:1px solid ${f.color}33">
+        <span class="fase-icon">${f.icon}</span>
+        <div style="flex:1">
+          <div class="fase-meta">
+            <span class="fase-num" style="color:${f.color}">${f.id}</span>
+            <span class="fase-name">${f.nom}</span>
+            <span class="badge" style="background:${f.color}22;color:${f.color};border:1px solid ${f.color}44">${f.setmanes}</span>
+            <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">${f.tasques.length} tasques</span>
+          </div>
+          <div class="fase-preview">${f.desc.substring(0,110)}…</div>
+        </div>
+        <span class="fase-arrow" id="fa-${f.id}">▾</span>
+      </div>${tascuesHtml}`;
+    container.appendChild(wrap);
+  });
+}
+
+function toggleFase(id) {
+  const body = document.getElementById('fb-'+id);
+  const arrow = document.getElementById('fa-'+id);
+  const header = document.getElementById('fh-'+id);
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  const faseColor = FASES.find(f=>f.id===id).color;
+  header.style.background = isOpen ? 'rgba(0,0,0,.3)' : `${faseColor}18`;
+  header.classList.toggle('open', !isOpen);
+}
+
+function toggleTasca(id) {
+  const detail = document.getElementById('td-'+id);
+  const arrow = document.getElementById('ta-'+id);
+  const preview = document.getElementById('tp-'+id);
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  if(preview) preview.style.display = isOpen ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', buildFases);
+</script>
+</body>
+</html>

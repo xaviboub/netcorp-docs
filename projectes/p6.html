@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P6 — Incident! Resposta, forense i resiliència</title>
+<style>
+  :root {
+    --bg: #0A0E1A; --panel: #111827; --border: #1E2D40;
+    --accent: #00C2FF; --green: #00E5A0; --orange: #FF8C42;
+    --yellow: #FFD166; --red: #FF4D6D; --purple: #A855F7;
+    --text: #E2E8F0; --muted: #64748B; --white: #FFFFFF;
+    --M06: #3B82F6; --M07: #22C55E; --M08: #F97316; --C037: #A855F7; --C038: #EF4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+  .header { background: linear-gradient(180deg,#0F1827 0%,var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 20px 24px 0; }
+  .header-inner { max-width: 960px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 16px; }
+  .header-title { font-size: 21px; font-weight: 900; color: var(--white); letter-spacing: -0.5px; margin: 8px 0 4px; }
+  .header-sub { color: var(--muted); font-size: 12px; }
+  .header-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .header-stats { display: flex; flex-direction: column; gap: 5px; text-align: right; }
+  .stat-row { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+  .stat-val { font-weight: 800; font-size: 20px; line-height: 1; }
+  .stat-lbl { color: var(--muted); font-size: 11px; }
+  .tabs { display: flex; gap: 2px; }
+  .tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px 6px 0 0; transition: all .15s; }
+  .tab-btn.active { background: rgba(0,194,255,.1); border-bottom-color: var(--accent); color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.05); }
+  .content { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .panel + .panel, .panel + .fase-wrap, .fase-wrap + .fase-wrap { margin-top: 10px; }
+  .panel-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .badge { display: inline-block; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; letter-spacing: .4px; white-space: nowrap; }
+  .badge-lg { padding: 4px 12px; font-size: 12px; }
+  .section-title { margin-bottom: 20px; }
+  .section-title h2 { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--white); letter-spacing: -.5px; }
+  .section-title p { margin: 4px 0 0 30px; color: var(--muted); font-size: 13px; }
+  .ra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+  .ra-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .ra-card-inner { display: flex; gap: 8px; align-items: flex-start; }
+  .ra-name { color: var(--white); font-weight: 700; font-size: 11px; margin-bottom: 4px; }
+  .ra-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .ra-tag { color: var(--muted); font-size: 10px; background: rgba(255,255,255,.05); border-radius: 3px; padding: 1px 5px; }
+  .crono { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .crono-item { flex: 1; min-width: 120px; border-radius: 10px; padding: 12px 10px; text-align: center; }
+  .crono-icon { font-size: 20px; margin-bottom: 4px; }
+  .crono-num { font-weight: 800; font-size: 12px; }
+  .crono-name { font-weight: 700; font-size: 11px; margin: 4px 0; line-height: 1.3; color: var(--white); }
+  .crono-weeks { color: var(--muted); font-size: 10px; }
+  .arch-item { border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .arch-label { color: var(--white); font-weight: 700; font-size: 12px; }
+  .arch-desc { color: var(--muted); font-size: 11px; }
+  .teoria-mod { margin-bottom: 16px; }
+  .teoria-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .teoria-icon { font-size: 26px; }
+  .teoria-title { font-weight: 800; font-size: 15px; }
+  .teoria-badges { display: flex; gap: 8px; margin-top: 4px; }
+  .teoria-bloc { border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px; }
+  .teoria-sess { font-weight: 700; font-size: 11px; margin-bottom: 6px; }
+  .teoria-item { display: flex; gap: 6px; margin-bottom: 3px; font-size: 12px; line-height: 1.6; color: var(--text); }
+  .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .infra-card { background: var(--panel); border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; }
+  .infra-icon { font-size: 20px; }
+  .infra-name { color: var(--white); font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+  .infra-desc { color: var(--muted); font-size: 11px; line-height: 1.5; margin-bottom: 5px; }
+  .infra-section-title { color: var(--white); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  .fase-wrap { margin-bottom: 10px; }
+  .fase-header { border-radius: 12px; padding: 14px 18px; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: background .15s; }
+  .fase-header.open { border-radius: 12px 12px 0 0; }
+  .fase-icon { font-size: 22px; }
+  .fase-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+  .fase-num { font-weight: 800; font-size: 13px; }
+  .fase-name { color: var(--white); font-weight: 700; font-size: 15px; }
+  .fase-preview { color: var(--muted); font-size: 12px; }
+  .fase-arrow { color: var(--muted); font-size: 18px; margin-left: auto; flex-shrink: 0; transition: transform .2s; }
+  .fase-arrow.open { transform: rotate(180deg); }
+  .fase-body { border-radius: 0 0 12px 12px; overflow: hidden; }
+  .fase-desc { padding: 12px 18px 8px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; line-height: 1.6; }
+  .tasca-header { padding: 12px 18px; cursor: pointer; border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; transition: background .15s; }
+  .tasca-id { font-weight: 800; font-size: 11px; border-radius: 4px; padding: 2px 7px; flex-shrink: 0; margin-top: 1px; }
+  .tasca-name { color: var(--white); font-weight: 700; font-size: 13px; }
+  .tasca-preview { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .tasca-arrow { color: var(--muted); font-size: 14px; flex-shrink: 0; margin-left: auto; transition: transform .2s; }
+  .tasca-arrow.open { transform: rotate(180deg); }
+  .tasca-detail { padding: 0 18px 16px; }
+  .tasca-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .tasca-passos { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .tasca-passos-title { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .tasca-pas { display: flex; gap: 10px; margin-bottom: 5px; color: var(--text); font-size: 12px; line-height: 1.5; }
+  .tasca-pas-num { font-weight: 800; flex-shrink: 0; font-size: 11px; }
+  .tasca-footer { display: grid; grid-template-columns: 1fr 1fr; }
+  .tasca-footer-block { padding: 12px 16px; }
+  .tasca-footer-block + .tasca-footer-block { border-left: 1px solid var(--border); }
+  .tasca-footer-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .tasca-entregable { font-size: 12px; font-weight: 600; line-height: 1.4; color: #00E5A0; }
+  .tasca-responsable { font-size: 12px; font-weight: 600; color: var(--yellow); }
+  .aval-card { margin-bottom: 10px; }
+  .aval-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .aval-area { color: var(--white); font-weight: 800; font-size: 14px; }
+  .aval-pes { border-radius: 20px; padding: 4px 14px; font-weight: 800; font-size: 18px; }
+  .aval-bar-bg { border-radius: 4px; height: 5px; margin-bottom: 10px; }
+  .aval-bar { border-radius: 4px; height: 100%; }
+  .aval-note { display: flex; gap: 8px; color: var(--text); font-size: 12px; margin-bottom: 5px; }
+  .p1-link { background: rgba(0,194,255,.08); border: 1px solid rgba(0,194,255,.2); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .p1-link-icon { font-size: 22px; }
+  .p1-link-text { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .p1-link-text strong { color: var(--accent); }
+  code { background: rgba(0,0,0,.2); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-badges">
+          <span class="badge badge-lg" style="background:rgba(123,36,28,.35);color:#FF8A75;border:1px solid rgba(123,36,28,.55)">P6</span>
+          <span class="badge badge-lg" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">5–6 setmanes</span>
+          <span class="badge badge-lg" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">🔥 Incident simulat</span>
+          <span class="badge badge-lg" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">Forense + OSINT</span>
+          <span class="badge badge-lg" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">Recuperació</span>
+        </div>
+        <div class="header-title">Incident! Resposta, forense i resiliència</div>
+        <div class="header-sub">ASIX Ciberseguretat · 2n Curs · Grups de 3 · C038 + C037 + M06 + M07</div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-row"><span class="stat-lbl">RA coberts</span><span class="stat-val" style="color:#00C2FF">4</span></div>
+        <div class="stat-row"><span class="stat-lbl">Mòduls</span><span class="stat-val" style="color:#00E5A0">4</span></div>
+        <div class="stat-row"><span class="stat-lbl">Tasques</span><span class="stat-val" style="color:#FFD166">15</span></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('resum',this)">📋 Resum</button>
+      <button class="tab-btn" onclick="showTab('teoria',this)">📚 Teoria</button>
+      <button class="tab-btn" onclick="showTab('infra',this)">🛠️ Recursos</button>
+      <button class="tab-btn" onclick="showTab('fases',this)">🔧 Pràctica</button>
+      <button class="tab-btn" onclick="showTab('avaluacio',this)">📊 Avaluació</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══ RESUM ═══ -->
+<div id="view-resum" class="view active">
+
+  <div class="p1-link" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25)">
+    <span class="p1-link-icon">🔥</span>
+    <div class="p1-link-text">
+      <strong style="color:#EF4444">Avís: aquest projecte funciona de manera diferent als anteriors.</strong> NetCorp (P1-P5) està plenament operativa, amb tallafocs, IDS/IPS i monitoratge. Però durant les properes setmanes, <strong>el professor (en rol d'atacant) comprometrà part de la infraestructura del vostre grup sense avisar prèviament</strong>. El vostre paper canvia: ja no sou l'equip de TI de NetCorp, sou una <strong>empresa de ciberseguretat externa contractada d'urgència</strong> per investigar què ha passat, contenir el dany, recuperar els serveis i explicar-ho a Direcció.
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> Objectiu del projecte</h2></div>
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel-grid2">
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Situació inicial (herència del P1-P5)</div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Infraestructura completa i defensada</div><div class="arch-desc">DMZ, tallafocs, VPN, IDS/IPS (Suricata), logs centralitzats (Graylog/ELK)</div></div></div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Monitoratge amb alertes</div><div class="arch-desc">Sistema de Telegram/correu del P5 hauria de detectar activitat anòmala</div></div></div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">45 usuaris amb correu corporatiu</div><div class="arch-desc">El correu (Postfix/Dovecot del P3) és un vector d'atac real per a phishing</div></div></div>
+        <div style="color:var(--red);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">L'esdeveniment que activa el projecte</div>
+        <div class="arch-item" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25)"><span style="font-size:18px">💥</span><div><div class="arch-label">Compromís sense avisar</div><div class="arch-desc">El professor introdueix un canvi a la infraestructura del grup: un usuari nou no autoritzat, un fitxer estrany, un servei amb comportament anòmal, un correu de phishing rebut...</div></div></div>
+        <div class="arch-item" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25)"><span style="font-size:18px">❓</span><div><div class="arch-label">Els alumnes NO en saben res inicialment</div><div class="arch-desc">Han de descobrir-ho ells mateixos (idealment via les seves pròpies alertes del P5) o se'ls notifica formalment com un "encàrrec urgent".</div></div></div>
+      </div>
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Lliurables al final del P6</div>
+        <div class="arch-item" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25)"><span style="font-size:18px">📜</span><div><div class="arch-label">Pla de Resposta a Incidents (IRP)</div><div class="arch-desc">Document preventiu de NetCorp, redactat ABANS que esclati l'incident (F1)</div></div></div>
+        <div class="arch-item" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25)"><span style="font-size:18px">🔍</span><div><div class="arch-label">Informe forense amb cronologia</div><div class="arch-desc">Línia de temps reconstruïda de l'atac a partir de logs i evidències</div></div></div>
+        <div class="arch-item" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25)"><span style="font-size:18px">📦</span><div><div class="arch-label">Evidències amb cadena de custòdia</div><div class="arch-desc">Captures, hashes, imatges de disc/memòria documentades formalment</div></div></div>
+        <div class="arch-item" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25)"><span style="font-size:18px">🕵️</span><div><div class="arch-label">Anàlisi OSINT de l'"atacant"</div><div class="arch-desc">Investigació de les pistes que el professor hagi deixat (IPs, dominis, indicadors)</div></div></div>
+        <div class="arch-item" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25)"><span style="font-size:18px">🔄</span><div><div class="arch-label">Recuperació amb scripts automatitzats</div><div class="arch-desc">Restauració controlada des de còpies de seguretat preparades a F1</div></div></div>
+        <div class="arch-item" style="background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25)"><span style="font-size:18px">🎤</span><div><div class="arch-label">Presentació executiva</div><div class="arch-desc">Com una consultora de ciberseguretat informant al client (Direcció de NetCorp)</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> RA coberts</h2></div>
+  <div class="ra-grid">
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3);flex-shrink:0">C038</span><div><div class="ra-name">RA1 · Resposta a incidents i anàlisi forense</div><div class="ra-tags"><span class="ra-tag">NIST/SANS</span><span class="ra-tag">Autopsy/Volatility</span><span class="ra-tag">Cadena de custòdia</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3);flex-shrink:0">C037</span><div><div class="ra-name">RA3 · Seguretat web: anàlisi post-incident</div><div class="ra-tags"><span class="ra-tag">Logs d'explotació</span><span class="ra-tag">IoCs</span><span class="ra-tag">Remediació</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);flex-shrink:0">M06</span><div><div class="ra-name">RA3 · Automatització de tasques de recuperació</div><div class="ra-tags"><span class="ra-tag">Backups automatitzats</span><span class="ra-tag">Restauració controlada</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);flex-shrink:0">M07</span><div><div class="ra-name">RA5 · Correu: vector phishing i anàlisi de capçaleres</div><div class="ra-tags"><span class="ra-tag">SPF/DKIM/DMARC</span><span class="ra-tag">Spoofing</span></div></div></div></div>
+  </div>
+
+  <div class="section-title"><h2><span>📅</span> Cronograma — 5–6 setmanes</h2></div>
+  <div class="panel">
+    <div class="crono">
+      <div class="crono-item" style="background:rgba(0,194,255,.12);border:1px solid rgba(0,194,255,.3)"><div class="crono-icon">🛡️</div><div class="crono-num" style="color:#00C2FF">F1</div><div class="crono-name">Preparació: IRP i backups</div><div class="crono-weeks">S1</div></div>
+      <div class="crono-item" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3)"><div class="crono-icon">🔥</div><div class="crono-num" style="color:#EF4444">F2</div><div class="crono-name">L'incident: detecció</div><div class="crono-weeks">S2</div></div>
+      <div class="crono-item" style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3)"><div class="crono-icon">🔍</div><div class="crono-num" style="color:#A855F7">F3</div><div class="crono-name">Contenció i anàlisi forense</div><div class="crono-weeks">S2–S3</div></div>
+      <div class="crono-item" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3)"><div class="crono-icon">🕵️</div><div class="crono-num" style="color:#22C55E">F4</div><div class="crono-name">Vector i OSINT</div><div class="crono-weeks">S3–S4</div></div>
+      <div class="crono-item" style="background:rgba(255,140,66,.12);border:1px solid rgba(255,140,66,.3)"><div class="crono-icon">🔄</div><div class="crono-num" style="color:#FF8C42">F5</div><div class="crono-name">Recuperació i informe final</div><div class="crono-weeks">S4–S6</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TEORIA ═══ -->
+<div id="view-teoria" class="view">
+  <div class="section-title"><h2><span>📚</span> Contingut teòric per mòdul</h2><p>Sessions impartides per cada professor just abans que la pràctica les necessiti.</p></div>
+
+  <!-- C038 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🔍</span>
+      <div>
+        <div class="teoria-title" style="color:#EF4444">Resposta a incidents i anàlisi forense</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">C038</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">7 sessions · ~14h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S1 — El cicle de resposta a incidents (NIST/SANS)</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Marc NIST SP 800-61: defineix 4 fases en bucle: (1) Preparació, (2) Detecció i Anàlisi, (3) Contenció/Eradicació/Recuperació, (4) Activitats post-incident (lliçons apreses).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Marc SANS PICERL (variant més detallada): Preparation, Identification, Containment, Eradication, Recovery, Lessons Learned. Útil perquè separa explícitament Contenció (aturar que s'estengui), Eradicació (eliminar la causa) i Recuperació (tornar a operar).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Per què la "Preparació" és la fase més important encara que sembli "abans de l'incident": un IRP (Incident Response Plan) escrit ABANS de l'incident estalvia hores crítiques de confusió quan realment passa. Aquest projecte comença precisament redactant-lo (F1), abans que el professor "ataqui".</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Rols durant un incident: Incident Commander (coordina, pren decisions), analista forense (recull evidències), comunicació (informa a Direcció/clients sense filtrar dades sensibles). En grups de 3, es poden rotar o assignar segons F.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S2 — Contenció: aturar l'hemorràgia sense destruir proves</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Dilema central de la contenció: aïllar un sistema compromès (desconnectar-lo de la xarxa) atura el dany, però APAGAR-LO destrueix evidències volàtils (memòria RAM, connexions de xarxa actives, processos en execució).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Ordre correcte d'actuació: (1) Aïllar a nivell de xarxa (desconnectar el cable, moure a una VLAN de quarantena, o bloquejar al tallafocs — NO apagar), (2) Capturar evidències volàtils (memòria, connexions, processos), (3) NOMÉS DESPRÉS, si cal, apagar per a anàlisi forense del disc.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Contenció a NetCorp: gràcies a la segmentació del P5 (VLANs, DMZ, tallafocs), "aïllar" un host pot ser tan senzill com afegir-li una regla específica al tallafocs que bloquegi tot el seu trànsit, sense desconnectar-lo físicament.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S3–S4 — Cadena de custòdia i recollida d'evidències</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Cadena de custòdia: registre formal de qui ha tocat cada evidència, quan, i per què. En un cas real, és el que permet que una evidència sigui admissible en un procés legal. En aquest projecte, és el que dona RIGOR al treball (i nota).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Hashes com a garantia d'integritat: en obtenir una evidència (un fitxer, una imatge de disc), es calcula immediatament el seu hash (SHA-256). Qualsevol anàlisi posterior es fa sobre CÒPIES; l'original es preserva i el seu hash es torna a verificar al final per demostrar que no s'ha alterat.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Ordre de volatilitat (Order of Volatility, RFC 3227): es recullen primer les dades MÉS volàtils (registres de CPU, memòria RAM, connexions de xarxa actives, processos en execució) i després les menys volàtils (disc, logs, còpies de seguretat). Si apagues l'ordinador abans de capturar la RAM, aquella informació es perd per sempre.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Plantilla de registre d'evidències: ID, descripció, origen (host/IP), data/hora de recollida, persona, hash SHA-256, ubicació d'emmagatzematge. Cada evidència recollida durant F3-F4 ha d'anotar-se aquí.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S5–S6 — Eines forenses: Volatility, Autopsy i Wireshark</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Anàlisi de memòria amb Volatility: a partir d'un volcat de memòria RAM (capturat amb eines com LiME en un sistema Linux compromès), Volatility permet llistar processos en execució (pslist), connexions de xarxa obertes en aquell moment (netscan), i fins i tot extreure fitxers oberts o claus de xifratge en memòria.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Anàlisi de disc amb Autopsy: interfície gràfica sobre The Sleuth Kit. Permet muntar una imatge de disc (en mode lectura) i navegar pel sistema de fitxers, recuperar fitxers esborrats, cercar per paraules clau, i veure la línia de temps de modificacions de fitxers (timeline).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Wireshark per a anàlisi forense de xarxa: a diferència del seu ús al P1 (entendre protocols), aquí s'usa per analitzar una captura de trànsit (pcap) ja existent (potser capturada per Suricata o el propi tallafocs del P5) buscant l'activitat de l'atacant: connexions sospitoses, exfiltració de dades, comandes C2 (Command & Control).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Indicadors de Compromís (IoC): qualsevol evidència observable que un sistema ha estat compromès — una IP, un domini, un hash de fitxer, una entrada de registre, un usuari creat. Els IoCs es recopilen durant l'anàlisi i s'usen per (a) confirmar l'abast de l'incident (altres hosts amb el mateix IoC també estan compromesos?) i (b) crear regles de detecció futures (com les regles Suricata del P5).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S7 — Plans de contingència i resiliència (BCP/DRP)</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>BCP (Business Continuity Plan): com l'empresa continua operant DURANT un incident greu (ex: si el servidor de correu cau, els comercials poden seguir treballant igualment? Hi ha un procediment alternatiu?).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>DRP (Disaster Recovery Plan): com es recupera la infraestructura DESPRÉS d'un incident greu. Mètriques clau: RTO (Recovery Time Objective — quant de temps màxim es pot estar sense el servei) i RPO (Recovery Point Objective — quantes dades es poden permetre perdre, determina la freqüència de les còpies de seguretat).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Per a NetCorp: definir RTO/RPO per a cada servei crític (AD, correu, web) — per exemple, AD: RTO 2h / RPO 24h (còpia diària); web: RTO 4h / RPO 1 setmana. Aquests valors determinen els requisits dels scripts de backup de M06 (F1).</span></div>
+    </div>
+  </div>
+
+  <!-- M07 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">📧</span>
+      <div>
+        <div class="teoria-title" style="color:#22C55E">Correu com a vector d'atac: phishing i anàlisi de capçaleres</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">M07</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">3 sessions · ~6h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S1 — Per què el correu és el vector d'atac número 1</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>La majoria d'incidents de seguretat reals comencen amb un correu: un empleat fa clic en un enllaç o obre un adjunt maliciós. És més fàcil enganyar una persona que trencar un tallafocs ben configurat (com el del P5).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Tipus de phishing: phishing genèric (massiu, poc personalitzat), spear phishing (dirigit a una persona/empresa concreta, amb informació real per fer-lo credible — ex: usant noms reals dels empleats de NetCorp del P2), whaling (dirigit a Direcció/càrrecs alts), BEC (Business Email Compromise: suplantar un proveïdor o un càrrec per demanar una transferència).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Per al P6: el "incident" pot incloure (segons el que decideixi el professor) un correu de phishing que un usuari de NetCorp ha rebut i amb el qual ha interactuat, sent l'origen del compromís d'un host.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S2 — Anàlisi de capçaleres de correu</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Les capçaleres de correu (visibles amb "mostrar original" al client de correu) contenen el recorregut real del missatge: Received (cada servidor SMTP pel qual ha passat, en ordre invers — el primer Received de dalt és l'últim salt), Return-Path, From (pot ser fals, "spoofed").</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Detectar spoofing: comparar el domini del "From" amb l'IP/domini real del primer servidor "Received" — si "From: direccio@netcorp.local" però el "Received" mostra un servidor SMTP totalment aliè a NetCorp, és spoofing.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Anàlisi pràctica sobre l'entorn del P3: amb el Postfix/Dovecot propi, els alumnes poden enviar-se a si mateixos un correu amb capçaleres manipulades (per exemple, amb telnet al port 25, escrivint manualment les comandes SMTP) per veure en primera persona com es detecta (o no) el spoofing.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S3 — SPF, DKIM i DMARC: protegint el domini de correu</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span><strong>SPF (Sender Policy Framework):</strong> registre DNS TXT que llista quins servidors estan autoritzats a enviar correu "en nom de" netcorp.local. Un servidor receptor pot comprovar si l'IP origen del correu coincideix amb la llista SPF del domini que diu ser el remitent.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span><strong>DKIM (DomainKeys Identified Mail):</strong> el servidor de correu signa digitalment els missatges sortints amb una clau privada; la clau pública es publica al DNS. El receptor verifica la signatura per confirmar que el missatge no s'ha alterat i prové realment del domini.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span><strong>DMARC (Domain-based Message Authentication, Reporting & Conformance):</strong> registre DNS que indica QUÈ FER si un correu falla SPF i/o DKIM (none/quarantine/reject), i on enviar informes sobre aquests fracassos. És la política que lliga SPF i DKIM.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Implementació al servidor de correu del P3: afegir els registres TXT corresponents a la zona DNS netcorp.local (SPF: <code>v=spf1 mx -all</code>; DKIM: generar la clau amb opendkim; DMARC: <code>v=DMARC1; p=quarantine; rua=mailto:dmarc@netcorp.local</code>) i verificar amb una eina de comprovació de correu.</span></div>
+    </div>
+  </div>
+
+  <!-- C037 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🌐</span>
+      <div>
+        <div class="teoria-title" style="color:#A855F7">Anàlisi web post-incident i OSINT</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">C037</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">5 sessions · ~10h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S1–S2 — Anàlisi de logs web per detectar explotació</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Si el "incident" afecta el servidor web de la DMZ (P3/P5), els logs d'accés (access.log) i d'errors (error.log) d'Apache/Nginx contenen el rastre de l'atac: peticions amb patrons d'injecció (' OR 1=1, &lt;script&gt;), accessos a rutes que no existeixen normalment (escaneig previ), codis d'estat anòmals (200 després de molts 404, indicant que una petició "estranya" finalment va funcionar).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Ara els logs estan centralitzats a Graylog/ELK (P5): en lloc de grep manual, es poden fer cerques i filtres temporals per reconstruir la seqüència exacta de peticions de l'IP sospitosa.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Correlació amb les alertes de Suricata (P5): si l'IDS va generar una alerta relacionada amb aquest atac, comparar la marca de temps de l'alerta amb els logs web — confirma si l'IDS va detectar l'atac (i si el tallafocs/IPS el va aturar o no).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S3 — Remediació de vulnerabilitats web post-incident</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Un cop identificat com va entrar l'atacant (per exemple, una vulnerabilitat no corregida del P3/P4 que va passar per alt, o una configuració del WAF amb una excepció massa permissiva), cal corregir-la específicament — no només "bloquejar la IP" (que és contenció, no eradicació).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Diferència entre contenció i eradicació aplicada al web: contenció = bloquejar la IP atacant al tallafocs (immediat). Eradicació = corregir la vulnerabilitat que va permetre l'atac (per exemple, afegir una regla ModSecurity específica, actualitzar un component vulnerable, corregir una validació d'entrada).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S4–S5 — OSINT: investigant l'origen de l'atac</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>OSINT (Open Source Intelligence): recollida d'informació a partir de fonts públiques. En aquest projecte, s'aplica als IoCs trobats (IPs, dominis, hashes de fitxers) per intentar contextualitzar-los — encara que "l'atacant" sigui el professor, l'exercici de metodologia és real.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>Shodan:</strong> motor de cerca de dispositius connectats a Internet. Permet consultar si una IP concreta té serveis exposats, banners, certificats — útil per investigar una IP "atacant" (en un entorn real).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>TheHarvester:</strong> eina que recull correus, subdominis i noms relacionats amb un domini a partir de motors de cerca públics — útil per entendre quina informació sobre NetCorp seria visible per a un atacant real abans d'un spear phishing (connecta amb la S1 de M07).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>VirusTotal / hash lookup:</strong> si durant l'anàlisi forense (C038) s'ha trobat un fitxer sospitós, es calcula el seu hash i es consulta en bases de dades públiques de malware per veure si és una mostra coneguda.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>Dark web — funcionament segur i marc ètic:</strong> introducció teòrica al funcionament de Tor i als mercats de dades robades, EXCLUSIVAMENT teòrica i sense navegació real des dels equips del centre. L'objectiu és que els alumnes entenguin per què existeix aquest risc (dades de NetCorp filtrades podrien aparèixer-hi) i com les empreses de ciberintel·ligència ho monitoritzen (serveis de "dark web monitoring"), sense que calgui ni es permeti l'accés directe.</span></div>
+    </div>
+  </div>
+
+  <!-- M06 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🔄</span>
+      <div>
+        <div class="teoria-title" style="color:#3B82F6">Automatització de còpies de seguretat i recuperació</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">M06</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">4 sessions · ~8h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S1 — Estratègies de còpia de seguretat</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Tipus de còpia: completa (tot, cada vegada — simple però lenta i ocupa molt), incremental (només el que ha canviat des de l'última còpia de qualsevol tipus), diferencial (només el que ha canviat des de l'última còpia completa). Compromís entre temps de còpia i temps de restauració.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Regla 3-2-1: 3 còpies de les dades, en 2 tipus de mitjans diferents, 1 d'elles fora de les instal·lacions (offsite). A NetCorp: una còpia local al Proxmox + una còpia a la VM d'Azure (P1) compleix parcialment la regla (offsite).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Què cal incloure a les còpies de NetCorp: bases de dades de l'AD (P2), fitxers de configuració dels serveis (P3-P5: vhosts, dhcpd.conf, configuracions de firewall/VPN/Suricata), continguts de les comparticions Samba, registres DNS.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S2 — Scripts de còpia de seguretat automatitzada</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Eines: rsync per a sincronització eficient de fitxers (només transmet les diferències), tar per a empaquetar, gzip/xz per a compressió. Combinació típica: tar + gzip + timestamp al nom del fitxer + rsync cap a un destí remot (la VM Azure).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Automatització amb cron (vist al P1): execució periòdica segons l'RPO definit a l'IRP (F1) — per exemple, backup de l'AD cada 24h, backup de configuracions de xarxa cada cop que es modifiquen (o setmanalment).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Verificació de les còpies: un script de backup que mai s'ha provat a restaurar NO és una còpia de seguretat fiable. Cal un procediment (encara que sigui manual o semi-automàtic) de prova de restauració periòdica.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Rotació i retenció: no guardar còpies indefinidament (espai limitat). Política típica: còpies diàries dels últims 7 dies + còpies setmanals de l'últim mes + còpia mensual de l'últim any (similar a logrotate, P1).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S3–S4 — Restauració controlada i automatització de la contenció</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Restauració controlada vs "tornar a engegar i ja": abans de restaurar un servei comprés, cal: (1) confirmar que la vulnerabilitat/vector ja està corregit (si no, restaurar només reintrodueix el problema), (2) restaurar en un entorn aïllat primer si és possible, (3) verificar la integritat de la còpia abans de confiar-hi (la còpia podria estar també compromesa si l'atac porta temps).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Script de restauració: ha de ser l'invers del script de backup (T del F1), idealment provat ABANS de l'incident. Ha de documentar cada pas: aturar el servei afectat, restaurar els fitxers/BD des de la còpia, verificar integritat (hash si és rellevant), reiniciar el servei, verificar funcionament.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Automatització de la contenció (connectant amb el P5): un script que, donada una IP o host compromès, l'afegeix automàticament a una llista de quarantena al tallafocs (similar al script de resposta del P5, però ara executat manualment per l'equip durant l'incident, amb registre de l'acció per a l'informe forense).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Documentació de "lessons learned": després de recuperar el servei, el script i el procediment de restauració s'actualitzen amb qualsevol problema trobat durant l'execució real — la pràctica gairebé mai surt exactament com es va planificar a F1, i això també forma part de l'aprenentatge.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RECURSOS ═══ -->
+<div id="view-infra" class="view">
+  <div class="section-title"><h2><span>🛠️</span> Recursos i infraestructura</h2><p>No calen VMs noves significatives. El recurs principal és la pròpia infraestructura P1-P5, més eines d'anàlisi forense.</p></div>
+
+  <div class="infra-section-title">🔌 Infraestructura existent (herència P1-P5)</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📊</span><div><div class="infra-name">Graylog/ELK (del P5)</div><div class="infra-desc">Font principal d'evidències: tots els logs centralitzats. Imprescindible que segueixi funcionant durant l'incident.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Reutilitzar del P5</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🚨</span><div><div class="infra-name">Suricata + alertes (del P5)</div><div class="infra-desc">Hauria de generar la primera pista de l'incident. Verificar que les alertes de Telegram/correu segueixen actives.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Reutilitzar del P5</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🧱</span><div><div class="infra-name">Tallafocs (del P5)</div><div class="infra-desc">S'usarà per a la contenció: bloqueig d'IPs/hosts compromesos.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Reutilitzar del P5</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🔓</span><div><div class="infra-name">VM Kali (del P1/P4)</div><div class="infra-desc">Conté la majoria d'eines forenses necessàries (Volatility, Autopsy, Wireshark) o permet instal·lar-les fàcilment.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Reutilitzar del P1</span></div></div>
+  </div>
+
+  <div class="infra-section-title">🧰 Eines forenses addicionals a instal·lar a la VM Kali</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🧠</span><div><div class="infra-name">Volatility 3</div><div class="infra-desc">apt install volatility3 (o pip install volatility3). Per a anàlisi de volcats de memòria RAM.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🗂️</span><div><div class="infra-name">Autopsy / The Sleuth Kit</div><div class="infra-desc">Sovint preinstal·lat a Kali. Si no: apt install autopsy sleuthkit. Per a anàlisi d'imatges de disc.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">💾</span><div><div class="infra-name">LiME (Linux Memory Extractor)</div><div class="infra-desc">Mòdul de kernel per capturar la memòria RAM d'una VM Linux "víctima" en calent.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🔎</span><div><div class="infra-name">TheHarvester</div><div class="infra-desc">Preinstal·lat a Kali. Per a la fase OSINT (S4-S5 de C037).</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït</span></div></div>
+  </div>
+
+  <div class="infra-section-title" style="color:var(--orange)">📋 Recursos addicionals i decisions a prendre</div>
+
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px;margin-bottom:12px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">🌐</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Comptes gratuïts per a OSINT</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Shodan i VirusTotal ofereixen comptes gratuïts amb límit de consultes diàries, suficient per a aquest projecte.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Shodan: compte gratuït (registre amb correu)</span>
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">VirusTotal: compte gratuït</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px;margin-bottom:12px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">💾</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Espai d'emmagatzematge per a còpies i evidències</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Les còpies de seguretat (F1) i les evidències forenses (imatges de disc, volcats de memòria) poden ocupar diversos GB. Verificar l'espai disponible al pool de Proxmox abans de començar.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Verificar quota amb el professor</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:18px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">🎭</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Sobre el "rol" de l'incident — IMPORTANT per al professorat</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">L'incident que el professor introdueix ha d'estar acotat i ser reversible: per exemple, crear un usuari extra a una VM, deixar un fitxer "maliciós" (script inofensiu però amb nom/comportament sospitós), modificar lleugerament un fitxer de configuració, o injectar una entrada de log fabricada. NO ha de comprometre realment la seguretat de l'equip compartit de l'aula ni d'altres grups.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">L'incident l'introdueix únicament el professor, mai un altre grup</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRÀCTICA ═══ -->
+<div id="view-fases" class="view">
+  <div class="section-title"><h2><span>🔧</span> Pràctica detallada per fases</h2><p>Clica una fase i després cada tasca per veure tots els passos.</p></div>
+  <div id="fases-container"></div>
+</div>
+
+<!-- ═══ AVALUACIÓ ═══ -->
+<div id="view-avaluacio" class="view">
+  <div class="section-title"><h2><span>📊</span> Rúbrica d'avaluació</h2><p>Grups de 3 alumnes. Cadascú ha de poder defensar qualsevol part del projecte.</p></div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Preparació: IRP i sistema de backups</div><div class="aval-pes" style="background:rgba(0,194,255,.15);color:#00C2FF;border:1px solid rgba(0,194,255,.3)">15%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(0,194,255,.15)"><div class="aval-bar" style="background:#00C2FF;width:15%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">IRP de NetCorp complet (rols, fases, RTO/RPO per servei) redactat ABANS de l'incident (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Scripts de backup automatitzats i provats (restauració de prova reeixida) abans de l'incident (7%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Detecció i contenció</div><div class="aval-pes" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(239,68,68,.15)"><div class="aval-bar" style="background:#EF4444;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Detecció de l'incident (via alertes pròpies del P5 o anàlisi proactiva) documentada amb la marca de temps real (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Acció de contenció correcta i proporcionada (aïllament sense pèrdua d'evidències volàtils) (12%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Anàlisi forense</div><div class="aval-pes" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">25%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(168,85,247,.15)"><div class="aval-bar" style="background:#A855F7;width:25%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Registre d'evidències amb hashes i cadena de custòdia completa (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Cronologia de l'atac reconstruïda amb evidències de logs/memòria/disc (10%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">IoCs identificats correctament i analitzats amb OSINT (7%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Recuperació</div><div class="aval-pes" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(59,130,246,.15)"><div class="aval-bar" style="background:#3B82F6;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Servei restaurat correctament des de còpia de seguretat, amb verificació post-restauració (10%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Vulnerabilitat/vector d'entrada corregit (eradicació), no només contingut (10%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Informe i presentació executiva</div><div class="aval-pes" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(34,197,94,.15)"><div class="aval-bar" style="background:#22C55E;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Informe forense complet i ben estructurat (10%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Presentació executiva amb to professional, com una consultora informant un client (10%)</li></ul>
+  </div>
+
+  <div class="panel" style="border-color:rgba(255,209,102,.3);background:rgba(255,209,102,.05);margin-top:10px">
+    <div style="color:#FFD166;font-weight:800;font-size:13px;margin-bottom:10px">📝 Condicions d'avaluació</div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>El professor introduirà l'incident en un moment no anunciat entre l'inici de F2 i el final de F3. Com més ràpid es detecti (idealment via les pròpies alertes del P5), millor puntuació a l'àrea de Detecció.</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>Si l'IRP (F1) no estava acabat abans de l'incident, l'àrea de Preparació es qualifica amb un màxim del 50%, independentment de la qualitat del document fet "a posteriori".</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>La presentació final (15+5 min) s'ha de fer EN TO EXECUTIU: el grup és "Consultora de Ciberseguretat XYZ" presentant a "Direcció de NetCorp" (rol del professor/avaluadors). Es valora el llenguatge professional, no acusatori.</span></div>
+    <div class="aval-note"><span style="color:#00E5A0">+</span><span><strong style="color:#00E5A0">Bonus +5%:</strong> si el grup detecta l'incident de manera totalment autònoma (via les seves pròpies alertes del P5), sense que el professor hagi hagut de "notificar-lo" formalment.</span></div>
+    <div class="aval-note"><span style="color:#FF4D6D">-</span><span><strong style="color:#FF4D6D">Malus -10%:</strong> si durant la contenció/anàlisi es destrueixen evidències volàtils crítiques (per exemple, apagant un host abans de capturar memòria) sense justificació documentada.</span></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+const FASES = [
+  { id:"F1", nom:"Preparació: IRP i sistema de backups", setmanes:"S1", color:"#00C2FF", icon:"🛡️",
+    desc:"ABANS que el professor 'ataqui', el grup redacta el Pla de Resposta a Incidents de NetCorp i implementa/verifica un sistema de còpies de seguretat automatitzat per als serveis crítics. Aquesta fase és la base de tot el projecte: el que no es prepari ara, es patirà a F3-F5.",
+    tasques:[
+      { id:"T1.1", nom:"Redacció del Pla de Resposta a Incidents (IRP)", responsable:"Tot el grup",
+        entregable:"Document IRP de NetCorp (3-5 pàgines)",
+        passos:["Definir els rols durant un incident: qui coordina (Incident Commander), qui recull evidències, qui comunica amb 'Direcció' — es poden rotar segons la fase","Documentar el cicle PICERL aplicat a NetCorp: què es fa concretament a cada fase (Preparation ja és aquesta tasca; Identification: com es detecta — Suricata/Graylog del P5; Containment: com s'aïlla un host amb el tallafocs del P5; etc.)","Per a cada servei crític (AD, DNS, correu, web/DMZ, fitxers Samba), definir RTO (temps màxim acceptable sense servei) i RPO (dades màximes que es poden perdre)","Crear una plantilla de 'Registre d'evidències' (taula amb columnes: ID, descripció, origen, data/hora, persona, hash, ubicació) que s'usarà a F3-F4"] },
+      { id:"T1.2", nom:"Identificació dels actius crítics i dades a protegir", responsable:"Responsable de seguretat",
+        entregable:"Inventari d'actius amb prioritat de backup",
+        passos:["Llistar tots els serveis desplegats als P1-P5 amb la seva ubicació (VM, IP, VLAN)","Per a cada servei, identificar QUINES dades/configuracions són crítiques de salvar: bases de dades AD (ntds.dit i SYSVOL, o l'equivalent OpenLDAP), zones DNS, vhosts i certificats web, configuració del tallafocs/VPN/Suricata, comparticions Samba","Prioritzar segons l'RTO/RPO de T1.1: els serveis amb RTO/RPO més exigents necessiten backups més freqüents"] },
+      { id:"T1.3", nom:"Scripts de backup automatitzat i prova de restauració", responsable:"Responsable de servidors",
+        entregable:"Scripts de backup funcionant per cron + evidència d'una restauració de prova reeixida",
+        passos:["Per a cada actiu prioritzat a T1.2, escriure un script de backup (tar+gzip+rsync cap a un destí, idealment la VM Azure del P1 per complir 3-2-1)","Programar els scripts amb cron segons la freqüència definida per l'RPO (T1.1)","IMPRESCINDIBLE: provar UNA restauració completa de cada script ABANS de continuar — restaurar en un directori/VM de prova i verificar que les dades són correctes i complertes","Documentar el procediment de restauració pas a pas (serà la base de F5)"] },
+    ]
+  },
+  { id:"F2", nom:"L'incident: detecció", setmanes:"S2", color:"#EF4444", icon:"🔥",
+    desc:"En algun moment durant aquesta setmana (sense avís previ), el professor introdueix el compromís. El repte del grup: detectar-ho com més aviat millor, idealment a través de les seves pròpies eines (Suricata, Graylog, alertes del P5).",
+    tasques:[
+      { id:"T2.1", nom:"Vigilància activa dels sistemes de monitoratge", responsable:"Tot el grup",
+        entregable:"Document de seguiment diari amb captures de l'estat de Graylog/Suricata/alertes",
+        passos:["Durant tota la setmana, revisar periòdicament el dashboard de Graylog i les alertes de Suricata/Telegram del P5","Si es rep una alerta inusual (un host nou, un usuari nou a l'AD, trànsit cap a una IP no habitual, un servei que es reinicia sol...), NO ignorar-la: és probablement el senyal de l'incident","Documentar la primera evidència de l'anomalia: captura de pantalla amb marca de temps exacta — aquest moment marca l'inici oficial de la 'Identification' al PICERL"] },
+      { id:"T2.2", nom:"Activació formal de l'IRP", responsable:"Incident Commander (rotatori)",
+        entregable:"Registre d'activació: hora, persona, evidència inicial que ha disparat l'activació",
+        passos:["Un cop confirmada l'anomalia (o rebuda la notificació formal del professor, si l'autodetecció no s'ha produït), declarar formalment 'incident actiu' seguint l'IRP de F1","Assignar els rols definits a T1.1 entre els membres del grup per a la resta del projecte","Començar a omplir la plantilla de cronologia de l'incident (es completarà a F3-F4) amb aquest primer punt"] },
+    ]
+  },
+  { id:"F3", nom:"Contenció i anàlisi forense", setmanes:"S2–S3", color:"#A855F7", icon:"🔍",
+    desc:"Es conté l'incident sense destruir evidències, es recullen proves seguint l'ordre de volatilitat i s'analitzen amb eines forenses per reconstruir què ha passat.",
+    tasques:[
+      { id:"T3.1", nom:"Contenció de l'host/servei afectat", responsable:"Incident Commander",
+        entregable:"Acció de contenció documentada (regla de tallafocs aplicada, hora, justificació)",
+        passos:["Identificar exactament quin host/servei sembla afectat (a partir de l'alerta de T2.1)","Aïllar-lo a nivell de xarxa usant el tallafocs del P5 (afegir una regla que el posi en quarantena: sense accés a la resta de VLANs, però mantenint-lo ENCÈS)","NO apagar el host en aquest punt — registrar explícitament aquesta decisió i el motiu (preservar evidències volàtils)","Documentar l'acció al registre de l'IRP: hora exacta, regla aplicada, qui l'ha executat"] },
+      { id:"T3.2", nom:"Captura d'evidències volàtils (memòria i xarxa)", responsable:"Analista forense",
+        entregable:"Volcat de memòria RAM + captura de connexions/processos actius, amb hashes i registre a la plantilla d'evidències",
+        passos:["Si el host afectat és Linux: usar LiME per capturar la memòria RAM (sense apagar la màquina)","Abans d'apagar o tocar res més, registrar: sortida de 'ps aux' (processos), 'ss -tunap' o 'netstat' (connexions de xarxa actives), 'who'/'last' (sessions d'usuari)","Calcular el hash SHA-256 del volcat de memòria immediatament després de generar-lo","Registrar cada evidència a la plantilla de T1.1: ID, descripció, hash, hora de captura, persona"] },
+      { id:"T3.3", nom:"Anàlisi de memòria amb Volatility", responsable:"Analista forense",
+        entregable:"Informe d'anàlisi de memòria: processos sospitosos, connexions, IoCs identificats",
+        passos:["Transferir el volcat de memòria (T3.2) a la VM Kali (mantenint el hash verificat)","Identificar el perfil del sistema operatiu amb Volatility","Llistar processos en execució (pslist/pstree) i buscar processos amb noms estranys, sense signar, o fills de processos inesperats","Llistar connexions de xarxa (netscan) en el moment de la captura i contrastar-les amb les IPs/ports esperats segons l'arquitectura P1-P5","Documentar tots els IoCs trobats (noms de procés, IPs, ports, usuaris)"] },
+      { id:"T3.4", nom:"Anàlisi de disc i logs (Autopsy + Graylog)", responsable:"Analista forense + Responsable de seguretat",
+        entregable:"Cronologia detallada de l'atac amb evidències de disc i logs centralitzats",
+        passos:["Si cal (i és proporcionat), obtenir una imatge de disc del host afectat (dd o eines similars) i el seu hash","Amb Autopsy, muntar la imatge i revisar: fitxers modificats/creats recentment (timeline), fitxers esborrats recuperables, usuaris i claus SSH afegits","Des de Graylog, filtrar tots els logs (web, auth, Suricata) en la franja temporal al voltant del primer IoC i extreure totes les entrades rellevants","Combinar tota la informació (memòria + disc + logs) en una ÚNICA cronologia ordenada cronològicament: hora, font, esdeveniment, evidència associada"] },
+    ]
+  },
+  { id:"F4", nom:"Identificació del vector i anàlisi OSINT", setmanes:"S3–S4", color:"#22C55E", icon:"🕵️",
+    desc:"Es determina COM va entrar l'atacant (vector inicial) — sovint relacionat amb correu/phishing o una vulnerabilitat web — i s'investiguen els IoCs trobats amb tècniques OSINT.",
+    tasques:[
+      { id:"T4.1", nom:"Anàlisi del vector d'entrada (correu/phishing)", responsable:"Responsable de servidors",
+        entregable:"Anàlisi de capçaleres del correu sospitós (si aplica) + verificació de SPF/DKIM/DMARC",
+        passos:["Si la cronologia (F3) apunta a un correu com a origen, recuperar-lo (de la safata de l'usuari afectat o dels logs de Postfix/Dovecot del P3)","Analitzar les capçaleres completes: verificar la cadena de 'Received', comparar el domini del 'From' amb l'origen real","Comprovar si els registres SPF/DKIM/DMARC de netcorp.local ja estaven configurats; si no, és una troballa per al pla de remediació","Implementar (o completar) SPF, DKIM i DMARC al servidor de correu del P3 i verificar amb una eina de comprovació"] },
+      { id:"T4.2", nom:"Anàlisi del vector d'entrada (web, si aplica)", responsable:"Responsable de seguretat",
+        entregable:"Identificació de la petició/vulnerabilitat exacta que va permetre l'accés inicial",
+        passos:["Si la cronologia apunta al servidor web de la DMZ, cercar a Graylog les peticions de l'IP/host sospitós en l'origen de l'atac","Identificar la petició concreta que sembla haver tingut èxit (codi 200 després de patrons d'escaneig, o coincidència amb una vulnerabilitat coneguda dels P3/P4)","Contrastar amb les alertes de Suricata (P5): es va detectar però no bloquejar (mode IDS)? O no es va detectar (regla insuficient)?","Documentar la causa arrel (root cause): configuració, versió de software, o regla de seguretat insuficient"] },
+      { id:"T4.3", nom:"Investigació OSINT dels IoCs", responsable:"Analista forense",
+        entregable:"Informe OSINT: context de les IPs/dominis/hashes trobats com a IoCs",
+        passos:["Per a cada IP identificada com IoC (T3.3/T4.1/T4.2), consultar-la a Shodan (si és una IP pública/simulada): què revela sobre el possible origen?","Si s'ha trobat algun fitxer sospitós (T3.4), calcular-ne el hash i consultar-lo a VirusTotal","Si el vector és phishing, usar TheHarvester sobre 'netcorp.local' per veure quina informació pública existeix que hauria fet possible un spear phishing creïble (relacionant amb la teoria de M07-S1)","Redactar un breu apartat 'Perfil de l'amenaça' a l'informe: què sabem (i què NO sabem) sobre l'origen, basant-nos només en evidència"] },
+    ]
+  },
+  { id:"F5", nom:"Recuperació, informe final i presentació", setmanes:"S4–S6", color:"#FF8C42", icon:"🔄",
+    desc:"Es restaura el servei afectat des de còpia de seguretat (un cop corregida la causa arrel), es redacta l'informe forense complet i es presenta com una consultora informant a Direcció.",
+    tasques:[
+      { id:"T5.1", nom:"Eradicació: correcció de la causa arrel", responsable:"Responsable de seguretat",
+        entregable:"Evidència de la correcció aplicada (configuració actualitzada, regla nova, etc.)",
+        passos:["A partir de la causa arrel identificada a F4, aplicar la correcció corresponent: pegat/actualització, regla de ModSecurity/Suricata nova, configuració SPF/DKIM/DMARC (T4.1), eliminació de l'usuari/fitxer introduït per l'incident","Verificar que la correcció no trenca cap funcionalitat existent (proves bàsiques dels serveis del P1-P5)","Documentar exactament què s'ha canviat i per què, amb referència a la troballa de F4 que ho justifica"] },
+      { id:"T5.2", nom:"Restauració del servei des de còpia de seguretat", responsable:"Responsable de servidors",
+        entregable:"Servei completament operatiu, restaurat des de la còpia de F1, amb verificació post-restauració",
+        passos:["Aturar el servei/host afectat de forma controlada (ara sí, amb les evidències ja capturades a F3)","Executar el script de restauració de T1.3 per recuperar la configuració/dades a un estat anterior a l'incident","Verificar que el servei funciona correctament (les mateixes proves de validació dels projectes anteriors aplicables)","Confirmar que, amb la correcció de T5.1 ja aplicada, l'atac original ja no funcionaria (repetir, si és segur i dins l'abast, la prova que el professor va usar per introduir l'incident)"] },
+      { id:"T5.3", nom:"Redacció de l'informe forense complet", responsable:"Tot el grup",
+        entregable:"Informe forense (PDF): cronologia, evidències, IoCs, causa arrel, accions de resposta",
+        passos:["Secció 1 - Resum executiu: què va passar, quan es va detectar, quin va ser l'impacte, com s'ha resolt (llenguatge per a Direcció)","Secció 2 - Cronologia detallada: la línia de temps completa de F3, amb totes les evidències referenciades","Secció 3 - Registre d'evidències: la taula completa amb hashes i cadena de custòdia","Secció 4 - Anàlisi de causa arrel i vector d'entrada (F4)","Secció 5 - Accions de resposta: contenció, eradicació, recuperació (amb temps de cadascuna — comparar amb l'RTO de l'IRP)","Secció 6 - Lliçons apreses i recomanacions: què caldria millorar (noves regles de Suricata, política de correu, formació d'usuaris en phishing, etc.)"] },
+      { id:"T5.4", nom:"Presentació executiva final", responsable:"Tot el grup",
+        entregable:"Presentació de 15+5 min en to de consultora professional",
+        passos:["Preparar la presentació adoptant el rol de 'Consultora de Ciberseguretat XYZ' presentant a 'Direcció de NetCorp' (el professor i altres avaluadors)","Estructura (15 min): 2 min què va passar (resum executiu), 4 min cronologia amb les evidències clau, 3 min com es va contenir i investigar, 3 min com es va recuperar el servei, 3 min recomanacions per evitar que torni a passar","Llenguatge: professional i orientat a negoci (impacte, risc, cost de no actuar), evitant un excés de tecnicismes sense explicació — recordar el consell de C038 del P4: descriure fets, no acusar","Q&A (5 min): cada membre ha de poder respondre preguntes sobre qualsevol secció de l'informe, no només la seva pròpia part"] },
+    ]
+  },
+];
+
+function buildFases() {
+  const container = document.getElementById('fases-container');
+  FASES.forEach(f => {
+    const wrap = document.createElement('div');
+    wrap.className = 'fase-wrap';
+    let tascuesHtml = `<div class="fase-body" id="fb-${f.id}" style="display:none;border:1px solid ${f.color};border-top:none;background:${f.color}06">
+      <div class="fase-desc">${f.desc}</div>`;
+    f.tasques.forEach(t => {
+      const passosHtml = t.passos.map((p,i) => `<div class="tasca-pas"><span class="tasca-pas-num" style="color:${f.color}">${i+1}.</span><span>${p}</span></div>`).join('');
+      tascuesHtml += `
+        <div class="tasca-header" id="th-${t.id}" onclick="toggleTasca('${t.id}')">
+          <span class="tasca-id" style="background:${f.color}22;color:${f.color}">${t.id}</span>
+          <div style="flex:1"><div class="tasca-name">${t.nom}</div><div class="tasca-preview" id="tp-${t.id}">${t.passos[0].substring(0,90)}…</div></div>
+          <span class="tasca-arrow" id="ta-${t.id}">▾</span>
+        </div>
+        <div class="tasca-detail" id="td-${t.id}" style="display:none">
+          <div class="tasca-inner">
+            <div class="tasca-passos">
+              <div class="tasca-passos-title">📋 Passos detallats</div>${passosHtml}
+            </div>
+            <div class="tasca-footer">
+              <div class="tasca-footer-block"><div class="tasca-footer-label">📦 Entregable</div><div class="tasca-entregable">${t.entregable}</div></div>
+              <div class="tasca-footer-block"><div class="tasca-footer-label">👤 Responsable</div><div class="tasca-responsable">${t.responsable}</div></div>
+            </div>
+          </div>
+        </div>`;
+    });
+    tascuesHtml += '</div>';
+    wrap.innerHTML = `
+      <div class="fase-header" id="fh-${f.id}" onclick="toggleFase('${f.id}')"
+           style="background:rgba(0,0,0,.3);border:1px solid ${f.color}33">
+        <span class="fase-icon">${f.icon}</span>
+        <div style="flex:1">
+          <div class="fase-meta">
+            <span class="fase-num" style="color:${f.color}">${f.id}</span>
+            <span class="fase-name">${f.nom}</span>
+            <span class="badge" style="background:${f.color}22;color:${f.color};border:1px solid ${f.color}44">${f.setmanes}</span>
+            <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">${f.tasques.length} tasques</span>
+          </div>
+          <div class="fase-preview">${f.desc.substring(0,110)}…</div>
+        </div>
+        <span class="fase-arrow" id="fa-${f.id}">▾</span>
+      </div>${tascuesHtml}`;
+    container.appendChild(wrap);
+  });
+}
+
+function toggleFase(id) {
+  const body = document.getElementById('fb-'+id);
+  const arrow = document.getElementById('fa-'+id);
+  const header = document.getElementById('fh-'+id);
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  const faseColor = FASES.find(f=>f.id===id).color;
+  header.style.background = isOpen ? 'rgba(0,0,0,.3)' : `${faseColor}18`;
+  header.classList.toggle('open', !isOpen);
+}
+
+function toggleTasca(id) {
+  const detail = document.getElementById('td-'+id);
+  const arrow = document.getElementById('ta-'+id);
+  const preview = document.getElementById('tp-'+id);
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  if(preview) preview.style.display = isOpen ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', buildFases);
+</script>
+</body>
+</html>

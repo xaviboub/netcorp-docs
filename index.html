@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Documentació dels projectes ABP per a ASIX 2n, itinerari Ciberseguretat">
+        <meta name="author" content="Departament d'Informàtica">
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>ASIX 2n · Ciberseguretat — NetCorp S.L.</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/fontawesome.min.css" rel="stylesheet">
+        <link href="css/brands.min.css" rel="stylesheet">
+        <link href="css/solid.min.css" rel="stylesheet">
+        <link href="css/v4-font-face.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body class="homepage">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href=".">ASIX 2n · Ciberseguretat — NetCorp S.L.</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="." class="nav-link active" aria-current="page">Inici</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Projectes</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="projectes/" class="dropdown-item">Visió general</a>
+</li>
+                                    
+<li>
+    <a href="projectes/p1.html" class="dropdown-item">P1 · Posem en marxa la xarxa corporativa</a>
+</li>
+                                    
+<li>
+    <a href="projectes/p2.html" class="dropdown-item">P2 · Identitat corporativa: directori, VLANs i DNS</a>
+</li>
+                                    
+<li>
+    <a href="projectes/p3.html" class="dropdown-item">P3 · Publiquem serveis: web, FTP, correu i accés remot</a>
+</li>
+                                    
+<li>
+    <a href="projectes/p4.html" class="dropdown-item">P4 · Col·laboració, mobilitat i primera auditoria</a>
+</li>
+                                    
+<li>
+    <a href="projectes/p5.html" class="dropdown-item">P5 · Blindem el perímetre: tallafocs, VPN i monitoratge</a>
+</li>
+                                    
+<li>
+    <a href="projectes/p6.html" class="dropdown-item">P6 · Incident! Resposta, forense i resiliència</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown"  aria-expanded="false">Teoria</a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="teoria/m08-cap1/" class="dropdown-item">M08 · Capítol 1: Xarxes i Commutació</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" class="nav-link disabled">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="projectes/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#asix-2n-itinerari-ciberseguretat" class="nav-link">ASIX 2n · Itinerari Ciberseguretat</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#com-funciona-aquest-curs" class="nav-link">Com funciona aquest curs</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#els-projectes" class="nav-link">Els projectes</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#material-teoric" class="nav-link">Material teòric</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="asix-2n-itinerari-ciberseguretat">ASIX 2n · Itinerari Ciberseguretat<a class="headerlink" href="#asix-2n-itinerari-ciberseguretat" title="Permanent link">&para;</a></h1>
+<p>Benvinguts a la documentació del projecte <strong>NetCorp S.L.</strong>: l'empresa fictícia
+sobre la qual treballarem durant tot el curs amb una metodologia d'<strong>Aprenentatge
+Basat en Projectes (ABP)</strong>.</p>
+<h2 id="com-funciona-aquest-curs">Com funciona aquest curs<a class="headerlink" href="#com-funciona-aquest-curs" title="Permanent link">&para;</a></h2>
+<p>Al llarg del curs desenvoluparem <strong>6 projectes transversals</strong>, cadascun ampliant
+la infraestructura de NetCorp S.L. construïda en els projectes anteriors. Cada
+projecte combina continguts de diversos mòduls (M06, M07, M08, C037, C038) que
+es treballen de manera coordinada.</p>
+<h2 id="els-projectes">Els projectes<a class="headerlink" href="#els-projectes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Projecte</th>
+<th>Títol</th>
+<th>Mòduls implicats</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>P1</strong></td>
+<td>Posem en marxa la xarxa corporativa</td>
+<td>M08, M06, M07, C037</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>Identitat corporativa: directori, VLANs i DNS</td>
+<td>M08, M06, M07, C037</td>
+</tr>
+<tr>
+<td><strong>P3</strong></td>
+<td>Publiquem serveis: web, FTP, correu i accés remot</td>
+<td>M08, M07, M06, C037</td>
+</tr>
+<tr>
+<td><strong>P4</strong></td>
+<td>Col·laboració, mobilitat i primera auditoria</td>
+<td>M07, M06, C037, C038</td>
+</tr>
+<tr>
+<td><strong>P5</strong></td>
+<td>Blindem el perímetre: tallafocs, VPN i monitoratge</td>
+<td>C037, C038, M06, M08</td>
+</tr>
+<tr>
+<td><strong>P6</strong></td>
+<td>Incident! Resposta, forense i resiliència</td>
+<td>C038, C037, M06, M07</td>
+</tr>
+</tbody>
+</table>
+<p>Cada projecte té la seva pròpia <strong>web interactiva</strong> (pestanyes amb resum, teoria,
+recursos, pràctica detallada per fases i avaluació), accessible des del menú
+<strong>Projectes</strong>.</p>
+<h2 id="material-teoric">Material teòric<a class="headerlink" href="#material-teoric" title="Permanent link">&para;</a></h2>
+<p>A l'apartat <strong>Teoria</strong> trobaràs els documents de fonaments necessaris per a
+cada mòdul, pensats per estudiar de manera autònoma i com a suport a les
+explicacions de classe.</p>
+<div class="admonition tip">
+<p class="admonition-title">Com estudiar</p>
+<p>Per a cada projecte, primer llegeix la pestanya <strong>Teoria</strong> de la seva web
+i/o el document de teoria corresponent, i després segueix la pestanya
+<strong>Pràctica</strong> pas a pas.</p>
+</div></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js"></script>
+        <script src="search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 1.6.1
+Build Date UTC : 2026-06-15 05:39:18.487356+00:00
+-->
