@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P1 — Posem en marxa la xarxa corporativa</title>
+<style>
+  :root {
+    --bg: #0A0E1A; --panel: #111827; --border: #1E2D40;
+    --accent: #00C2FF; --green: #00E5A0; --orange: #FF8C42;
+    --yellow: #FFD166; --red: #FF4D6D; --purple: #A855F7;
+    --text: #E2E8F0; --muted: #64748B; --white: #FFFFFF;
+    --M06: #3B82F6; --M07: #22C55E; --M08: #F97316; --C037: #A855F7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: linear-gradient(180deg,#0F1827 0%,var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 20px 24px 0; }
+  .header-inner { max-width: 960px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 16px; }
+  .header-title { font-size: 21px; font-weight: 900; color: var(--white); letter-spacing: -0.5px; margin: 8px 0 4px; }
+  .header-sub { color: var(--muted); font-size: 12px; }
+  .header-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .header-stats { display: flex; flex-direction: column; gap: 5px; text-align: right; }
+  .stat-row { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+  .stat-val { font-weight: 800; font-size: 20px; line-height: 1; }
+  .stat-lbl { color: var(--muted); font-size: 11px; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 2px; }
+  .tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px 6px 0 0; transition: all .15s; }
+  .tab-btn.active { background: rgba(0,194,255,.1); border-bottom-color: var(--accent); color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.05); }
+
+  /* CONTENT */
+  .content { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* PANELS */
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .panel + .panel, .panel + .fase-wrap, .fase-wrap + .fase-wrap { margin-top: 10px; }
+  .panel-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* BADGES */
+  .badge { display: inline-block; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; letter-spacing: .4px; white-space: nowrap; }
+  .badge-lg { padding: 4px 12px; font-size: 12px; }
+
+  /* SECTION TITLE */
+  .section-title { margin-bottom: 20px; }
+  .section-title h2 { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--white); letter-spacing: -.5px; }
+  .section-title p { margin: 4px 0 0 30px; color: var(--muted); font-size: 13px; }
+
+  /* RA GRID */
+  .ra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+  .ra-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .ra-card-inner { display: flex; gap: 8px; align-items: flex-start; }
+  .ra-name { color: var(--white); font-weight: 700; font-size: 11px; margin-bottom: 4px; }
+  .ra-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .ra-tag { color: var(--muted); font-size: 10px; background: rgba(255,255,255,.05); border-radius: 3px; padding: 1px 5px; }
+
+  /* CRONOGRAMA */
+  .crono { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .crono-item { flex: 1; min-width: 120px; border-radius: 10px; padding: 12px 10px; text-align: center; }
+  .crono-icon { font-size: 20px; margin-bottom: 4px; }
+  .crono-num { font-weight: 800; font-size: 12px; }
+  .crono-name { font-weight: 700; font-size: 11px; margin: 4px 0; line-height: 1.3; color: var(--white); }
+  .crono-weeks { color: var(--muted); font-size: 10px; }
+
+  /* SEUS */
+  .seu-item { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; border-radius: 8px; padding: 8px 12px; }
+  .seu-name { color: var(--white); font-weight: 700; font-size: 12px; }
+  .seu-infra { color: var(--muted); font-size: 11px; }
+
+  /* ARCH ITEMS */
+  .arch-item { border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .arch-label { color: var(--white); font-weight: 700; font-size: 12px; }
+  .arch-desc { color: var(--muted); font-size: 11px; }
+
+  /* TEORIA */
+  .teoria-mod { margin-bottom: 16px; }
+  .teoria-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .teoria-icon { font-size: 26px; }
+  .teoria-title { font-weight: 800; font-size: 15px; }
+  .teoria-badges { display: flex; gap: 8px; margin-top: 4px; }
+  .teoria-bloc { border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px; }
+  .teoria-sess { font-weight: 700; font-size: 11px; margin-bottom: 6px; }
+  .teoria-item { display: flex; gap: 6px; margin-bottom: 3px; font-size: 12px; line-height: 1.6; color: var(--text); }
+  .teoria-bullet { flex-shrink: 0; font-weight: 700; }
+
+  /* INFRA */
+  .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .infra-card { background: var(--panel); border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; }
+  .infra-icon { font-size: 20px; }
+  .infra-name { color: var(--white); font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+  .infra-desc { color: var(--muted); font-size: 11px; line-height: 1.5; margin-bottom: 5px; }
+  .infra-section-title { color: var(--white); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+
+  /* DEMANAR */
+  .demanar-card { border-radius: 12px; padding: 18px; margin-bottom: 12px; }
+  .demanar-header { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+  .demanar-icon { font-size: 26px; }
+  .demanar-title { color: var(--white); font-weight: 800; font-size: 14px; }
+  .demanar-desc { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .demanar-badges { display: flex; gap: 8px; margin-top: 6px; }
+  .demanar-passos { border-top: 1px solid var(--border); padding-top: 12px; }
+  .demanar-passos-title { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; color: var(--orange); }
+  .demanar-pas { display: flex; gap: 10px; margin-bottom: 6px; color: var(--text); font-size: 12px; }
+  .demanar-pas-num { color: var(--orange); font-weight: 800; flex-shrink: 0; }
+
+  /* FASES */
+  .fase-wrap { margin-bottom: 10px; }
+  .fase-header { border-radius: 12px; padding: 14px 18px; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: background .15s; }
+  .fase-header.open { border-radius: 12px 12px 0 0; }
+  .fase-icon { font-size: 22px; }
+  .fase-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+  .fase-num { font-weight: 800; font-size: 13px; }
+  .fase-name { color: var(--white); font-weight: 700; font-size: 15px; }
+  .fase-preview { color: var(--muted); font-size: 12px; }
+  .fase-arrow { color: var(--muted); font-size: 18px; margin-left: auto; flex-shrink: 0; transition: transform .2s; }
+  .fase-arrow.open { transform: rotate(180deg); }
+
+  .fase-body { border-radius: 0 0 12px 12px; overflow: hidden; }
+  .fase-desc { padding: 12px 18px 8px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; line-height: 1.6; }
+
+  .tasca-header { padding: 12px 18px; cursor: pointer; border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; transition: background .15s; }
+  .tasca-id { font-weight: 800; font-size: 11px; border-radius: 4px; padding: 2px 7px; flex-shrink: 0; margin-top: 1px; }
+  .tasca-name { color: var(--white); font-weight: 700; font-size: 13px; }
+  .tasca-preview { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .tasca-arrow { color: var(--muted); font-size: 14px; flex-shrink: 0; margin-left: auto; transition: transform .2s; }
+  .tasca-arrow.open { transform: rotate(180deg); }
+
+  .tasca-detail { padding: 0 18px 16px; }
+  .tasca-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .tasca-passos { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .tasca-passos-title { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .tasca-pas { display: flex; gap: 10px; margin-bottom: 5px; color: var(--text); font-size: 12px; line-height: 1.5; }
+  .tasca-pas-num { font-weight: 800; flex-shrink: 0; font-size: 11px; }
+  .tasca-footer { display: grid; grid-template-columns: 1fr 1fr; }
+  .tasca-footer-block { padding: 12px 16px; }
+  .tasca-footer-block + .tasca-footer-block { border-left: 1px solid var(--border); }
+  .tasca-footer-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .tasca-entregable { font-size: 12px; font-weight: 600; line-height: 1.4; color: #00E5A0; }
+  .tasca-responsable { font-size: 12px; font-weight: 600; color: var(--yellow); }
+
+  /* AVALUACIÓ */
+  .aval-card { margin-bottom: 10px; }
+  .aval-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .aval-area { color: var(--white); font-weight: 800; font-size: 14px; }
+  .aval-pes { border-radius: 20px; padding: 4px 14px; font-weight: 800; font-size: 18px; }
+  .aval-bar-bg { border-radius: 4px; height: 5px; margin-bottom: 10px; }
+  .aval-bar { border-radius: 4px; height: 100%; }
+  .aval-notes { margin-top: 4px; }
+  .aval-note { display: flex; gap: 8px; color: var(--text); font-size: 12px; margin-bottom: 5px; }
+  .aval-note-arrow { color: var(--yellow); flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-badges">
+          <span class="badge badge-lg" style="background:rgba(0,194,255,.15);color:#00C2FF;border:1px solid rgba(0,194,255,.3)">P1</span>
+          <span class="badge badge-lg" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">7 setmanes</span>
+          <span class="badge badge-lg" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">Router + Switch Cisco físics</span>
+          <span class="badge badge-lg" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">☁️ + Azure</span>
+        </div>
+        <div class="header-title">Posem en marxa la xarxa corporativa</div>
+        <div class="header-sub">ASIX Ciberseguretat · 2n Curs · Grups de 3 · M08 + M06 + M07 + C037</div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-row"><span class="stat-lbl">RA coberts</span><span class="stat-val" style="color:#00C2FF">7</span></div>
+        <div class="stat-row"><span class="stat-lbl">Mòduls</span><span class="stat-val" style="color:#00E5A0">4</span></div>
+        <div class="stat-row"><span class="stat-lbl">Tasques</span><span class="stat-val" style="color:#FFD166">18</span></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('resum',this)">📋 Resum</button>
+      <button class="tab-btn" onclick="showTab('teoria',this)">📚 Teoria</button>
+      <button class="tab-btn" onclick="showTab('infra',this)">🛠️ Recursos</button>
+      <button class="tab-btn" onclick="showTab('fases',this)">🔧 Pràctica</button>
+      <button class="tab-btn" onclick="showTab('avaluacio',this)">📊 Avaluació</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══ RESUM ═══ -->
+<div id="view-resum" class="view active">
+  <div class="section-title"><h2><span>🏢</span> Context del projecte</h2><p>Els alumnes actuen com a equip IT de NetCorp S.L.</p></div>
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel-grid2">
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">L'empresa</div>
+        <p style="font-size:13px;line-height:1.8;margin-bottom:12px;color:var(--text)"><strong style="color:var(--white)">NetCorp S.L.</strong> és una empresa de distribució logística amb 3 seus i ~45 treballadors.</p>
+        <div class="seu-item" style="background:rgba(0,194,255,.08);border:1px solid rgba(0,194,255,.2)">
+          <span style="font-size:18px">🏛️</span>
+          <div><div class="seu-name">Seu Central (Barcelona)</div><div class="seu-infra">Switch Cisco + Router Cisco + Proxmox</div></div>
+        </div>
+        <div class="seu-item" style="background:rgba(255,255,255,.04);border:1px solid var(--border)">
+          <span style="font-size:18px">🏢</span>
+          <div><div class="seu-name">Delegació Nord (Girona)</div><div class="seu-infra">Simulada amb VLAN isolada al lab</div></div>
+        </div>
+        <div class="seu-item" style="background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2)">
+          <span style="font-size:18px">☁️</span>
+          <div><div class="seu-name">Delegació Sud (Tarragona)</div><div class="seu-infra">VM Azure — seu remota al cloud</div></div>
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">☁️ Azure</span>
+        </div>
+        <div style="margin-top:12px">
+          <div style="color:var(--muted);font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">Departaments</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">Direcció (VLAN 10)</span>
+            <span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">IT (VLAN 20)</span>
+            <span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">Logística (VLAN 30)</span>
+            <span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">Vendes (VLAN 40)</span>
+            <span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">RRHH (VLAN 50)</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Arquitectura desplegada</div>
+        <div class="arch-item" style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2)"><span style="font-size:18px">📡</span><div><div class="arch-label">Router Cisco físic</div><div class="arch-desc">Router-on-a-stick, NAT/PAT, ACLs per VLAN</div></div></div>
+        <div class="arch-item" style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2)"><span style="font-size:18px">🔀</span><div><div class="arch-label">Switch Cisco físic</div><div class="arch-desc">VLANs, STP, port-security, trunk cap al router</div></div></div>
+        <div class="arch-item" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2)"><span style="font-size:18px">🖥️</span><div><div class="arch-label">DHCP + Zabbix a Proxmox</div><div class="arch-desc">Serveis d'infraestructura virtualitzats</div></div></div>
+        <div class="arch-item" style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2)"><span style="font-size:18px">🔒</span><div><div class="arch-label">VM WireGuard a Proxmox</div><div class="arch-desc">VPN gateway cap a la seu Azure</div></div></div>
+        <div class="arch-item" style="background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.2)"><span style="font-size:18px">☁️</span><div><div class="arch-label">VM Ubuntu a Azure</div><div class="arch-desc">Seu Tarragona al cloud (Azure for Students)</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> RA coberts</h2></div>
+  <div class="ra-grid">
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3);flex-shrink:0">M08</span><div><div class="ra-name">RA1 · Estructura de xarxes (OSI/TCP-IP)</div><div class="ra-tags"><span class="ra-tag">Esquema OSI aplicat</span><span class="ra-tag">Wireshark</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3);flex-shrink:0">M08</span><div><div class="ra-name">RA2 · Integració d'elements i cablejat</div><div class="ra-tags"><span class="ra-tag">Cablejat UTP</span><span class="ra-tag">SNMP bàsic</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3);flex-shrink:0">M08</span><div><div class="ra-name">RA3 · Administració de commutadors Cisco</div><div class="ra-tags"><span class="ra-tag">Config switch IOS</span><span class="ra-tag">STP, port-security, trunk</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);flex-shrink:0">M06</span><div><div class="ra-name">RA2 · Processos del sistema operatiu</div><div class="ra-tags"><span class="ra-tag">Ubuntu Server a Proxmox</span><span class="ra-tag">systemd</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);flex-shrink:0">M06</span><div><div class="ra-name">RA3 · Automatització bàsica de tasques</div><div class="ra-tags"><span class="ra-tag">Scripts bash</span><span class="ra-tag">Cron</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);flex-shrink:0">M07</span><div><div class="ra-name">RA2 · DHCP: configuració automàtica</div><div class="ra-tags"><span class="ra-tag">Servidor DHCP</span><span class="ra-tag">Àmbits per VLAN</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3);flex-shrink:0">C037</span><div><div class="ra-name">RA4 · Seguretat bàsica dels canals</div><div class="ra-tags"><span class="ra-tag">Port-security</span><span class="ra-tag">ACLs Cisco</span><span class="ra-tag">Nmap</span></div></div></div></div>
+  </div>
+
+  <div class="section-title"><h2><span>📅</span> Cronograma — 7 setmanes</h2></div>
+  <div class="panel">
+    <div class="crono">
+      <div class="crono-item" style="background:rgba(0,194,255,.12);border:1px solid rgba(0,194,255,.3)"><div class="crono-icon">📐</div><div class="crono-num" style="color:#00C2FF">F1</div><div class="crono-name">Anàlisi i disseny</div><div class="crono-weeks">S1–S2</div></div>
+      <div class="crono-item" style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3)"><div class="crono-icon">🔌</div><div class="crono-num" style="color:#F97316">F2</div><div class="crono-name">Infra física Cisco</div><div class="crono-weeks">S3–S4</div></div>
+      <div class="crono-item" style="background:rgba(0,229,160,.12);border:1px solid rgba(0,229,160,.3)"><div class="crono-icon">☁️</div><div class="crono-num" style="color:#00E5A0">F3</div><div class="crono-name">Seu remota Azure</div><div class="crono-weeks">S5</div></div>
+      <div class="crono-item" style="background:rgba(255,209,102,.12);border:1px solid rgba(255,209,102,.3)"><div class="crono-icon">⚙️</div><div class="crono-num" style="color:#FFD166">F4</div><div class="crono-name">Automatització i monitoratge</div><div class="crono-weeks">S6</div></div>
+      <div class="crono-item" style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3)"><div class="crono-icon">🛡️</div><div class="crono-num" style="color:#A855F7">F5</div><div class="crono-name">Seguretat i validació</div><div class="crono-weeks">S7</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TEORIA ═══ -->
+<div id="view-teoria" class="view">
+  <div class="section-title"><h2><span>📚</span> Contingut teòric per mòdul</h2><p>Total: 16 sessions (~32h). S'imparteix just abans que calgui a la pràctica.</p></div>
+
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🌐</span>
+      <div>
+        <div class="teoria-title" style="color:#F97316">Fonaments de xarxes, commutació i routing</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">M08</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">7 sessions</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">~14h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.06);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S1–S2</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>Model OSI i TCP/IP: encapsulat, PDUs, diferència entre capes.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>Adreces MAC vs IP. Tipus de cablejat i estàndards IEEE 802.3.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>Muntatge de cables UTP i verificació amb comprovador. Dominis de col·lisió i difusió.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.06);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S3–S4</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>Commutadors Cisco: taula MAC, modes de commutació.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>STP: elecció Root Bridge, estats dels ports (blocking → forwarding), BPDU.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>Port-security: sticky MAC, modes restrict/protect/shutdown. Trunks 802.1Q.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.06);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S5–S6</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>Adreçament IPv4: classes, màscares, subnetting i VLSM aplicat al projecte.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>Router-on-a-stick: subinterfícies, encapsulació dot1Q, inter-VLAN routing.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>NAT overload (PAT): sortida a internet. Rutes estàtiques i ruta per defecte.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.06);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S7</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>Diagnòstic IOS: show ip interface brief, show vlan brief, show spanning-tree, show ip route.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#F97316">›</span><span>Eines: ping, traceroute, Wireshark. Lab Packet Tracer com a pre-pràctica obligatòria.</span></div>
+    </div>
+  </div>
+
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🖥️</span>
+      <div>
+        <div class="teoria-title" style="color:#3B82F6">Sistema operatiu servidor i automatització</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">M06</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">4 sessions</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">~8h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.06);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S1–S2</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#3B82F6">›</span><span>Instal·lació Ubuntu Server 24 LTS a Proxmox: opcions de disc, LVM, perfil minimal.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#3B82F6">›</span><span>Systemd: units, targets, journalctl. Processos: ps, top, htop, kill, nice.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#3B82F6">›</span><span>Gestió d'usuaris i permisos. SSH: connexió per claus, sshd_config bàsic.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.06);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S3–S4</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#3B82F6">›</span><span>Bash scripting: variables, condicionals (if/case), bucles (for/while), funcions.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#3B82F6">›</span><span>Scripts de desplegament automatitzat de serveis. Codi de sortida i gestió d'errors.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#3B82F6">›</span><span>Cron i crontab. Logrotate. Cas pràctic: script de verificació de connectivitat.</span></div>
+    </div>
+  </div>
+
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">📡</span>
+      <div>
+        <div class="teoria-title" style="color:#22C55E">Servei DHCP i gestió d'adreces IP</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">M07</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">2 sessions</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">~4h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.06);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S1–S2</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#22C55E">›</span><span>Protocol DHCP: procés DORA (Discover, Offer, Request, Ack). Opcions: gateway, DNS, temps.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#22C55E">›</span><span>isc-dhcp-server a Ubuntu: fitxer dhcpd.conf, àmbits, exclusions i reserves per MAC.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#22C55E">›</span><span>DHCP Relay Agent per servir múltiples VLANs. Diagnòstic: dhclient -v, Wireshark bootp.</span></div>
+    </div>
+  </div>
+
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🔒</span>
+      <div>
+        <div class="teoria-title" style="color:#A855F7">Seguretat bàsica de la infraestructura de xarxa</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">C037</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">3 sessions</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">~6h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.06);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S1</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#A855F7">›</span><span>Vectors d'atac en capa 2: MAC flooding, VLAN hopping, ARP spoofing.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#A855F7">›</span><span>Per què el switch per defecte és insegur. Demos amb eines del lab.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.06);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S2</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#A855F7">›</span><span>Mitigació: port-security, BPDU Guard, Root Guard, Dynamic ARP Inspection.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#A855F7">›</span><span>ACLs estàndard i exteses: sintaxi, ubicació, verificació.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.06);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S3</div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#A855F7">›</span><span>Reconeixement de xarxa: visió de l'atacant. Nmap: -sn, -sV, -O, -p.</span></div>
+      <div class="teoria-item"><span class="teoria-bullet" style="color:#A855F7">›</span><span>Interpretació de resultats. Concepte de superfície d'atac.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RECURSOS ═══ -->
+<div id="view-infra" class="view">
+  <div class="section-title"><h2><span>🛠️</span> Recursos i infraestructura</h2></div>
+
+  <div class="infra-section-title">🔌 Infraestructura física</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🔀</span><div><div class="infra-name">Switch Cisco gestionable (capa 2/3)</div><div class="infra-desc">1 per grup. Catalyst 2960 o 3560. Config real IOS: VLANs, STP, port-security, trunk.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📡</span><div><div class="infra-name">Router Cisco físic</div><div class="infra-desc">1 per grup. 1841, 2811 o similar. Router-on-a-stick, NAT/PAT, ACLs, rutes estàtiques.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">💻</span><div><div class="infra-name">PCs/portàtils (1 per alumne)</div><div class="infra-desc">Accés consola (USB-serial), Wireshark, Packet Tracer, SSH. Navegador per Proxmox i Azure.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🔧</span><div><div class="infra-name">Kit de cablejat UTP</div><div class="infra-desc">Cable, connectors RJ45, crimpadora, comprovador. 1 kit per grup.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,209,102,.3)"><span class="infra-icon">🖥️</span><div><div class="infra-name">Cable de consola Cisco (RJ45→USB)</div><div class="infra-desc">1 per grup. Per accedir al CLI del switch i router per primera vegada.</div><span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Confirmar</span></div></div>
+    <div class="infra-card" style="border:1px solid var(--border)"><span class="infra-icon">📦</span><div><div class="infra-name">Patch panel i rack</div><div class="infra-desc">Recomanable per simular entorn real. No imprescindible.</div><span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">Opcional</span></div></div>
+  </div>
+
+  <div class="infra-section-title">🖥️ Proxmox — VMs (servidor compartit de la classe)</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🖥️</span><div><div class="infra-name">VM Servidor DHCP (Ubuntu Server 24)</div><div class="infra-desc">512 MB RAM, 10 GB disc. isc-dhcp-server. 1 per grup.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📊</span><div><div class="infra-name">VM Zabbix / Netdata (monitoratge)</div><div class="infra-desc">2 GB RAM, 20 GB disc. SNMP polling del switch i router. 1 instància compartida.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🧪</span><div><div class="infra-name">VM Kali Linux (atacant simulat)</div><div class="infra-desc">2 GB RAM. Nmap, arp-scan. 1 compartida per tota la classe.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,209,102,.3)"><span class="infra-icon">🔄</span><div><div class="infra-name">Bridge de xarxa a Proxmox per grup</div><div class="infra-desc">Cada grup necessita un vmbr propi per aïllar les xarxes. Configurar a nivell Proxmox.</div><span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Confirmar</span></div></div>
+  </div>
+
+  <div class="infra-section-title">☁️ Azure — Seu remota (1 VM per grup)</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(255,140,66,.3)"><span class="infra-icon">☁️</span><div><div class="infra-name">Azure VM Standard B1s (Ubuntu)</div><div class="infra-desc">1 per grup. Seu remota Tarragona. Connexió via WireGuard VPN al router Cisco.</div><span class="badge" style="background:rgba(255,140,66,.15);color:#FF8C42;border:1px solid rgba(255,140,66,.3)">→ Cal demanar</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,140,66,.3)"><span class="infra-icon">🌐</span><div><div class="infra-name">Azure Virtual Network (VNet)</div><div class="infra-desc">Espai 172.16.x.0/24 per grup. NSG per filtrar ports. Pràcticament gratuït.</div><span class="badge" style="background:rgba(255,140,66,.15);color:#FF8C42;border:1px solid rgba(255,140,66,.3)">→ Cal demanar</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,140,66,.3)"><span class="infra-icon">📊</span><div><div class="infra-name">Azure Monitor bàsic</div><div class="infra-desc">Inclòs al portal Azure. Mètriques de la VM sense cost addicional.</div><span class="badge" style="background:rgba(255,140,66,.15);color:#FF8C42;border:1px solid rgba(255,140,66,.3)">→ Cal demanar</span></div></div>
+  </div>
+
+  <div class="infra-section-title">🚀 Recursos a gestionar abans d'iniciar el projecte</div>
+
+  <div class="demanar-card" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3)">
+    <div class="demanar-header">
+      <span class="demanar-icon">🎓</span>
+      <div>
+        <div class="demanar-title">Azure for Students — $100 crèdits per alumne</div>
+        <div class="demanar-desc">Completament gratuït amb correu institucional. No cal targeta de crèdit. Els crèdits duren 12 mesos. Per a 15 alumnes: $1.500 en crèdits totals.</div>
+        <div class="demanar-badges">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Cost: ~$3-5 per grup i projecte</span>
+          <span class="badge" style="background:rgba(255,140,66,.15);color:#FF8C42;border:1px solid rgba(255,140,66,.3)">Gestionar 2-3 setmanes abans</span>
+        </div>
+      </div>
+    </div>
+    <div class="demanar-passos">
+      <div class="demanar-passos-title">Passos per activar-ho</div>
+      <div class="demanar-pas"><span class="demanar-pas-num">1.</span><span>Accedir a <strong>azure.microsoft.com/free/students</strong></span></div>
+      <div class="demanar-pas"><span class="demanar-pas-num">2.</span><span>Clicar "Start free" i iniciar sessió amb el correu del centre (.cat o .edu)</span></div>
+      <div class="demanar-pas"><span class="demanar-pas-num">3.</span><span>Si el domini no és reconegut automàticament, sol·licitar verificació a <strong>education.microsoft.com</strong></span></div>
+      <div class="demanar-pas"><span class="demanar-pas-num">4.</span><span>Activar la subscripció "Azure for Students" — apareix al portal com a tipus de subscripció</span></div>
+      <div class="demanar-pas"><span class="demanar-pas-num">5.</span><span>Recomanable: crear un grup de recursos per projecte per controlar despeses fàcilment</span></div>
+    </div>
+  </div>
+
+  <div class="demanar-card" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);margin-top:10px">
+    <div class="demanar-header">
+      <span class="demanar-icon">🎒</span>
+      <div>
+        <div class="demanar-title">Cisco Networking Academy — Packet Tracer</div>
+        <div class="demanar-desc">Gratuït. Llicència institucional disponible per centres. Imprescindible per a la fase de pre-pràctica (F1).</div>
+        <div class="demanar-badges">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Cost: Gratuït</span>
+          <span class="badge" style="background:rgba(255,140,66,.15);color:#FF8C42;border:1px solid rgba(255,140,66,.3)">Si el centre ja té NetAcad, crear el curs</span>
+        </div>
+      </div>
+    </div>
+    <div class="demanar-passos">
+      <div class="demanar-passos-title">Passos per activar-ho</div>
+      <div class="demanar-pas"><span class="demanar-pas-num">1.</span><span>Accedir a <strong>netacad.com</strong> i registrar el centre com a institució acadèmica</span></div>
+      <div class="demanar-pas"><span class="demanar-pas-num">2.</span><span>Crear curs "Networking Essentials" (gratuït) — dona accés automàtic a Packet Tracer</span></div>
+      <div class="demanar-pas"><span class="demanar-pas-num">3.</span><span>Distribuir invitació als alumnes — cada un s'instal·la la seva còpia</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRÀCTICA ═══ -->
+<div id="view-fases" class="view">
+  <div class="section-title"><h2><span>🔧</span> Pràctica detallada per fases</h2><p>Clica una fase per veure les tasques. Clica una tasca per veure tots els passos.</p></div>
+
+  <script>
+  const FASES_DATA = [
+    { id:"F1", nom:"Anàlisi i disseny", setmanes:"S1–S2", color:"#00C2FF", icon:"📐",
+      desc:"Abans de tocar cap cable, els alumnes reben el document de requisits de NetCorp i han de dissenyar tota la infraestructura. Treballen amb Packet Tracer i produeixen la documentació de disseny completa que servirà de guia per a totes les fases posteriors.",
+      tasques:[
+        { id:"T1.1", nom:"Anàlisi de requisits de NetCorp S.L.", responsable:"Tot el grup",
+          entregable:"Document d'anàlisi de requisits (1–2 pàgines)",
+          passos:["Lectura del document de requisits de l'empresa","Identificar el nombre de dispositius per departament i seu","Determinar necessitats de segmentació: quins departaments es comuniquen i quins no","Llistar els serveis necessaris: DHCP, monitoratge, VPN","Elaborar llista de preguntes que un sysadmin faria al client"] },
+        { id:"T1.2", nom:"Disseny del pla d'adreçament IP amb VLSM", responsable:"Responsable de xarxa",
+          entregable:"Taula d'adreçament IP (full de càlcul) — OBLIGATORI per continuar",
+          passos:["Assignar espai d'adreces base (ex: 192.168.0.0/16)","Aplicar VLSM: calcular la mida de cada subxarxa per nombre de hosts","Per cada VLAN: ID, nom, xarxa, màscara, rang DHCP, reserva servidors, adreça gateway","Afegir xarxa per a la seu Azure (172.16.x.0/24) i per al túnel WireGuard"] },
+        { id:"T1.3", nom:"Simulació completa a Packet Tracer", responsable:"Tot el grup",
+          entregable:"Fitxer .pkt funcional + captures de proves de connectivitat",
+          passos:["Construir la topologia: router Cisco, switch Cisco, PCs per departament, servidor DHCP","Configurar seguint la taula d'adreçament del T1.2","Verificar ping entre hosts de la mateixa VLAN","Verificar ping entre VLANs i al gateway","Documentar discrepàncies amb el disseny inicial i justificar canvis"] },
+        { id:"T1.4", nom:"Decisió d'arquitectura i diagrama final", responsable:"Tot el grup",
+          entregable:"Diagrama d'arquitectura híbrida (draw.io) aprovat pel professor",
+          passos:["Decidir quins serveis van a Proxmox (DHCP, monitoratge)","Definir com s'integra el router Cisco físic amb les VMs de Proxmox","Planificar com s'implementa la seu remota a Azure","Crear diagrama lògic i físic final","El professor ha de validar el disseny ABANS de passar a F2"] },
+      ]
+    },
+    { id:"F2", nom:"Infraestructura física: switch i router Cisco", setmanes:"S3–S4", color:"#F97316", icon:"🔌",
+      desc:"Es munta la infraestructura física real. El switch i el router Cisco reben la configuració completa seguint el disseny aprovat. Al final de la fase, la xarxa local ha d'estar 100% operativa amb totes les VLANs, inter-VLAN routing i sortida a internet.",
+      tasques:[
+        { id:"T2.1", nom:"Muntatge físic i cablejat documentat", responsable:"Responsable d'infraestructura",
+          entregable:"Foto del muntatge + document de cablejat (port → dispositiu → VLAN)",
+          passos:["Crimpar cables UTP (directe entre switch i router, directe entre switch i PCs)","Connectar tots els dispositius físicament","Documentar cada port del switch: número, dispositiu connectat, VLAN, propòsit","Verificar continuïtat de tots els cables amb el comprovador","Etiquetar físicament els cables"] },
+        { id:"T2.2", nom:"Configuració completa del Switch Cisco", responsable:"Responsable de xarxa",
+          entregable:"Running-config exportada + sortides de show vlan brief, show spanning-tree",
+          passos:["Accés per cable de consola (minicom o PuTTY a 9600 bauds)","Configuració inicial: hostname, enable secret (class), no ip domain-lookup, banner motd","Crear VLANs: 10 Direccio, 20 IT, 30 Logistica, 40 Vendes, 50 RRHH, 99 Gestio, 999 Native","Assignació de ports d'accés: switchport mode access + vlan corresponent","Port del router: switchport mode trunk, native vlan 999, allowed vlans 10,20,30,40,50,99","Port-security als ports d'accés: maximum 2, violation shutdown, mac-address sticky","Verificar STP: comprovar Root Bridge, ports en forwarding i blocking"] },
+        { id:"T2.3", nom:"Configuració completa del Router Cisco", responsable:"Responsable de xarxa",
+          entregable:"Running-config exportada + proves ping inter-VLAN funcionals",
+          passos:["Accés per consola. Configuració inicial igual que el switch","Interfície cap al switch: no shutdown (sense IP — les IPs van a les subinterfícies)","Crear subinterfícies per cada VLAN: interface Gi0/0.10, encapsulation dot1Q 10, ip address...","Interfície WAN: ip address, ip nat outside. Interfície LAN: ip nat inside","NAT: ip nat inside source list 1 interface [WAN] overload. access-list 1 permit 192.168.0.0 0.0.255.255","Ruta per defecte: ip route 0.0.0.0 0.0.0.0 [gateway aula]","Verificació: ping des del router a cada VLAN, ping entre PCs de VLANs diferents"] },
+        { id:"T2.4", nom:"Desplegament VM DHCP a Proxmox i DHCP Relay", responsable:"Responsable de servidors",
+          entregable:"Fitxer dhcpd.conf + proves dhclient -v des de PC de cada VLAN",
+          passos:["Crear VM Ubuntu Server 24 a Proxmox: 512 MB RAM, 10 GB disc, bridge amb accés a les VLANs","Instal·lar isc-dhcp-server","Configurar dhcpd.conf: un subnet per cada VLAN, range dinàmic, option routers i dns","Afegir reserves per MACs de servidors","Al Router Cisco: ip helper-address [IP VM DHCP] a cada subinterfície de VLAN","Verificar: un PC de cada VLAN obté IP correcta automàticament"] },
+      ]
+    },
+    { id:"F3", nom:"Seu remota a Azure (VPN WireGuard)", setmanes:"S5", color:"#00E5A0", icon:"☁️",
+      desc:"Es desplega la seu de Tarragona com a infraestructura al cloud Azure. Una VM Ubuntu simula el servidor de la delegació remota i es connecta amb la seu central via túnel VPN WireGuard. Primera experiència amb arquitectura híbrida real.",
+      tasques:[
+        { id:"T3.1", nom:"Activació Azure for Students i Resource Group", responsable:"Tot el grup (1 compte per grup)",
+          entregable:"Captura portal Azure amb subscripció activa i Resource Group creat",
+          passos:["Accedir a azure.microsoft.com/free/students amb el correu del centre","Activar la subscripció Azure for Students (no cal targeta de crèdit)","Explorar Cost Management: revisar estimació de costos ABANS de crear res","Crear Resource Group 'NetCorp-G[N]-P1' a la regió West Europe","Revisar model de costos: VM B1s ~$7/mes, IP pública estàtica ~$4/mes — cobert pels crèdits"] },
+        { id:"T3.2", nom:"Creació de la VNet i Network Security Group", responsable:"Responsable de xarxa",
+          entregable:"Diagrama VNet exportat + captures de les regles NSG",
+          passos:["Crear Virtual Network: nom 'NetCorp-VNet', espai 172.16.[grup].0/24","Subxarxa 'servers': 172.16.[grup].0/25. Subxarxa 'gestio': 172.16.[grup].128/25","Crear NSG 'NetCorp-NSG': ALLOW SSH port 22, ALLOW UDP 51820 (WireGuard), ALLOW ICMP, DENY ALL resta","Associar NSG a la subxarxa 'servers'"] },
+        { id:"T3.3", nom:"Desplegament de la VM Ubuntu a Azure", responsable:"Responsable de virtualització",
+          entregable:"Connexió SSH funcional a la VM Azure des del PC del lab",
+          passos:["Crear VM: Standard B1s (1 vCPU, 1 GB RAM — inclosa als crèdits)","Imatge: Ubuntu 24.04 LTS","Autenticació per SSH key: ssh-keygen -t ed25519 al PC del lab, pujar la clau pública","Assignar IP pública estàtica","Verificar accés: ssh -i [clau_privada] azureuser@[IP_publica]"] },
+        { id:"T3.4", nom:"Túnel VPN WireGuard: Router Cisco ↔ Azure", responsable:"Responsable de xarxa",
+          entregable:"wg show amb handshake actiu + ping bidireccional documentat",
+          passos:["A la VM Azure: apt install wireguard, generar claus (wg genkey | tee privatekey | wg pubkey > publickey)","Fitxer /etc/wireguard/wg0.conf: Address=10.200.0.2/30, ListenPort=51820, PrivateKey=..., Peer amb la clau pública del lab","Al costat del lab: VM WireGuard a Proxmox (Ubuntu minimal) com a VPN gateway","Configurar ip forwarding al servidor WireGuard del lab","Afegir ruta estàtica al router Cisco: ip route 172.16.[grup].0 255.255.255.0 [IP VM WireGuard]","Verificar: ping des d'un PC del lab a 172.16.[grup].1, ping des de la VM Azure a 192.168.10.1"] },
+      ]
+    },
+    { id:"F4", nom:"Automatització i monitoratge", setmanes:"S6", color:"#FFD166", icon:"⚙️",
+      desc:"Amb la infraestructura en funcionament, s'automatitza el desplegament de configuracions i es desplega monitoratge SNMP per tenir visibilitat de tots els dispositius: switch Cisco, router Cisco, servidors Proxmox i la VM d'Azure.",
+      tasques:[
+        { id:"T4.1", nom:"Script bash de desplegament del servidor DHCP", responsable:"Responsable de servidors",
+          entregable:"Script deploy_dhcp.sh — demostrat en una VM nova des de zero",
+          passos:["Comprovar que s'executa com a root (si no, sortir amb error)","Instal·lar isc-dhcp-server si no està instal·lat (apt install -y)","Copiar el fitxer dhcpd.conf des d'una URL o ruta local","Habilitar i arrancar el servei: systemctl enable --now isc-dhcp-server","Verificar que el servei està actiu: systemctl is-active","Mostrar resultat final amb colors (✓ verd / ✗ vermell)","Demostrar partint d'una VM Ubuntu nova: en <2 minuts el DHCP ha d'estar operatiu"] },
+        { id:"T4.2", nom:"Activació SNMP als dispositius Cisco", responsable:"Responsable de xarxa",
+          entregable:"Captures de snmpwalk funcionals contra switch, router i servidors",
+          passos:["Al Switch i Router Cisco: snmp-server community netcorp_ro RO","Crear ACL per restringir consultes SNMP a la IP del servidor Zabbix","Aplicar: snmp-server community netcorp_ro RO SNMP_ACL","Configurar snmp-server location i contact","Verificar: snmpwalk -v2c -c netcorp_ro [IP switch] des del servidor Zabbix"] },
+        { id:"T4.3", nom:"Desplegament Zabbix i dashboard de monitoratge", responsable:"Responsable de servidors",
+          entregable:"Dashboard Zabbix amb switch + router + servidor DHCP + VM Azure monitoritzats",
+          passos:["Crear VM Zabbix a Proxmox: 2 GB RAM, 20 GB disc, Ubuntu Server","Instal·lar Zabbix 7 des del repositori oficial (repo.zabbix.com)","Afegir hosts: Switch (SNMP v2c, template Cisco IOS), Router (SNMP v2c), Servidor DHCP (agent Zabbix)","Instal·lar zabbix-agent2 a la VM Azure i afegir-la via túnel WireGuard","Crear dashboard: trànsit per port, estat interfícies, CPU/RAM servidors, latència Azure","Crear trigger: si ping a 172.16.[grup].1 falla → enviar alerta"] },
+        { id:"T4.4", nom:"Script de verificació de connectivitat (cron)", responsable:"Responsable de servidors",
+          entregable:"Script check_connectivity.sh + log de 30 minuts",
+          passos:["Comprovar ping al gateway de cada VLAN (192.168.10.1, 20.1, 30.1, 40.1, 50.1)","Comprovar ping a la VM Azure (172.16.[grup].2)","Verificar servei DHCP actiu: systemctl is-active isc-dhcp-server","Verificar túnel WireGuard actiu: wg show | grep handshake","Escriure resultats a /var/log/netcorp/check_[data].log amb timestamp","Si alguna comprovació falla 2 vegades seguides: enviar email d'alerta","Afegir al crontab: */5 * * * *"] },
+      ]
+    },
+    { id:"F5", nom:"Seguretat i validació final", setmanes:"S7", color:"#A855F7", icon:"🛡️",
+      desc:"Fase final: s'aplica el bastionament, es realitza una auditoria de reconeixement des de la perspectiva d'un atacant, es valida el funcionament de tots els mecanismes de seguretat i es prepara la documentació i presentació tècnica final.",
+      tasques:[
+        { id:"T5.1", nom:"Bastionament dels servidors Linux", responsable:"Responsable de seguretat",
+          entregable:"Checklist de bastionament per cada servidor + sshd_config + ufw status",
+          passos:["A TOTES les VMs: canviar port SSH a 2222 (sshd_config: Port 2222, PermitRootLogin no, PasswordAuthentication no, MaxAuthTries 3)","Crear usuari 'netcorp_admin' amb sudo en lloc d'usar root","Configurar UFW: default deny incoming, allow 2222/tcp, allow 67/udp (DHCP), allow 161/udp (SNMP), allow 51820/udp (WireGuard)","Instal·lar fail2ban: protegir SSH (màxim 3 intents, ban 1 hora)","Verificar: intentar connexió SSH com a root → rebutjat"] },
+        { id:"T5.2", nom:"Bastionament del Router Cisco i ACLs finals", responsable:"Responsable de xarxa",
+          entregable:"Matriu d'accessos entre VLANs justificada + ACLs al running-config",
+          passos:["Crear matriu d'accés: IT accedeix a totes; Direcció accedeix a Vendes i RRHH; Logística i Vendes entre elles; RRHH no accedeix a Logística ni Vendes","Implementar amb ACLs exteses al Router, una per VLAN, inbound a la subinterfície","Exemple RRHH: deny ip 192.168.50.0/255.0.0.255 a 192.168.30.0, deny a 192.168.40.0, permit ip any any","Verificar que les restriccions funcionen des dels PCs de cada VLAN"] },
+        { id:"T5.3", nom:"Auditoria de reconeixement amb Nmap (VM Kali)", responsable:"Responsable de seguretat",
+          entregable:"Informe: escaneig ABANS vs DESPRÉS del bastionament amb anàlisi comparativa",
+          passos:["Des de VM Kali (simula atacant extern a VLAN IT)","FASE 1 — Abans bastionament: nmap -sn 192.168.0.0/16 (host discovery)","nmap -sV -p- [IP cada servidor] (tots els ports i versions)","nmap -O [IP router] (OS detection). Documentar tots els ports oberts","FASE 2 — Després bastionament: repetir els mateixos escaneigs","Comparar: quants ports s'han tancat? Quins serveis han desaparegut?","Analitzar els ports que queden oberts i justificar per quin motiu han de ser-hi"] },
+        { id:"T5.4", nom:"Proves de resiliència i validació de seguretat", responsable:"Tot el grup",
+          entregable:"Taula de proves: escenari, resultat esperat, resultat obtingut, OK/KO",
+          passos:["Desconnectar un port del switch → STP ha de reconverge en <30s, Zabbix ha d'alertar","Connectar portàtil no autoritzat → port-security ha de posar el port en err-disabled","Intentar SSH amb contrasenya → fail2ban ha de bloquejar l'IP","Ping de VLAN RRHH a VLAN Logística → ACL ha de bloquejar","Tallar el túnel WireGuard manualment → Zabbix ha d'alertar en <10 min","Reiniciar VM DHCP → els PCs han de renovar IPs sense intervenció manual"] },
+        { id:"T5.5", nom:"Documentació tècnica final i presentació", responsable:"Tot el grup",
+          entregable:"Dossier tècnic (PDF) + presentació 15 min + demo en directe",
+          passos:["Dossier: diagrama final (lògic i físic), taula IP definitiva, running-configs switch i router","Afegir fitxers de config dels servidors (dhcpd.conf, wg0.conf), captures de proves","Incloure informe bastionament Nmap before/after, taula de proves de resiliència","Captura de Cost Management Azure amb cost real del projecte","Registre de problemes trobats i com es van resoldre","Presentació 15+5 min: 3 min context, 5 min demo en directe, 5 min decisions i problemes, 2 min cost Azure i conclusions"] },
+      ]
+    },
+  ];
+
+  function renderFases() {
+    const container = document.getElementById('fases-container');
+    FASES_DATA.forEach(fase => {
+      const wrap = document.createElement('div');
+      wrap.className = 'fase-wrap';
+      const headerHtml = `
+        <div class="fase-header" id="fh-${fase.id}" onclick="toggleFase('${fase.id}')"
+             style="background:rgba(0,0,0,.3);border:1px solid ${fase.color}33;">
+          <span class="fase-icon">${fase.icon}</span>
+          <div style="flex:1">
+            <div class="fase-meta">
+              <span class="fase-num" style="color:${fase.color}">${fase.id}</span>
+              <span class="fase-name">${fase.nom}</span>
+              <span class="badge" style="background:${fase.color}22;color:${fase.color};border:1px solid ${fase.color}44">${fase.setmanes}</span>
+              <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">${fase.tasques.length} tasques</span>
+            </div>
+            <div class="fase-preview">${fase.desc.substring(0,110)}…</div>
+          </div>
+          <span class="fase-arrow" id="fa-${fase.id}">▾</span>
+        </div>`;
+      let tascuesHtml = `<div class="fase-body" id="fb-${fase.id}" style="display:none;border:1px solid ${fase.color};border-top:none;background:${fase.color}06">
+        <div class="fase-desc">${fase.desc}</div>`;
+      fase.tasques.forEach(t => {
+        const passosHtml = t.passos.map((p,i) => `<div class="tasca-pas"><span class="tasca-pas-num" style="color:${fase.color}">${i+1}.</span><span>${p}</span></div>`).join('');
+        tascuesHtml += `
+          <div class="tasca-header" id="th-${t.id}" onclick="toggleTasca('${t.id}')" style="">
+            <span class="tasca-id" style="background:${fase.color}22;color:${fase.color}">${t.id}</span>
+            <div style="flex:1">
+              <div class="tasca-name">${t.nom}</div>
+              <div class="tasca-preview" id="tp-${t.id}">${t.passos[0].substring(0,80)}…</div>
+            </div>
+            <span class="tasca-arrow" id="ta-${t.id}">▾</span>
+          </div>
+          <div class="tasca-detail" id="td-${t.id}" style="display:none">
+            <div class="tasca-inner">
+              <div class="tasca-passos">
+                <div class="tasca-passos-title">📋 Passos detallats</div>
+                ${passosHtml}
+              </div>
+              <div class="tasca-footer">
+                <div class="tasca-footer-block">
+                  <div class="tasca-footer-label">📦 Entregable</div>
+                  <div class="tasca-entregable">${t.entregable}</div>
+                </div>
+                <div class="tasca-footer-block">
+                  <div class="tasca-footer-label">👤 Responsable</div>
+                  <div class="tasca-responsable">${t.responsable}</div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      });
+      tascuesHtml += '</div>';
+      wrap.innerHTML = headerHtml + tascuesHtml;
+      container.appendChild(wrap);
+    });
+  }
+
+  function toggleFase(id) {
+    const body = document.getElementById('fb-'+id);
+    const arrow = document.getElementById('fa-'+id);
+    const header = document.getElementById('fh-'+id);
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    arrow.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+    if (!isOpen) {
+      const faseColor = FASES_DATA.find(f=>f.id===id).color;
+      header.style.background = `${faseColor}18`;
+    } else {
+      header.style.background = 'rgba(0,0,0,.3)';
+    }
+  }
+
+  function toggleTasca(id) {
+    const detail = document.getElementById('td-'+id);
+    const arrow = document.getElementById('ta-'+id);
+    const preview = document.getElementById('tp-'+id);
+    const isOpen = detail.style.display !== 'none';
+    detail.style.display = isOpen ? 'none' : 'block';
+    arrow.classList.toggle('open', !isOpen);
+    if (preview) preview.style.display = isOpen ? 'block' : 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', renderFases);
+  </script>
+
+  <div id="fases-container"></div>
+</div>
+
+<!-- ═══ AVALUACIÓ ═══ -->
+<div id="view-avaluacio" class="view">
+  <div class="section-title"><h2><span>📊</span> Rúbrica d'avaluació</h2><p>Grups de 3 alumnes. Cadascú ha de poder defensar qualsevol decisió tècnica.</p></div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Infraestructura física (Cisco)</div><div class="aval-pes" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">30%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(249,115,22,.15)"><div class="aval-bar" style="background:#F97316;width:30%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Switch configurat: VLANs, STP, port-security, trunk (10%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Router configurat: subinterfícies, NAT/PAT, ACLs (10%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Connectivitat inter-VLAN verificada i taula IP correcta (5%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Cablejat documentat i ports etiquetats (5%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Serveis i automatització</div><div class="aval-pes" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(59,130,246,.15)"><div class="aval-bar" style="background:#3B82F6;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">DHCP funcional amb àmbits per VLAN, reserves i relay (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Scripts bash funcionals, comentats i demostrats (7%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Monitoratge Zabbix amb SNMP actiu i dashboard (5%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Arquitectura cloud (Azure)</div><div class="aval-pes" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(0,229,160,.15)"><div class="aval-bar" style="background:#00E5A0;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">VM Azure desplegada, VNet i NSG configurats (5%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Túnel VPN WireGuard bidireccional funcional (10%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Cost controlat — Cost Management revisat i capturat (5%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Seguretat aplicada</div><div class="aval-pes" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(168,85,247,.15)"><div class="aval-bar" style="background:#A855F7;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Bastionament SSH, UFW i fail2ban a tots els servidors (7%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">ACLs inter-VLAN correctes i justificades (7%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Informe Nmap before/after amb anàlisi comparativa (6%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Documentació i presentació</div><div class="aval-pes" style="background:rgba(0,194,255,.15);color:#00C2FF;border:1px solid rgba(0,194,255,.3)">10%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(0,194,255,.15)"><div class="aval-bar" style="background:#00C2FF;width:10%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Dossier tècnic complet (diagrama, configs, proves) (5%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Presentació oral + demo en directe (5%)</li></ul>
+  </div>
+
+  <div class="panel" style="border-color:rgba(255,209,102,.3);background:rgba(255,209,102,.05);margin-top:10px">
+    <div style="color:#FFD166;font-weight:800;font-size:13px;margin-bottom:10px">📝 Condicions d'avaluació</div>
+    <div class="aval-notes">
+      <div class="aval-note"><span class="aval-note-arrow">→</span><span>El dia de presentació es realitzarà una demo en directe: la infraestructura ha d'estar operativa.</span></div>
+      <div class="aval-note"><span class="aval-note-arrow">→</span><span>El dossier tècnic es lliura en PDF 48h abans. Les configs s'entreguen com a fitxers de text annexats.</span></div>
+      <div class="aval-note"><span class="aval-note-arrow">→</span><span>Cada membre del grup pot ser preguntat per qualsevol part del projecte durant el Q&amp;A (5 min).</span></div>
+      <div class="aval-note"><span class="aval-note-arrow" style="color:#00E5A0">+</span><span><strong style="color:#00E5A0">Bonus +5%:</strong> si el monitoratge detecta i alerta automàticament els incidents de la fase T5.4.</span></div>
+      <div class="aval-note"><span class="aval-note-arrow" style="color:#FF4D6D">-</span><span><strong style="color:#FF4D6D">Malus -10%:</strong> si un servei crític (DHCP, WireGuard, switch) no funciona el dia de la demo sense justificació.</span></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+
+</body>
+</html>

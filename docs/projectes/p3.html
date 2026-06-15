@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P3 — Publiquem serveis: web, FTP, correu i accés remot</title>
+<style>
+  :root {
+    --bg: #0A0E1A; --panel: #111827; --border: #1E2D40;
+    --accent: #00C2FF; --green: #00E5A0; --orange: #FF8C42;
+    --yellow: #FFD166; --red: #FF4D6D; --purple: #A855F7;
+    --text: #E2E8F0; --muted: #64748B; --white: #FFFFFF;
+    --M06: #3B82F6; --M07: #22C55E; --M08: #F97316; --C037: #A855F7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+  .header { background: linear-gradient(180deg,#0F1827 0%,var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 20px 24px 0; }
+  .header-inner { max-width: 960px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 16px; }
+  .header-title { font-size: 21px; font-weight: 900; color: var(--white); letter-spacing: -0.5px; margin: 8px 0 4px; }
+  .header-sub { color: var(--muted); font-size: 12px; }
+  .header-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .header-stats { display: flex; flex-direction: column; gap: 5px; text-align: right; }
+  .stat-row { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+  .stat-val { font-weight: 800; font-size: 20px; line-height: 1; }
+  .stat-lbl { color: var(--muted); font-size: 11px; }
+  .tabs { display: flex; gap: 2px; }
+  .tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px 6px 0 0; transition: all .15s; }
+  .tab-btn.active { background: rgba(0,194,255,.1); border-bottom-color: var(--accent); color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.05); }
+  .content { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .panel + .panel, .panel + .fase-wrap, .fase-wrap + .fase-wrap { margin-top: 10px; }
+  .panel-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .badge { display: inline-block; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; letter-spacing: .4px; white-space: nowrap; }
+  .badge-lg { padding: 4px 12px; font-size: 12px; }
+  .section-title { margin-bottom: 20px; }
+  .section-title h2 { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--white); letter-spacing: -.5px; }
+  .section-title p { margin: 4px 0 0 30px; color: var(--muted); font-size: 13px; }
+  .ra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+  .ra-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .ra-card-inner { display: flex; gap: 8px; align-items: flex-start; }
+  .ra-name { color: var(--white); font-weight: 700; font-size: 11px; margin-bottom: 4px; }
+  .ra-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .ra-tag { color: var(--muted); font-size: 10px; background: rgba(255,255,255,.05); border-radius: 3px; padding: 1px 5px; }
+  .crono { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .crono-item { flex: 1; min-width: 120px; border-radius: 10px; padding: 12px 10px; text-align: center; }
+  .crono-icon { font-size: 20px; margin-bottom: 4px; }
+  .crono-num { font-weight: 800; font-size: 12px; }
+  .crono-name { font-weight: 700; font-size: 11px; margin: 4px 0; line-height: 1.3; color: var(--white); }
+  .crono-weeks { color: var(--muted); font-size: 10px; }
+  .arch-item { border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .arch-label { color: var(--white); font-weight: 700; font-size: 12px; }
+  .arch-desc { color: var(--muted); font-size: 11px; }
+  .teoria-mod { margin-bottom: 16px; }
+  .teoria-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .teoria-icon { font-size: 26px; }
+  .teoria-title { font-weight: 800; font-size: 15px; }
+  .teoria-badges { display: flex; gap: 8px; margin-top: 4px; }
+  .teoria-bloc { border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px; }
+  .teoria-sess { font-weight: 700; font-size: 11px; margin-bottom: 6px; }
+  .teoria-item { display: flex; gap: 6px; margin-bottom: 3px; font-size: 12px; line-height: 1.6; color: var(--text); }
+  .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .infra-card { background: var(--panel); border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; }
+  .infra-icon { font-size: 20px; }
+  .infra-name { color: var(--white); font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+  .infra-desc { color: var(--muted); font-size: 11px; line-height: 1.5; margin-bottom: 5px; }
+  .infra-section-title { color: var(--white); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  .fase-wrap { margin-bottom: 10px; }
+  .fase-header { border-radius: 12px; padding: 14px 18px; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: background .15s; }
+  .fase-header.open { border-radius: 12px 12px 0 0; }
+  .fase-icon { font-size: 22px; }
+  .fase-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+  .fase-num { font-weight: 800; font-size: 13px; }
+  .fase-name { color: var(--white); font-weight: 700; font-size: 15px; }
+  .fase-preview { color: var(--muted); font-size: 12px; }
+  .fase-arrow { color: var(--muted); font-size: 18px; margin-left: auto; flex-shrink: 0; transition: transform .2s; }
+  .fase-arrow.open { transform: rotate(180deg); }
+  .fase-body { border-radius: 0 0 12px 12px; overflow: hidden; }
+  .fase-desc { padding: 12px 18px 8px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; line-height: 1.6; }
+  .tasca-header { padding: 12px 18px; cursor: pointer; border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; transition: background .15s; }
+  .tasca-id { font-weight: 800; font-size: 11px; border-radius: 4px; padding: 2px 7px; flex-shrink: 0; margin-top: 1px; }
+  .tasca-name { color: var(--white); font-weight: 700; font-size: 13px; }
+  .tasca-preview { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .tasca-arrow { color: var(--muted); font-size: 14px; flex-shrink: 0; margin-left: auto; transition: transform .2s; }
+  .tasca-arrow.open { transform: rotate(180deg); }
+  .tasca-detail { padding: 0 18px 16px; }
+  .tasca-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .tasca-passos { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .tasca-passos-title { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .tasca-pas { display: flex; gap: 10px; margin-bottom: 5px; color: var(--text); font-size: 12px; line-height: 1.5; }
+  .tasca-pas-num { font-weight: 800; flex-shrink: 0; font-size: 11px; }
+  .tasca-footer { display: grid; grid-template-columns: 1fr 1fr; }
+  .tasca-footer-block { padding: 12px 16px; }
+  .tasca-footer-block + .tasca-footer-block { border-left: 1px solid var(--border); }
+  .tasca-footer-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .tasca-entregable { font-size: 12px; font-weight: 600; line-height: 1.4; color: #00E5A0; }
+  .tasca-responsable { font-size: 12px; font-weight: 600; color: var(--yellow); }
+  .aval-card { margin-bottom: 10px; }
+  .aval-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .aval-area { color: var(--white); font-weight: 800; font-size: 14px; }
+  .aval-pes { border-radius: 20px; padding: 4px 14px; font-weight: 800; font-size: 18px; }
+  .aval-bar-bg { border-radius: 4px; height: 5px; margin-bottom: 10px; }
+  .aval-bar { border-radius: 4px; height: 100%; }
+  .aval-note { display: flex; gap: 8px; color: var(--text); font-size: 12px; margin-bottom: 5px; }
+  .p1-link { background: rgba(0,194,255,.08); border: 1px solid rgba(0,194,255,.2); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .p1-link-icon { font-size: 22px; }
+  .p1-link-text { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .p1-link-text strong { color: var(--accent); }
+  code { background: rgba(0,0,0,.2); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-badges">
+          <span class="badge badge-lg" style="background:rgba(14,102,85,.25);color:#3FE0C0;border:1px solid rgba(14,102,85,.4)">P3</span>
+          <span class="badge badge-lg" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">6–7 setmanes</span>
+          <span class="badge badge-lg" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">Web · FTP · Correu</span>
+          <span class="badge badge-lg" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">OSPF + NAT</span>
+          <span class="badge badge-lg" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">OWASP Top 10</span>
+        </div>
+        <div class="header-title">Publiquem serveis: web, FTP, correu i accés remot</div>
+        <div class="header-sub">ASIX Ciberseguretat · 2n Curs · Grups de 3 · M08 + M07 + M06 + C037</div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-row"><span class="stat-lbl">RA coberts</span><span class="stat-val" style="color:#00C2FF">8</span></div>
+        <div class="stat-row"><span class="stat-lbl">Mòduls</span><span class="stat-val" style="color:#00E5A0">4</span></div>
+        <div class="stat-row"><span class="stat-lbl">Tasques</span><span class="stat-val" style="color:#FFD166">19</span></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('resum',this)">📋 Resum</button>
+      <button class="tab-btn" onclick="showTab('teoria',this)">📚 Teoria</button>
+      <button class="tab-btn" onclick="showTab('infra',this)">🛠️ Recursos</button>
+      <button class="tab-btn" onclick="showTab('fases',this)">🔧 Pràctica</button>
+      <button class="tab-btn" onclick="showTab('avaluacio',this)">📊 Avaluació</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══ RESUM ═══ -->
+<div id="view-resum" class="view active">
+
+  <div class="p1-link">
+    <span class="p1-link-icon">🔗</span>
+    <div class="p1-link-text">
+      <strong>Continua des del P2.</strong> NetCorp ja té xarxa segmentada per VLANs, Active Directory amb tots els usuaris i DNS intern (netcorp.local). En aquest projecte l'empresa <strong>comença a oferir serveis</strong>: web, transferència de fitxers, correu electrònic i accés remot, tant cap a dins com cap a Internet.
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> Objectiu del projecte</h2></div>
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel-grid2">
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Situació inicial (herència del P1+P2)</div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Xarxa segmentada operativa</div><div class="arch-desc">5 VLANs + router-on-a-stick + ACLs entre departaments</div></div></div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Active Directory + DNS intern</div><div class="arch-desc">Tots els usuaris i servidors resolts per netcorp.local</div></div></div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Seu Azure (Tarragona) connectada</div><div class="arch-desc">VPN WireGuard activa, IP pública disponible</div></div></div>
+        <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Problemes que cal resoldre ara</div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense serveis d'aplicació</div><div class="arch-desc">No hi ha web, FTP ni correu. NetCorp no pot operar digitalment.</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense publicació a Internet</div><div class="arch-desc">El router té només una ruta per defecte i NAT bàsic del P1. Cal NAT estàtic per publicar serveis.</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense ruta cap a la seu Tarragona via xarxa interna</div><div class="arch-desc">El túnel VPN existeix, però el trànsit de producció no s'hi encamina automàticament.</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Accés remot i compartició de fitxers manuals</div><div class="arch-desc">No hi ha SSH bastionat ni comparticions Samba integrades amb AD.</div></div></div>
+      </div>
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Arquitectura al final del P3</div>
+        <div class="arch-item" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25)"><span style="font-size:18px">🔁</span><div><div class="arch-label">OSPF operatiu</div><div class="arch-desc">El router anuncia totes les xarxes per OSPF, incloent la ruta cap a Azure via el túnel.</div></div></div>
+        <div class="arch-item" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25)"><span style="font-size:18px">🌍</span><div><div class="arch-label">NAT estàtic per a serveis publicats</div><div class="arch-desc">El servidor web i el FTP són accessibles des d'Internet amb IP/port fix.</div></div></div>
+        <div class="arch-item" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25)"><span style="font-size:18px">🌐</span><div><div class="arch-label">Servidor web (Apache/Nginx + SSL)</div><div class="arch-desc">Intranet (intern) i web corporativa (pública), amb VirtualHosts i certificats.</div></div></div>
+        <div class="arch-item" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25)"><span style="font-size:18px">📁</span><div><div class="arch-label">Servidor FTP amb usuaris per departament</div><div class="arch-desc">Accés actiu/passiu, usuaris virtuals per a Logística i Vendes.</div></div></div>
+        <div class="arch-item" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25)"><span style="font-size:18px">✉️</span><div><div class="arch-label">Servidor de correu (Postfix+Dovecot)</div><div class="arch-desc">SMTP/IMAP amb antispam i comptes per a tots els empleats AD.</div></div></div>
+        <div class="arch-item" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25)"><span style="font-size:18px">🔑</span><div><div class="arch-label">SSH bastionat + Samba integrat amb AD</div><div class="arch-desc">Accés remot per clau + comparticions de fitxers per departament.</div></div></div>
+        <div class="arch-item" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25)"><span style="font-size:18px">🛡️</span><div><div class="arch-label">Seguretat web (OWASP)</div><div class="arch-desc">Capçaleres HTTP segures, WAF bàsic i informe d'anàlisi de vulnerabilitats.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> RA coberts</h2></div>
+  <div class="ra-grid">
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3);flex-shrink:0">M08</span><div><div class="ra-name">RA6 · Protocols d'encaminament dinàmic</div><div class="ra-tags"><span class="ra-tag">RIP v1/v2</span><span class="ra-tag">OSPF</span><span class="ra-tag">VLSM/CIDR</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3);flex-shrink:0">M08</span><div><div class="ra-name">RA7 · NAT i connexió a xarxes públiques</div><div class="ra-tags"><span class="ra-tag">NAT estàtic</span><span class="ra-tag">PAT</span><span class="ra-tag">Publicació serveis</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);flex-shrink:0">M07</span><div><div class="ra-name">RA3 · Servidors web (Apache/Nginx, SSL)</div><div class="ra-tags"><span class="ra-tag">VirtualHosts</span><span class="ra-tag">Let's Encrypt</span><span class="ra-tag">HTTPS</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);flex-shrink:0">M07</span><div><div class="ra-name">RA4 · Servei FTP</div><div class="ra-tags"><span class="ra-tag">vsftpd</span><span class="ra-tag">Actiu/Passiu</span><span class="ra-tag">Usuaris virtuals</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);flex-shrink:0">M07</span><div><div class="ra-name">RA5 · Servidor de correu (SMTP, IMAP)</div><div class="ra-tags"><span class="ra-tag">Postfix</span><span class="ra-tag">Dovecot</span><span class="ra-tag">SpamAssassin</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);flex-shrink:0">M06</span><div><div class="ra-name">RA4 · Administració remota (SSH, RDP)</div><div class="ra-tags"><span class="ra-tag">Claus SSH</span><span class="ra-tag">Hardening</span><span class="ra-tag">Tunneling</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);flex-shrink:0">M06</span><div><div class="ra-name">RA6 · Integració sistemes heterogenis</div><div class="ra-tags"><span class="ra-tag">Samba</span><span class="ra-tag">Integració AD</span><span class="ra-tag">NFS</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3);flex-shrink:0">C037</span><div><div class="ra-name">RA3 · Seguretat web (OWASP Top 10)</div><div class="ra-tags"><span class="ra-tag">Injeccions SQL/XSS</span><span class="ra-tag">Capçaleres HTTP</span><span class="ra-tag">WAF bàsic</span></div></div></div></div>
+  </div>
+
+  <div class="section-title"><h2><span>📅</span> Cronograma — 6–7 setmanes</h2></div>
+  <div class="panel">
+    <div class="crono">
+      <div class="crono-item" style="background:rgba(0,194,255,.12);border:1px solid rgba(0,194,255,.3)"><div class="crono-icon">📐</div><div class="crono-num" style="color:#00C2FF">F1</div><div class="crono-name">Disseny i planificació</div><div class="crono-weeks">S1</div></div>
+      <div class="crono-item" style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3)"><div class="crono-icon">🔁</div><div class="crono-num" style="color:#F97316">F2</div><div class="crono-name">OSPF i NAT</div><div class="crono-weeks">S2</div></div>
+      <div class="crono-item" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3)"><div class="crono-icon">🌐</div><div class="crono-num" style="color:#22C55E">F3</div><div class="crono-name">Servidors web i FTP</div><div class="crono-weeks">S3–S4</div></div>
+      <div class="crono-item" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3)"><div class="crono-icon">✉️</div><div class="crono-num" style="color:#3B82F6">F4</div><div class="crono-name">Correu, SSH i Samba</div><div class="crono-weeks">S5–S6</div></div>
+      <div class="crono-item" style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3)"><div class="crono-icon">🛡️</div><div class="crono-num" style="color:#A855F7">F5</div><div class="crono-name">Seguretat web i validació</div><div class="crono-weeks">S6–S7</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TEORIA ═══ -->
+<div id="view-teoria" class="view">
+  <div class="section-title"><h2><span>📚</span> Contingut teòric per mòdul</h2><p>Sessions impartides per cada professor just abans que la pràctica les necessiti.</p></div>
+
+  <!-- M08 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🔁</span>
+      <div>
+        <div class="teoria-title" style="color:#F97316">Encaminament dinàmic (RIP/OSPF) i NAT avançat</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">M08</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">5 sessions · ~10h</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">Prerequisit: P1+P2 (router-on-a-stick i ACLs)</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S1 — Per què calen protocols d'encaminament dinàmic</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Límits de les rutes estàtiques: cada nova xarxa (com el túnel cap a Azure) requereix configuració manual a TOTS els routers. En xarxes amb múltiples seus, això és inviable i propens a errors.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Protocols de vector de distància vs estat d'enllaç: RIP (vector de distància, mètrica = nombre de salts, màx. 15) vs OSPF (estat d'enllaç, mètrica = cost basat en ample de banda, sense límit de salts).</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Distància administrativa: com decideix el router quina ruta usar quan coneix la mateixa xarxa per diversos mitjans (directa=0, estàtica=1, OSPF=110, RIP=120).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S2 — RIPv1 i RIPv2: configuració i limitacions</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Configuració bàsica: <code>router rip</code>, <code>version 2</code>, <code>network [xarxa]</code> per cada xarxa directament connectada a anunciar.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>RIPv1 (classful, sense màscara, broadcast) vs RIPv2 (classless, suporta VLSM, multicast 224.0.0.9). Per què RIPv1 no funciona amb el VLSM del Projecte 1.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Limitacions de RIP: convergència lenta (timers de 30s, fins a 180s per detectar caiguda), límit de 15 salts, mètrica simplista (no considera ample de banda).</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Diagnòstic: <code>show ip route</code> (rutes marcades amb R), <code>show ip protocols</code>, <code>debug ip rip</code>.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S3–S4 — OSPF (Open Shortest Path First)</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Conceptes fonamentals: àrees OSPF (Area 0 = backbone), adjacències (relacions Router ↔ Router via Hello packets), algorisme de Dijkstra per calcular el camí més curt (SPF tree).</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Configuració: <code>router ospf [process-id]</code>, <code>network [xarxa] [wildcard] area 0</code>. Wildcard mask: invers de la màscara de subxarxa.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Router ID: identificador únic de 32 bits (format IP) que identifica el router dins OSPF. S'elegeix automàticament (IP loopback més alta, o IP d'interfície més alta si no hi ha loopback) o manualment.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Cost OSPF: inversament proporcional a l'ample de banda (cost = 10^8 / BW). Influeix en la selecció de la ruta òptima quan hi ha múltiples camins.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Diagnòstic OSPF: <code>show ip ospf neighbor</code> (estat FULL = adjacència establerta), <code>show ip ospf database</code>, <code>show ip route</code> (rutes marcades amb O).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(249,115,22,.07);border-left:3px solid #F97316">
+      <div class="teoria-sess" style="color:#F97316">S5 — NAT avançat: publicar serveis a Internet</div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Repàs PAT/NAT Overload (vist al P1) i introducció al NAT estàtic 1:1 per a servidors que han de ser accessibles des de fora amb IP fixa.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Port Forwarding (NAT estàtic amb traducció de port): publicar un servei intern (ex: 192.168.40.10:80) a través d'un port concret de la IP pública del router. Sintaxi Cisco: <code>ip nat inside source static tcp [IP_privada] [port] [IP_pública] [port] extendable</code>.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Implicacions de seguretat: cada regla NAT estàtica obre un forat al firewall implícit del NAT. Cal combinar-ho amb ACLs per limitar l'origen del trànsit permès.</span></div>
+      <div class="teoria-item"><span style="color:#F97316;flex-shrink:0">›</span><span>Verificació: <code>show ip nat translations</code>, <code>show ip nat statistics</code>, prova des d'un dispositiu extern (mòbil amb dades, no WiFi de l'aula).</span></div>
+    </div>
+  </div>
+
+  <!-- M07 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🌐</span>
+      <div>
+        <div class="teoria-title" style="color:#22C55E">Servidors web, FTP i correu electrònic</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">M07</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">8 sessions · ~16h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S1–S2 — Servidors web: Apache i Nginx</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Funcionament d'un servidor web: rep peticions HTTP, localitza el recurs (fitxer estàtic o executa un programa), retorna una resposta HTTP amb codi d'estat (200, 404, 500...).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Apache (httpd): arquitectura modular (mod_ssl, mod_rewrite, mod_security). Fitxers de configuració: <code>/etc/apache2/sites-available/</code>, <code>a2ensite</code>, <code>a2enmod</code>.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Nginx: arquitectura basada en esdeveniments (event-driven), més eficient per a alta concurrència. Sovint usat com a proxy invers davant d'Apache.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>VirtualHosts (Apache) / Server Blocks (Nginx): permeten servir múltiples llocs web des d'un mateix servidor, diferenciats per nom de domini (Name-based) o per IP/port (IP-based).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S3 — SSL/TLS i certificats digitals</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Per què HTTPS: xifra la comunicació client-servidor (confidencialitat), verifica la identitat del servidor (autenticitat) i garanteix que les dades no s'han modificat (integritat).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Certificat digital: conté la clau pública del servidor i està signat per una Autoritat de Certificació (CA). El navegador confia en CAs preinstal·lades.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Let's Encrypt i Certbot: CA gratuïta i automatitzada. Per a dominis públics (la web corporativa publicada). Per a serveis interns (intranet .local), s'usen certificats autosignats o una CA pròpia.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Redirecció HTTP→HTTPS i HSTS (HTTP Strict Transport Security): força el navegador a usar només HTTPS per a aquest domini.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S4–S5 — Servei FTP: vsftpd</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>FTP usa DOS connexions: control (port 21, comandes) i dades (port 20 en mode actiu, port aleatori en mode passiu). Aquesta dualitat és el motiu pel qual FTP té problemes amb NAT i firewalls.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Mode actiu: el SERVIDOR inicia la connexió de dades cap al client (problema: el client sol estar darrere NAT, el servidor no pot connectar-hi). Mode passiu: el CLIENT inicia ambdues connexions (recomanat darrere NAT).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>vsftpd (Very Secure FTP daemon): configuració a <code>/etc/vsftpd.conf</code>. Paràmetres clau: <code>pasv_enable</code>, <code>pasv_min_port</code>/<code>pasv_max_port</code> (rang de ports per al mode passiu, cal obrir-los al firewall).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Usuaris virtuals (no comptes de sistema reals): cada departament té un usuari FTP amb el seu directori chroot (<code>chroot_local_user=YES</code>), sense accés SSH ni shell al sistema.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>FTP vs SFTP vs FTPS: FTP transmet credencials en text pla (insegur). SFTP (sobre SSH, port 22) i FTPS (FTP + TLS) són les alternatives segures — es tractaran a la fase de seguretat.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S6–S8 — Correu electrònic: Postfix, Dovecot i antispam</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Arquitectura del correu: MTA (Mail Transfer Agent, ex: Postfix) envia/rep correu entre servidors via SMTP (port 25/587). MDA/MAA (Mail Delivery/Access Agent, ex: Dovecot) permet als usuaris accedir a la seva bústia via IMAP (port 143/993) o POP3 (port 110/995).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>SMTP: protocol per ENVIAR correu (de client a servidor, o de servidor a servidor). El registre MX del DNS indica quin servidor rep el correu d'un domini.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>IMAP vs POP3: IMAP sincronitza l'estat dels correus amb el servidor (llegit/no llegit, carpetes) — ideal per a múltiples dispositius. POP3 descarrega i normalment elimina els correus del servidor.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Postfix: configuració a <code>/etc/postfix/main.cf</code>. Paràmetres clau: <code>myhostname</code>, <code>mydomain</code>, <code>mynetworks</code> (xarxes autoritzades a enviar sense autenticació).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Dovecot: servidor IMAP/POP3. Integració amb Postfix mitjançant un mateix magatzem d'usuaris (ex: usuaris del sistema o base de dades).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>SpamAssassin: analitza cada correu entrant amb un sistema de puntuació basat en regles (capçaleres sospitoses, paraules clau, llistes negres DNSBL). Per sobre d'un llindar, el correu es marca com a spam o es rebutja.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Open relay: un servidor de correu mal configurat que permet a qualsevol enviar correu a través d'ell. És un dels errors de configuració més greus — convertiria NetCorp en font de spam mundial. <code>mynetworks</code> ha d'estar ben restringit.</span></div>
+    </div>
+  </div>
+
+  <!-- M06 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🔑</span>
+      <div>
+        <div class="teoria-title" style="color:#3B82F6">Accés remot segur i integració de sistemes</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">M06</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">4 sessions · ~8h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S1–S2 — SSH avançat: tunneling i RDP/VNC</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Repàs d'autenticació per clau pública (vista al P1) aplicada ara a TOTS els nous servidors (web, FTP, correu).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>SSH Tunneling (port forwarding): <code>ssh -L [port_local]:[host]:[port_remot] usuari@servidor</code> (local forwarding, accedir a un servei intern a través del servidor SSH). <code>ssh -D [port]</code> (proxy SOCKS dinàmic).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Cas d'ús a NetCorp: un comercial fora de l'oficina vol accedir a la intranet (servidor web intern, no publicat). Amb un túnel SSH cap al servidor, pot accedir-hi sense exposar la intranet a Internet.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>RDP (Remote Desktop Protocol, port 3389): accés gràfic remot a Windows. VNC (Virtual Network Computing): alternativa multiplataforma per a Linux/macOS/Windows. Tots dos s'han de tunelitzar via SSH o VPN, mai exposats directament a Internet.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S3–S4 — Samba: integració Windows-Linux i comparticions</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Samba implementa el protocol SMB/CIFS de Microsoft sobre Linux. Permet que un servidor Linux comparteixi carpetes que els PCs Windows veuen com a unitats de xarxa normals.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Integració amb Active Directory: el servidor Samba s'uneix al domini netcorp.local (com a "Domain Member"), de manera que els permisos de les comparticions es basen en els usuaris i grups d'AD ja existents (els del P2).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Configuració a <code>/etc/samba/smb.conf</code>: secció <code>[global]</code> (configuració del domini) i una secció per cada compartició, amb permisos basats en grups AD (<code>valid users = @"NETCORP\\GRP_Logistica"</code>).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>NFS (Network File System): alternativa per a comparticions entre servidors Linux (no requereix autenticació Windows). Útil per a comparticions entre les VMs de Proxmox i la VM Azure.</span></div>
+    </div>
+  </div>
+
+  <!-- C037 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🛡️</span>
+      <div>
+        <div class="teoria-title" style="color:#A855F7">Seguretat web: OWASP Top 10</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">C037</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">4 sessions · ~8h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S1 — OWASP Top 10: panoràmica i injeccions</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>OWASP (Open Worldwide Application Security Project): organització que manté la llista de les 10 vulnerabilitats web més crítiques i freqüents, actualitzada periòdicament. Referència estàndard del sector.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>Injecció SQL:</strong> quan una aplicació web incorpora directament l'entrada de l'usuari a una consulta SQL sense validar-la. Permet a un atacant llegir, modificar o eliminar dades de la base de dades. Mitigació: consultes parametritzades (prepared statements), mai concatenació de strings.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>XSS (Cross-Site Scripting):</strong> injecció de codi JavaScript que s'executa al navegador d'altres usuaris. XSS reflectit (via URL/paràmetres), XSS emmagatzemat (guardat a la BD, ex: en comentaris). Mitigació: escapar/sanititzar tota sortida HTML.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><strong>CSRF (Cross-Site Request Forgery):</strong> un lloc maliciós fa que el navegador de la víctima (que té sessió oberta en un altre lloc) executi accions no desitjades en aquell lloc. Mitigació: tokens CSRF únics per formulari.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S2 — Gestió insegura de sessions i autenticació</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Cookies de sessió: han d'incloure els atributs <code>Secure</code> (només per HTTPS), <code>HttpOnly</code> (no accessible per JavaScript, mitiga XSS) i <code>SameSite</code> (mitiga CSRF).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Gestió de contrasenyes: mai en text pla a la BD. Hash amb sal (bcrypt, Argon2). Política de complexitat i bloqueig per intents fallits.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Configuració errònia de seguretat (Security Misconfiguration): un dels riscos més comuns. Exemples: pàgines d'administració accessibles sense autenticació, missatges d'error que revelen informació interna (stack traces), serveis amb credencials per defecte.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S3 — Capçaleres de seguretat HTTP</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><code>Strict-Transport-Security (HSTS)</code>: força el navegador a usar HTTPS per a aquest domini durant un temps determinat.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><code>X-Content-Type-Options: nosniff</code>: impedeix que el navegador "endevini" el tipus de contingut, mitigant alguns atacs XSS.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><code>X-Frame-Options</code> / <code>Content-Security-Policy (CSP)</code>: controlen si la pàgina es pot incrustar en un <code>iframe</code> (mitiga clickjacking) i quines fonts de scripts/estils es permeten.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span><code>Server</code> i <code>X-Powered-By</code>: revelen la versió exacta del software. Bona pràctica: eliminar-les o ofuscar-les (no donar pistes a l'atacant).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S4 — WAF (Web Application Firewall) bàsic</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Un WAF inspecciona el trànsit HTTP/HTTPS i bloqueja patrons coneguts d'atac (signatures d'injeccions SQL, XSS, etc.) abans que arribin a l'aplicació.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>ModSecurity: WAF de codi lliure, mòdul per a Apache i Nginx. S'utilitza amb un conjunt de regles (CRS - Core Rule Set d'OWASP) que cobreix la majoria de l'OWASP Top 10.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Mode DetectionOnly vs Blocking: en producció es recomana començar en mode detecció (registra però no bloqueja) per ajustar regles i evitar falsos positius, abans de passar a mode bloqueig.</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RECURSOS ═══ -->
+<div id="view-infra" class="view">
+  <div class="section-title"><h2><span>🛠️</span> Recursos i infraestructura</h2><p>Tot el que es necessita per executar el P3. La majoria és reutilització de l'entorn dels P1/P2.</p></div>
+
+  <div class="infra-section-title">🔌 Infraestructura física i de xarxa (herència P1+P2)</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📡</span><div><div class="infra-name">Router Cisco físic</div><div class="infra-desc">Noves configuracions: OSPF a totes les interfícies, NAT estàtic per als nous serveis.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P1/P2</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🔀</span><div><div class="infra-name">Switch Cisco</div><div class="infra-desc">Sense canvis estructurals. Es reaprofiten les VLANs del P2.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P2</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🏢</span><div><div class="infra-name">Active Directory (DC)</div><div class="infra-desc">S'usaran els comptes d'usuari existents per a correu i Samba.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P2</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🌐</span><div><div class="infra-name">DNS intern (netcorp.local)</div><div class="infra-desc">S'afegiran nous registres: www, ftp, mail, intranet apuntant als nous servidors.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P2</span></div></div>
+  </div>
+
+  <div class="infra-section-title">🖥️ Proxmox — VMs noves per al P3</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🌐</span><div><div class="infra-name">VM Servidor Web (Ubuntu Server 24)</div><div class="infra-desc">1 GB RAM, 15 GB disc. Apache o Nginx + Certbot. VLAN IT o nova VLAN DMZ (opcional).</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📁</span><div><div class="infra-name">VM Servidor FTP (Ubuntu Server 24)</div><div class="infra-desc">512 MB RAM, 20 GB disc (espai per a fitxers). vsftpd amb usuaris virtuals.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">✉️</span><div><div class="infra-name">VM Servidor de Correu (Ubuntu Server 24)</div><div class="infra-desc">1 GB RAM, 20 GB disc. Postfix + Dovecot + SpamAssassin.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📂</span><div><div class="infra-name">VM Samba (o integrada amb FTP/Web)</div><div class="infra-desc">512 MB RAM. Pot reutilitzar una VM existent per estalviar recursos del Proxmox compartit.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+  </div>
+
+  <div class="infra-section-title">☁️ Connexió amb la seu Azure</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(255,209,102,.3)"><span class="infra-icon">🔁</span><div><div class="infra-name">OSPF al VPN Gateway (Proxmox)</div><div class="infra-desc">La VM WireGuard del P1 ha d'anunciar la xarxa Azure (172.16.X.0/24) per OSPF cap al router Cisco.</div><span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Configuració nova</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,209,102,.3)"><span class="infra-icon">🌍</span><div><div class="infra-name">Comprovació IP pública del router</div><div class="infra-desc">Per al NAT estàtic, cal saber quina IP pública (o simulada de l'aula) té el router per provar l'accés extern.</div><span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Verificar amb el centre</span></div></div>
+  </div>
+
+  <div class="infra-section-title" style="color:var(--orange)">📋 Software i recursos addicionals</div>
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px;margin-bottom:12px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">🔒</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Certificats SSL per a serveis interns</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Com que <code>netcorp.local</code> no és un domini públic, Let's Encrypt no pot emetre certificats per a la intranet. Cal generar certificats autosignats o muntar una CA pròpia amb OpenSSL.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït — OpenSSL inclòs a Ubuntu</span>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Dues opcions</div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">A.</span><span><strong>Per a la web pública</strong> (publicada a Internet amb domini real): Let's Encrypt + Certbot — gratuït i automàtic, requereix un domini real registrat.</span></div>
+      <div style="display:flex;gap:10px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">B.</span><span><strong>Per a la intranet</strong> (intranet.netcorp.local): certificat autosignat amb OpenSSL, o crear una mini-CA i instal·lar-la com a "Autoritat de confiança" als PCs del domini via GPO (reaprofitant el P2).</span></div>
+    </div>
+  </div>
+
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">🌍</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Domini real per a la web pública (opcional)</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Per provar Let's Encrypt amb un domini real, alguns registradors ofereixen subdominis gratuïts (DuckDNS, No-IP) que apunten a la IP pública del router de l'aula.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït — DuckDNS</span>
+          <span class="badge" style="background:rgba(255,140,66,.15);color:#FF8C42;border:1px solid rgba(255,140,66,.3)">Opcional, no obligatori</span>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Passos (si s'usa)</div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">1.</span><span>Crear un subdomini a <strong>duckdns.org</strong> (ex: netcorp-g1.duckdns.org)</span></div>
+      <div style="display:flex;gap:10px;margin-bottom:6px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">2.</span><span>Configurar-lo perquè apunti a la IP pública del router de l'aula</span></div>
+      <div style="display:flex;gap:10px;color:var(--text);font-size:12px"><span style="color:var(--orange);font-weight:800;flex-shrink:0">3.</span><span>Verificar que el port forwarding (NAT estàtic, T2.3) fa arribar el trànsit al servidor web intern</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRÀCTICA ═══ -->
+<div id="view-fases" class="view">
+  <div class="section-title"><h2><span>🔧</span> Pràctica detallada per fases</h2><p>Clica una fase i després cada tasca per veure tots els passos.</p></div>
+  <div id="fases-container"></div>
+</div>
+
+<!-- ═══ AVALUACIÓ ═══ -->
+<div id="view-avaluacio" class="view">
+  <div class="section-title"><h2><span>📊</span> Rúbrica d'avaluació</h2><p>Grups de 3 alumnes. Cadascú ha de poder defensar qualsevol part del projecte.</p></div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Encaminament dinàmic i NAT</div><div class="aval-pes" style="background:rgba(249,115,22,.15);color:#F97316;border:1px solid rgba(249,115,22,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(249,115,22,.15)"><div class="aval-bar" style="background:#F97316;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">OSPF configurat i adjacències FULL establertes, incloent la xarxa Azure (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Totes les xarxes (incloent VLANs i túnel) apareixen a la taula d'encaminament via OSPF (6%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">NAT estàtic (port forwarding) per al servidor web i FTP funcional des de l'exterior (6%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Servidor web i FTP</div><div class="aval-pes" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">25%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(34,197,94,.15)"><div class="aval-bar" style="background:#22C55E;width:25%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Servidor web amb almenys 2 VirtualHosts (intranet + web pública) (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">HTTPS funcional amb certificat (Let's Encrypt o autosignat segons cas) (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">FTP funcional amb usuaris virtuals per departament i mode passiu configurat (9%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Correu electrònic</div><div class="aval-pes" style="background:rgba(0,194,255,.15);color:#00C2FF;border:1px solid rgba(0,194,255,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(0,194,255,.15)"><div class="aval-bar" style="background:#00C2FF;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Postfix + Dovecot funcionals: enviar i rebre correu entre usuaris del domini (10%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">SpamAssassin actiu i classificant correu de prova correctament (5%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Verificat que el servidor NO és un open relay (5%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Accés remot i Samba</div><div class="aval-pes" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">15%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(59,130,246,.15)"><div class="aval-bar" style="background:#3B82F6;width:15%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Tots els nous servidors amb SSH bastionat (clau, port no estàndard) (6%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Túnel SSH demostrat per accedir a un servei intern des de fora (4%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Samba integrat amb AD: comparticions amb permisos per grup (5%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Seguretat web (OWASP) i documentació</div><div class="aval-pes" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(168,85,247,.15)"><div class="aval-bar" style="background:#A855F7;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Capçaleres de seguretat HTTP aplicades i verificades (5%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Informe d'anàlisi OWASP del servidor web amb eines (ZAP/Nikto) (5%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">WAF (ModSecurity) actiu amb el CRS (5%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Documentació i presentació amb demo en directe (5%)</li></ul>
+  </div>
+
+  <div class="panel" style="border-color:rgba(255,209,102,.3);background:rgba(255,209,102,.05);margin-top:10px">
+    <div style="color:#FFD166;font-weight:800;font-size:13px;margin-bottom:10px">📝 Condicions d'avaluació</div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>El dia de la demo, el professor provarà accedir a la web pública i al FTP des d'un dispositiu fora de la xarxa de l'aula (mòbil amb dades).</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>S'enviarà un correu de prova entre dos usuaris de departaments diferents i s'haurà de rebre correctament a la safata d'entrada (via Dovecot/IMAP).</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>El dossier ha d'incloure les configuracions completes (apache/nginx vhosts, vsftpd.conf, main.cf, master.cf, smb.conf) com a fitxers de text.</span></div>
+    <div class="aval-note"><span style="color:#00E5A0">+</span><span><strong style="color:#00E5A0">Bonus +5%:</strong> si s'implementa SFTP com a alternativa segura a FTP i es documenta la comparativa de seguretat.</span></div>
+    <div class="aval-note"><span style="color:#FF4D6D">-</span><span><strong style="color:#FF4D6D">Malus -10%:</strong> si l'auditoria detecta que el servidor de correu actua com a open relay.</span></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+const FASES = [
+  { id:"F1", nom:"Disseny i planificació del P3", setmanes:"S1", color:"#00C2FF", icon:"📐",
+    desc:"Es planifica l'arquitectura de serveis: quina VM allotjarà cada servei, com encaixa amb les VLANs existents, quines àrees OSPF cal definir i quines regles de NAT estàtic caldrà crear.",
+    tasques:[
+      { id:"T1.1", nom:"Disseny de l'arquitectura de serveis", responsable:"Tot el grup",
+        entregable:"Diagrama actualitzat (P1+P2+P3) amb les noves VMs i fluxos de trànsit",
+        passos:["Decidir a quina VLAN va cada nou servei (recomanació: VLAN IT per gestió, considerar una VLAN DMZ si es vol aïllar els serveis publicats)","Assignar IPs estàtiques a les 3-4 noves VMs seguint el pla d'adreçament del P1 (ampliant si cal)","Dibuixar el flux de trànsit: client extern → router (NAT) → servidor intern, i client intern → switch → servidor","Identificar quins ports caldrà obrir al NAT/firewall per a cada servei (80/443 web, 21+passiu FTP, 25/587/143/993 correu)"] },
+      { id:"T1.2", nom:"Planificació d'OSPF i de les regles NAT", responsable:"Responsable de xarxa",
+        entregable:"Taula de xarxes per àrea OSPF + taula de regles NAT estàtic previstes",
+        passos:["Llistar totes les xarxes que ha de conèixer el router: VLANs (10,20,30,40,50,99), xarxa del túnel WireGuard, xarxa Azure","Decidir si tot va a Area 0 (més senzill, recomanat per a aquest projecte) o es creen àrees addicionals","Per a cada servei a publicar, definir: IP privada del servidor, port intern, port extern (poden coincidir o no)","El professor valida la planificació abans de F2"] },
+    ]
+  },
+  { id:"F2", nom:"Encaminament dinàmic (OSPF) i NAT", setmanes:"S2", color:"#F97316", icon:"🔁",
+    desc:"S'habilita OSPF al router per substituir/complementar les rutes estàtiques, incloent la xarxa d'Azure. Es configuren les regles de NAT estàtic necessàries per publicar els futurs serveis.",
+    tasques:[
+      { id:"T2.1", nom:"Configuració d'OSPF al Router Cisco", responsable:"Responsable de xarxa",
+        entregable:"show ip ospf neighbor (adjacències FULL) + show ip route (rutes O)",
+        passos:["Activar OSPF: router ospf 1","Anunciar totes les xarxes directament connectades: network [xarxa] [wildcard] area 0 per cada VLAN i la xarxa del túnel","Configurar un Router ID explícit per claredat: router-id 1.1.1.[N] (on N = número de grup)","Verificar amb show ip ospf neighbor que s'estableixen adjacències (si hi ha més d'un router al laboratori) o que almenys les xarxes apareixen com O a show ip route","Si només hi ha un router (cas habitual en aquest projecte), OSPF servirà sobretot per preparar l'escalabilitat i practicar la configuració; documentar aquesta circumstància"] },
+      { id:"T2.2", nom:"Configuració d'OSPF a la VM VPN Gateway (Proxmox)", responsable:"Responsable de xarxa",
+        entregable:"La xarxa 172.16.[N].0/24 (Azure) apareix a la taula d'encaminament del router com a O o redistribuïda",
+        passos:["Si la VM WireGuard és Linux, instal·lar un dimoni OSPF (FRRouting - frr) per anunciar la xarxa Azure cap al router Cisco","Alternativa més senzilla (recomanada si el temps és just): mantenir una ruta estàtica cap a Azure al router i redistribuir-la a OSPF amb 'redistribute static' — documentar la decisió presa i el motiu","Verificar amb ping des de qualsevol VLAN cap a la IP privada de la VM Azure (172.16.[N].2)"] },
+      { id:"T2.3", nom:"Regles de NAT estàtic (port forwarding)", responsable:"Responsable de xarxa",
+        entregable:"show ip nat translations mostrant les regles estàtiques + prova d'accés extern (mòbil amb dades)",
+        passos:["Per al futur servidor web (encara no desplegat, però es pot configurar la regla par endavant): ip nat inside source static tcp [IP_privada_web] 80 [IP_pública] 8080 extendable (s'usa un port alt per no requerir privilegis especials a l'aula)","Repetir per a HTTPS (443) i per al FTP (21 + rang de ports passius, ex: 21000-21010)","Verificar amb show ip nat translations que les regles estan actives (encara que el servei destí no existeixi, la regla NAT ja es pot veure)","Documentar la IP pública (o la simulada de l'aula) i els ports finals que s'usaran per a les proves de F3 i F4"] },
+    ]
+  },
+  { id:"F3", nom:"Servidors web i FTP", setmanes:"S3–S4", color:"#22C55E", icon:"🌐",
+    desc:"Es desplega el servidor web amb dues webs (intranet i pública) i el servidor FTP amb usuaris virtuals per departament. Es configura HTTPS per a totes dues webs.",
+    tasques:[
+      { id:"T3.1", nom:"Desplegament del servidor web i VirtualHosts", responsable:"Responsable de servidors",
+        entregable:"Dues webs accessibles: intranet.netcorp.local (HTTPS intern) i la web pública (HTTPS extern)",
+        passos:["Crear VM Ubuntu Server 24 (1 GB RAM, 15 GB disc), IP estàtica segons el pla d'adreçament","Instal·lar Apache (o Nginx, decisió del grup, documentar el motiu)","Crear el VirtualHost/Server Block 1: 'intranet.netcorp.local' — contingut: una pàgina d'inici senzilla de la intranet de NetCorp (notícies internes, enllaços a Samba/correu)","Crear el VirtualHost/Server Block 2: 'www' (web pública) — contingut: pàgina corporativa de presentació de NetCorp","Crear els registres DNS corresponents a la zona netcorp.local: intranet → IP del servidor (P2)","Provar l'accés des d'un PC de cada VLAN a la intranet (ha de respectar les ACLs del P2 si n'hi havia)"] },
+      { id:"T3.2", nom:"Configuració HTTPS per a totes dues webs", responsable:"Responsable de servidors",
+        entregable:"Les dues webs accessibles per HTTPS sense errors de certificat (o amb avís esperat si és autosignat)",
+        passos:["Per a la intranet (domini .local, no públic): generar un certificat autosignat amb OpenSSL (openssl req -x509 -newkey rsa:2048 -keyout intranet.key -out intranet.crt -days 365)","Configurar l'Apache/Nginx perquè serveixi intranet.netcorp.local per HTTPS (port 443) amb aquest certificat","Per a la web pública: SI s'ha configurat un domini real (DuckDNS), usar Certbot per obtenir un certificat Let's Encrypt vàlid. SI NO, documentar que en un entorn real s'usaria Let's Encrypt i usar un certificat autosignat per a la demo","Configurar redirecció HTTP → HTTPS per a totes dues webs","Aplicar les capçaleres de seguretat bàsiques (es completarà a F5): Strict-Transport-Security, X-Content-Type-Options"] },
+      { id:"T3.3", nom:"Desplegament del servidor FTP (vsftpd)", responsable:"Responsable de servidors",
+        entregable:"FTP accessible amb usuaris virtuals per departament, mode passiu funcional",
+        passos:["Crear VM Ubuntu Server 24 (512 MB RAM, 20 GB disc per a fitxers), IP estàtica","Instal·lar vsftpd. Configurar /etc/vsftpd.conf: anonymous_enable=NO, local_enable=YES, chroot_local_user=YES","Configurar mode passiu: pasv_enable=YES, pasv_min_port=21000, pasv_max_port=21010, pasv_address=[IP que veurà el client] (la IP pública si l'accés és extern)","Crear usuaris virtuals (no comptes de sistema) per a Logística i Vendes: cada usuari amb el seu directori chroot independent","Provar connexió des d'un client FTP (FileZilla o ftp per línia de comandes) en mode passiu, pujant i descarregant un fitxer","Provar l'accés des de fora de la xarxa de l'aula usant la regla NAT del T2.3 (mòbil amb dades)"] },
+      { id:"T3.4", nom:"Publicació i prova d'accés extern", responsable:"Tot el grup",
+        entregable:"Captures de pantalla: accés a la web pública i al FTP des d'un dispositiu fora de la xarxa de l'aula",
+        passos:["Connectar un mòbil a dades mòbils (NO a la WiFi de l'aula)","Accedir a la IP pública del router pel port configurat al NAT (T2.3) per a la web: http://[IP_pública]:8080","Repetir per a HTTPS i per al FTP (amb un client FTP per Android/iOS si és possible, o documentar la limitació)","Si l'accés extern no és possible per restriccions de la xarxa del centre, documentar-ho i fer la prova simulant 'extern' des d'una altra VLAN sense les ACLs de confiança"] },
+    ]
+  },
+  { id:"F4", nom:"Correu electrònic, SSH i Samba", setmanes:"S5–S6", color:"#3B82F6", icon:"✉️",
+    desc:"Es desplega el servidor de correu intern amb Postfix, Dovecot i SpamAssassin. Es bastioneixen tots els nous servidors amb SSH per clau i es configura Samba integrat amb l'Active Directory del P2.",
+    tasques:[
+      { id:"T4.1", nom:"Desplegament de Postfix (MTA)", responsable:"Responsable de servidors",
+        entregable:"Postfix instal·lat i configurat amb mynetworks restringit, registre MX al DNS",
+        passos:["Crear VM Ubuntu Server 24 (1 GB RAM, 20 GB disc), IP estàtica","Instal·lar Postfix: durant la instal·lació, triar 'Internet Site', myhostname = mail.netcorp.local","Configurar /etc/postfix/main.cf: mydomain = netcorp.local, mynetworks limitat a les xarxes internes de NetCorp (totes les VLANs)","Crear el registre MX a la zona DNS netcorp.local apuntant a mail.netcorp.local","Verificar: telnet localhost 25, comprovar que Postfix respon i que NO accepta relay des d'IPs externes (provar des de la VM Kali si es té disponible)"] },
+      { id:"T4.2", nom:"Desplegament de Dovecot (IMAP) i integració", responsable:"Responsable de servidors",
+        entregable:"Usuaris poden connectar-se via client de correu (Thunderbird) i enviar/rebre correu entre ells",
+        passos:["Instal·lar Dovecot (dovecot-imapd, dovecot-pop3d)","Configurar Dovecot per usar els comptes d'usuari del sistema (mail_location apuntant a Maildir) o integrar amb AD via LDAP (opció avançada, valorar segons temps disponible)","Crear 4-5 comptes de correu de prova corresponents a empleats de diferents departaments (del llistat del document de situació inicial)","Configurar un client de correu (Thunderbird) en un PC de cada VLAN amb els paràmetres: IMAP (mail.netcorp.local:993, SSL), SMTP (mail.netcorp.local:587, STARTTLS)","Prova: enviar un correu d'un usuari d'IT a un usuari de RRHH i verificar la recepció"] },
+      { id:"T4.3", nom:"Instal·lació de SpamAssassin", responsable:"Responsable de servidors",
+        entregable:"Correu de prova amb contingut típic de spam classificat correctament (capçalera X-Spam-Status)",
+        passos:["Instal·lar spamassassin i spamc. Integrar amb Postfix via milter o procmail (segons la guia que segueixi el grup)","Activar el servei: systemctl enable --now spamassassin","Enviar un correu de prova amb text típic de spam (ex: 'GUANYA DINERS RÀPID, CLICA AQUÍ!!!') i verificar que la capçalera X-Spam-Status indica una puntuació alta","Enviar un correu normal i verificar que la puntuació és baixa","Documentar el llindar configurat i què passa amb els correus que el superen (marcar com spam vs rebutjar)"] },
+      { id:"T4.4", nom:"Bastionament SSH de tots els nous servidors", responsable:"Responsable de seguretat",
+        entregable:"Checklist de bastionament aplicada a les 3-4 noves VMs (web, FTP, correu, Samba)",
+        passos:["A cada nova VM: generar/copiar la clau pública SSH del grup, afegir-la a ~/.ssh/authorized_keys","Editar /etc/ssh/sshd_config: PermitRootLogin no, PasswordAuthentication no, Port 2222 (o un altre triat pel grup, documentar-ho)","Configurar UFW: permetre només els ports necessaris per a cada servei (web: 80/443; FTP: 21+passiu; correu: 25/587/993)","Instal·lar i configurar fail2ban per protegir SSH a totes les noves VMs","Verificar: connexió SSH amb contrasenya és rebutjada; connexió per clau funciona"] },
+      { id:"T4.5", nom:"Túnel SSH per accedir a la intranet des de fora", responsable:"Responsable de xarxa",
+        entregable:"Demostració d'accés a intranet.netcorp.local des d'un dispositiu extern via túnel SSH",
+        passos:["Des d'un dispositiu fora de la xarxa de NetCorp (simulat, per exemple un altre PC connectat a una xarxa diferent), establir un túnel SSH cap a un servidor de NetCorp accessible: ssh -L 8443:[IP_intranet]:443 usuari@[IP_pública_servidor]","Accedir des del navegador del dispositiu extern a https://localhost:8443 i verificar que es mostra la intranet","Documentar per què aquest mètode és més segur que publicar directament la intranet a Internet"] },
+      { id:"T4.6", nom:"Samba integrat amb Active Directory", responsable:"Responsable de servidors",
+        entregable:"Comparticions de xarxa accessibles des de Windows amb permisos basats en grups AD del P2",
+        passos:["Instal·lar Samba a una VM Linux (es pot reaprofitar la VM de FTP o Web si els recursos del Proxmox són limitats, documentant la decisió)","Unir el servidor Samba al domini netcorp.local: realm join netcorp.local (requereix Kerberos/Winbind configurats)","Crear comparticions per a Logística i Vendes amb permisos basats en els grups de seguretat creats al P2 (GRP_Logistica, GRP_Vendes)","Des d'un PC Windows del domini, accedir a \\\\\\\\[servidor-samba]\\\\logistica i verificar que només els usuaris del grup corresponent hi tenen accés","Verificar amb un usuari d'un altre departament que l'accés és denegat"] },
+    ]
+  },
+  { id:"F5", nom:"Seguretat web (OWASP) i validació final", setmanes:"S6–S7", color:"#A855F7", icon:"🛡️",
+    desc:"S'aplica seguretat específica al servidor web seguint OWASP Top 10, es realitza una auditoria amb eines especialitzades, i es valida tot el sistema de forma integral abans de la presentació.",
+    tasques:[
+      { id:"T5.1", nom:"Capçaleres de seguretat HTTP", responsable:"Responsable de seguretat",
+        entregable:"Captures de les capçaleres de resposta HTTP (via navegador o curl -I) mostrant totes les capçaleres aplicades",
+        passos:["Configurar a Apache/Nginx les capçaleres: Strict-Transport-Security, X-Content-Type-Options: nosniff, X-Frame-Options: SAMEORIGIN, Content-Security-Policy bàsica","Eliminar o reduir la informació de la capçalera Server (ServerTokens Prod a Apache, server_tokens off a Nginx)","Verificar amb curl -I https://intranet.netcorp.local que totes les capçaleres apareixen","Eina de verificació online (si hi ha accés a Internet): securityheaders.com per a la web pública"] },
+      { id:"T5.2", nom:"Auditoria de seguretat web amb eines OWASP", responsable:"Responsable de seguretat",
+        entregable:"Informe d'auditoria amb OWASP ZAP o Nikto: vulnerabilitats trobades i recomanacions",
+        passos:["Des de la VM Kali (del P1), executar un escaneig amb Nikto contra el servidor web: nikto -h https://intranet.netcorp.local","Si es disposa de OWASP ZAP, realitzar un escaneig automàtic (Automated Scan) contra la intranet","Documentar cada troballa: nivell de risc, descripció, recomanació de mitigació","Comparar els resultats abans i després d'aplicar les capçaleres de seguretat del T5.1"] },
+      { id:"T5.3", nom:"Desplegament de ModSecurity (WAF)", responsable:"Responsable de seguretat",
+        entregable:"ModSecurity actiu amb el Core Rule Set, demostració de bloqueig d'una petició maliciosa",
+        passos:["Instal·lar ModSecurity per a Apache (libapache2-mod-security2) o Nginx (mòdul corresponent)","Descarregar i activar el OWASP Core Rule Set (CRS)","Configurar en mode SecRuleEngine DetectionOnly primer, revisar els logs per detectar falsos positius","Canviar a SecRuleEngine On (bloqueig actiu)","Demostració: fer una petició amb un patró d'injecció SQL típic (ex: ?id=1' OR '1'='1) i verificar que ModSecurity la bloqueja amb un 403"] },
+      { id:"T5.4", nom:"Validació integral del sistema (P1+P2+P3)", responsable:"Tot el grup",
+        entregable:"Taula de proves d'integració (mínim 15 proves, amb resultat esperat i obtingut)",
+        passos:["Prova 1: un usuari de cada departament pot navegar a la intranet per HTTPS","Prova 2: la web pública és accessible des de fora via NAT","Prova 3: el FTP funciona en mode passiu des de dins i des de fora","Prova 4: correu enviat d'un usuari a un altre del domini arriba correctament","Prova 5: correu de spam de prova és classificat correctament","Prova 6: comparticions Samba respecten els permisos AD","Prova 7: SSH per clau funciona a tots els nous servidors; per contrasenya és rebutjat","Prova 8: fail2ban bloqueja després de 3 intents fallits a cada nou servidor","Prova 9: ModSecurity bloqueja una petició d'injecció de prova","Prova 10: les ACLs del P2 segueixen funcionant correctament (no s'han trencat amb els canvis del P3)","Prova 11: OSPF manté les adjacències i les rutes cap a Azure"] },
+      { id:"T5.5", nom:"Documentació tècnica final i presentació", responsable:"Tot el grup",
+        entregable:"Dossier tècnic (PDF) + presentació 15 min amb demo en directe",
+        passos:["Actualitzar el diagrama d'arquitectura global (P1+P2+P3) amb tots els serveis nous","Documentar: configuracions completes (vhosts, vsftpd.conf, main.cf, master.cf, smb.conf, regles NAT, configuració OSPF)","Informe d'auditoria OWASP (abans/després de capçaleres i WAF)","Taula de validació integral (T5.4)","Registre de problemes trobats i com es van resoldre","Presentació (15+5 min): 3 min context, 7 min demo en directe (navegar a les webs, enviar correu, accedir a FTP/Samba, demostrar bloqueig WAF), 3 min decisions i problemes, 2 min conclusions"] },
+    ]
+  },
+];
+
+function buildFases() {
+  const container = document.getElementById('fases-container');
+  FASES.forEach(f => {
+    const wrap = document.createElement('div');
+    wrap.className = 'fase-wrap';
+    let tascuesHtml = `<div class="fase-body" id="fb-${f.id}" style="display:none;border:1px solid ${f.color};border-top:none;background:${f.color}06">
+      <div class="fase-desc">${f.desc}</div>`;
+    f.tasques.forEach(t => {
+      const passosHtml = t.passos.map((p,i) => `<div class="tasca-pas"><span class="tasca-pas-num" style="color:${f.color}">${i+1}.</span><span>${p}</span></div>`).join('');
+      tascuesHtml += `
+        <div class="tasca-header" id="th-${t.id}" onclick="toggleTasca('${t.id}')">
+          <span class="tasca-id" style="background:${f.color}22;color:${f.color}">${t.id}</span>
+          <div style="flex:1"><div class="tasca-name">${t.nom}</div><div class="tasca-preview" id="tp-${t.id}">${t.passos[0].substring(0,90)}…</div></div>
+          <span class="tasca-arrow" id="ta-${t.id}">▾</span>
+        </div>
+        <div class="tasca-detail" id="td-${t.id}" style="display:none">
+          <div class="tasca-inner">
+            <div class="tasca-passos">
+              <div class="tasca-passos-title">📋 Passos detallats</div>${passosHtml}
+            </div>
+            <div class="tasca-footer">
+              <div class="tasca-footer-block"><div class="tasca-footer-label">📦 Entregable</div><div class="tasca-entregable">${t.entregable}</div></div>
+              <div class="tasca-footer-block"><div class="tasca-footer-label">👤 Responsable</div><div class="tasca-responsable">${t.responsable}</div></div>
+            </div>
+          </div>
+        </div>`;
+    });
+    tascuesHtml += '</div>';
+    wrap.innerHTML = `
+      <div class="fase-header" id="fh-${f.id}" onclick="toggleFase('${f.id}')"
+           style="background:rgba(0,0,0,.3);border:1px solid ${f.color}33">
+        <span class="fase-icon">${f.icon}</span>
+        <div style="flex:1">
+          <div class="fase-meta">
+            <span class="fase-num" style="color:${f.color}">${f.id}</span>
+            <span class="fase-name">${f.nom}</span>
+            <span class="badge" style="background:${f.color}22;color:${f.color};border:1px solid ${f.color}44">${f.setmanes}</span>
+            <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">${f.tasques.length} tasques</span>
+          </div>
+          <div class="fase-preview">${f.desc.substring(0,110)}…</div>
+        </div>
+        <span class="fase-arrow" id="fa-${f.id}">▾</span>
+      </div>${tascuesHtml}`;
+    container.appendChild(wrap);
+  });
+}
+
+function toggleFase(id) {
+  const body = document.getElementById('fb-'+id);
+  const arrow = document.getElementById('fa-'+id);
+  const header = document.getElementById('fh-'+id);
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  const faseColor = FASES.find(f=>f.id===id).color;
+  header.style.background = isOpen ? 'rgba(0,0,0,.3)' : `${faseColor}18`;
+  header.classList.toggle('open', !isOpen);
+}
+
+function toggleTasca(id) {
+  const detail = document.getElementById('td-'+id);
+  const arrow = document.getElementById('ta-'+id);
+  const preview = document.getElementById('tp-'+id);
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  if(preview) preview.style.display = isOpen ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', buildFases);
+</script>
+</body>
+</html>

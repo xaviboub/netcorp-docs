@@ -1,0 +1,29 @@
+site_name: ASIX 2n · Ciberseguretat — NetCorp S.L.
+site_description: Documentació dels projectes ABP per a ASIX 2n, itinerari Ciberseguretat
+site_author: Departament d'Informàtica
+
+theme:
+  name: mkdocs
+  locale: en
+  highlightjs: true
+  navigation_depth: 4
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - fenced_code
+
+nav:
+  - Inici: index.md
+  - Projectes:
+      - Visió general: projectes/index.md
+      - "P1 · Posem en marxa la xarxa corporativa": projectes/p1.html
+      - "P2 · Identitat corporativa: directori, VLANs i DNS": projectes/p2.html
+      - "P3 · Publiquem serveis: web, FTP, correu i accés remot": projectes/p3.html
+      - "P4 · Col·laboració, mobilitat i primera auditoria": projectes/p4.html
+      - "P5 · Blindem el perímetre: tallafocs, VPN i monitoratge": projectes/p5.html
+      - "P6 · Incident! Resposta, forense i resiliència": projectes/p6.html
+  - Teoria:
+      - "M08 · Capítol 1: Xarxes i Commutació": teoria/m08-cap1.md

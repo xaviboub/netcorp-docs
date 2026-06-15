@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P4 — Col·laboració, mobilitat i primera auditoria</title>
+<style>
+  :root {
+    --bg: #0A0E1A; --panel: #111827; --border: #1E2D40;
+    --accent: #00C2FF; --green: #00E5A0; --orange: #FF8C42;
+    --yellow: #FFD166; --red: #FF4D6D; --purple: #A855F7;
+    --text: #E2E8F0; --muted: #64748B; --white: #FFFFFF;
+    --M06: #3B82F6; --M07: #22C55E; --M08: #F97316; --C037: #A855F7; --C038: #EF4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+  .header { background: linear-gradient(180deg,#0F1827 0%,var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 20px 24px 0; }
+  .header-inner { max-width: 960px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 16px; }
+  .header-title { font-size: 21px; font-weight: 900; color: var(--white); letter-spacing: -0.5px; margin: 8px 0 4px; }
+  .header-sub { color: var(--muted); font-size: 12px; }
+  .header-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .header-stats { display: flex; flex-direction: column; gap: 5px; text-align: right; }
+  .stat-row { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+  .stat-val { font-weight: 800; font-size: 20px; line-height: 1; }
+  .stat-lbl { color: var(--muted); font-size: 11px; }
+  .tabs { display: flex; gap: 2px; }
+  .tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--muted); padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px 6px 0 0; transition: all .15s; }
+  .tab-btn.active { background: rgba(0,194,255,.1); border-bottom-color: var(--accent); color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,.05); }
+  .content { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
+  .view { display: none; }
+  .view.active { display: block; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .panel + .panel, .panel + .fase-wrap, .fase-wrap + .fase-wrap { margin-top: 10px; }
+  .panel-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .badge { display: inline-block; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; letter-spacing: .4px; white-space: nowrap; }
+  .badge-lg { padding: 4px 12px; font-size: 12px; }
+  .section-title { margin-bottom: 20px; }
+  .section-title h2 { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--white); letter-spacing: -.5px; }
+  .section-title p { margin: 4px 0 0 30px; color: var(--muted); font-size: 13px; }
+  .ra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+  .ra-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .ra-card-inner { display: flex; gap: 8px; align-items: flex-start; }
+  .ra-name { color: var(--white); font-weight: 700; font-size: 11px; margin-bottom: 4px; }
+  .ra-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .ra-tag { color: var(--muted); font-size: 10px; background: rgba(255,255,255,.05); border-radius: 3px; padding: 1px 5px; }
+  .crono { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .crono-item { flex: 1; min-width: 120px; border-radius: 10px; padding: 12px 10px; text-align: center; }
+  .crono-icon { font-size: 20px; margin-bottom: 4px; }
+  .crono-num { font-weight: 800; font-size: 12px; }
+  .crono-name { font-weight: 700; font-size: 11px; margin: 4px 0; line-height: 1.3; color: var(--white); }
+  .crono-weeks { color: var(--muted); font-size: 10px; }
+  .arch-item { border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .arch-label { color: var(--white); font-weight: 700; font-size: 12px; }
+  .arch-desc { color: var(--muted); font-size: 11px; }
+  .teoria-mod { margin-bottom: 16px; }
+  .teoria-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .teoria-icon { font-size: 26px; }
+  .teoria-title { font-weight: 800; font-size: 15px; }
+  .teoria-badges { display: flex; gap: 8px; margin-top: 4px; }
+  .teoria-bloc { border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px; }
+  .teoria-sess { font-weight: 700; font-size: 11px; margin-bottom: 6px; }
+  .teoria-item { display: flex; gap: 6px; margin-bottom: 3px; font-size: 12px; line-height: 1.6; color: var(--text); }
+  .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .infra-card { background: var(--panel); border-radius: 10px; padding: 12px 14px; display: flex; gap: 10px; }
+  .infra-icon { font-size: 20px; }
+  .infra-name { color: var(--white); font-weight: 700; font-size: 12px; margin-bottom: 3px; }
+  .infra-desc { color: var(--muted); font-size: 11px; line-height: 1.5; margin-bottom: 5px; }
+  .infra-section-title { color: var(--white); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  .fase-wrap { margin-bottom: 10px; }
+  .fase-header { border-radius: 12px; padding: 14px 18px; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: background .15s; }
+  .fase-header.open { border-radius: 12px 12px 0 0; }
+  .fase-icon { font-size: 22px; }
+  .fase-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+  .fase-num { font-weight: 800; font-size: 13px; }
+  .fase-name { color: var(--white); font-weight: 700; font-size: 15px; }
+  .fase-preview { color: var(--muted); font-size: 12px; }
+  .fase-arrow { color: var(--muted); font-size: 18px; margin-left: auto; flex-shrink: 0; transition: transform .2s; }
+  .fase-arrow.open { transform: rotate(180deg); }
+  .fase-body { border-radius: 0 0 12px 12px; overflow: hidden; }
+  .fase-desc { padding: 12px 18px 8px; border-bottom: 1px solid var(--border); color: var(--text); font-size: 13px; line-height: 1.6; }
+  .tasca-header { padding: 12px 18px; cursor: pointer; border-top: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; transition: background .15s; }
+  .tasca-id { font-weight: 800; font-size: 11px; border-radius: 4px; padding: 2px 7px; flex-shrink: 0; margin-top: 1px; }
+  .tasca-name { color: var(--white); font-weight: 700; font-size: 13px; }
+  .tasca-preview { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .tasca-arrow { color: var(--muted); font-size: 14px; flex-shrink: 0; margin-left: auto; transition: transform .2s; }
+  .tasca-arrow.open { transform: rotate(180deg); }
+  .tasca-detail { padding: 0 18px 16px; }
+  .tasca-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .tasca-passos { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .tasca-passos-title { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .tasca-pas { display: flex; gap: 10px; margin-bottom: 5px; color: var(--text); font-size: 12px; line-height: 1.5; }
+  .tasca-pas-num { font-weight: 800; flex-shrink: 0; font-size: 11px; }
+  .tasca-footer { display: grid; grid-template-columns: 1fr 1fr; }
+  .tasca-footer-block { padding: 12px 16px; }
+  .tasca-footer-block + .tasca-footer-block { border-left: 1px solid var(--border); }
+  .tasca-footer-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .tasca-entregable { font-size: 12px; font-weight: 600; line-height: 1.4; color: #00E5A0; }
+  .tasca-responsable { font-size: 12px; font-weight: 600; color: var(--yellow); }
+  .aval-card { margin-bottom: 10px; }
+  .aval-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .aval-area { color: var(--white); font-weight: 800; font-size: 14px; }
+  .aval-pes { border-radius: 20px; padding: 4px 14px; font-weight: 800; font-size: 18px; }
+  .aval-bar-bg { border-radius: 4px; height: 5px; margin-bottom: 10px; }
+  .aval-bar { border-radius: 4px; height: 100%; }
+  .aval-note { display: flex; gap: 8px; color: var(--text); font-size: 12px; margin-bottom: 5px; }
+  .p1-link { background: rgba(0,194,255,.08); border: 1px solid rgba(0,194,255,.2); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .p1-link-icon { font-size: 22px; }
+  .p1-link-text { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .p1-link-text strong { color: var(--accent); }
+  code { background: rgba(0,0,0,.2); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-badges">
+          <span class="badge badge-lg" style="background:rgba(74,35,90,.3);color:#C39BD3;border:1px solid rgba(74,35,90,.5)">P4</span>
+          <span class="badge badge-lg" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">5–6 setmanes</span>
+          <span class="badge badge-lg" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">Col·laboració i mobilitat</span>
+          <span class="badge badge-lg" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">Mòbils i IoT</span>
+          <span class="badge badge-lg" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">🔓 Hacking ètic</span>
+        </div>
+        <div class="header-title">Col·laboració, mobilitat i primera auditoria</div>
+        <div class="header-sub">ASIX Ciberseguretat · 2n Curs · Grups de 3 · M07 + M06 + C037 + C038</div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-row"><span class="stat-lbl">RA coberts</span><span class="stat-val" style="color:#00C2FF">5</span></div>
+        <div class="stat-row"><span class="stat-lbl">Mòduls</span><span class="stat-val" style="color:#00E5A0">4</span></div>
+        <div class="stat-row"><span class="stat-lbl">Tasques</span><span class="stat-val" style="color:#FFD166">16</span></div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('resum',this)">📋 Resum</button>
+      <button class="tab-btn" onclick="showTab('teoria',this)">📚 Teoria</button>
+      <button class="tab-btn" onclick="showTab('infra',this)">🛠️ Recursos</button>
+      <button class="tab-btn" onclick="showTab('fases',this)">🔧 Pràctica</button>
+      <button class="tab-btn" onclick="showTab('avaluacio',this)">📊 Avaluació</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══ RESUM ═══ -->
+<div id="view-resum" class="view active">
+
+  <div class="p1-link">
+    <span class="p1-link-icon">🔗</span>
+    <div class="p1-link-text">
+      <strong>Continua des del P3.</strong> NetCorp ja té xarxa, identitat (AD/DNS), i serveis publicats (web, FTP, correu). Ara l'empresa <strong>creix</strong>: arriben mòbils corporatius, dispositius IoT a l'oficina, i es necessiten eines de col·laboració (missatgeria, videoconferència) i impressores compartides. Amb tot desplegat, és el moment de fer la <strong>primera auditoria de seguretat real</strong> sobre la infraestructura acumulada dels 3 projectes anteriors.
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> Objectiu del projecte</h2></div>
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel-grid2">
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Situació inicial (herència del P1+P2+P3)</div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Xarxa, AD, DNS i serveis operatius</div><div class="arch-desc">5 VLANs, OSPF, AD amb 45 usuaris, web/FTP/correu funcionals</div></div></div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Accés remot i fitxers compartits</div><div class="arch-desc">SSH bastionat, Samba integrat amb AD</div></div></div>
+        <div class="arch-item" style="background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.15)"><span style="font-size:18px">✅</span><div><div class="arch-label">Seguretat bàsica aplicada</div><div class="arch-desc">ACLs, fail2ban, capçaleres HTTP, WAF al servidor web</div></div></div>
+        <div style="color:var(--orange);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Problemes que cal resoldre ara</div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Sense eines de col·laboració</div><div class="arch-desc">No hi ha xat intern, llistes de correu ni videoconferència per a reunions remotes (clau per a la seu de Tarragona).</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Impressores no compartides</div><div class="arch-desc">Cada departament té impressores locals sense gestió centralitzada ni accés des de PCs Windows i Linux.</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Mòbils i IoT sense política</div><div class="arch-desc">Els comercials usen mòbils personals per accedir al correu. Hi ha una càmera IP i un termòstat intel·ligent sense segmentar.</div></div></div>
+        <div class="arch-item" style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.2)"><span style="font-size:18px">❌</span><div><div class="arch-label">Mai s'ha auditat la infraestructura</div><div class="arch-desc">Després de 3 projectes desplegant serveis, ningú ha mirat el conjunt amb ulls d'atacant.</div></div></div>
+      </div>
+      <div>
+        <div style="color:var(--accent);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Arquitectura al final del P4</div>
+        <div class="arch-item" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25)"><span style="font-size:18px">💬</span><div><div class="arch-label">Servidor de missatgeria intern (XMPP/Matrix)</div><div class="arch-desc">Xat corporatiu + llista de distribució per departament</div></div></div>
+        <div class="arch-item" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25)"><span style="font-size:18px">📹</span><div><div class="arch-label">Videoconferència (Jitsi Meet)</div><div class="arch-desc">Reunions amb la seu Azure de Tarragona sense dependre de tercers</div></div></div>
+        <div class="arch-item" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25)"><span style="font-size:18px">🖨️</span><div><div class="arch-label">Servidor d'impressió (CUPS)</div><div class="arch-desc">Impressores compartides entre Windows i Linux via IPP</div></div></div>
+        <div class="arch-item" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25)"><span style="font-size:18px">📱</span><div><div class="arch-label">VLAN IoT + política MDM</div><div class="arch-desc">Dispositius mòbils i IoT segmentats i amb política de seguretat documentada</div></div></div>
+        <div class="arch-item" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25)"><span style="font-size:18px">🔓</span><div><div class="arch-label">Informe de pentest professional</div><div class="arch-desc">Auditoria completa de P1+P2+P3 amb Nmap, Metasploit, Hydra i Burp Suite</div></div></div>
+        <div class="arch-item" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25)"><span style="font-size:18px">📋</span><div><div class="arch-label">Pla de remediació</div><div class="arch-desc">Vulnerabilitats prioritzades amb accions concretes per al P5</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2><span>🎯</span> RA coberts</h2></div>
+  <div class="ra-grid">
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);flex-shrink:0">M07</span><div><div class="ra-name">RA6 · Missatgeria i llistes de distribució</div><div class="ra-tags"><span class="ra-tag">XMPP/Matrix</span><span class="ra-tag">Mailman</span><span class="ra-tag">Comptes AD</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3);flex-shrink:0">M07</span><div><div class="ra-name">RA7 · Servidors d'àudio, vídeo i videoconferència</div><div class="ra-tags"><span class="ra-tag">Jitsi Meet</span><span class="ra-tag">WebRTC</span><span class="ra-tag">SIP/VoIP</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3);flex-shrink:0">M06</span><div><div class="ra-name">RA5 · Servidors d'impressió</div><div class="ra-tags"><span class="ra-tag">CUPS</span><span class="ra-tag">IPP</span><span class="ra-tag">Drivers multiplataforma</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3);flex-shrink:0">C037</span><div><div class="ra-name">RA1 · Seguretat en dispositius mòbils i IoT</div><div class="ra-tags"><span class="ra-tag">MDM</span><span class="ra-tag">VLAN IoT</span><span class="ra-tag">WiFi corporatiu</span></div></div></div></div>
+    <div class="ra-card"><div class="ra-card-inner"><span class="badge" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3);flex-shrink:0">C038</span><div><div class="ra-name">RA2 · Hacking ètic: auditoria de la infraestructura</div><div class="ra-tags"><span class="ra-tag">Nmap/Metasploit</span><span class="ra-tag">Hydra/Burp Suite</span><span class="ra-tag">Informe PTES</span></div></div></div></div>
+  </div>
+
+  <div class="section-title"><h2><span>📅</span> Cronograma — 5–6 setmanes</h2></div>
+  <div class="panel">
+    <div class="crono">
+      <div class="crono-item" style="background:rgba(0,194,255,.12);border:1px solid rgba(0,194,255,.3)"><div class="crono-icon">📐</div><div class="crono-num" style="color:#00C2FF">F1</div><div class="crono-name">Disseny i planificació</div><div class="crono-weeks">S1</div></div>
+      <div class="crono-item" style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3)"><div class="crono-icon">💬</div><div class="crono-num" style="color:#22C55E">F2</div><div class="crono-name">Missatgeria i videoconferència</div><div class="crono-weeks">S2</div></div>
+      <div class="crono-item" style="background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3)"><div class="crono-icon">🖨️</div><div class="crono-num" style="color:#3B82F6">F3</div><div class="crono-name">Impressió compartida</div><div class="crono-weeks">S2–S3</div></div>
+      <div class="crono-item" style="background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3)"><div class="crono-icon">📱</div><div class="crono-num" style="color:#A855F7">F4</div><div class="crono-name">Mòbils, IoT i WiFi</div><div class="crono-weeks">S3–S4</div></div>
+      <div class="crono-item" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3)"><div class="crono-icon">🔓</div><div class="crono-num" style="color:#EF4444">F5</div><div class="crono-name">Pentest i informe</div><div class="crono-weeks">S4–S6</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TEORIA ═══ -->
+<div id="view-teoria" class="view">
+  <div class="section-title"><h2><span>📚</span> Contingut teòric per mòdul</h2><p>Sessions impartides per cada professor just abans que la pràctica les necessiti.</p></div>
+
+  <!-- M07 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">💬</span>
+      <div>
+        <div class="teoria-title" style="color:#22C55E">Missatgeria, llistes de distribució i videoconferència</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">M07</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">5 sessions · ~10h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S1–S2 — Missatgeria instantània: XMPP i Matrix</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Per què una empresa vol el seu propi xat: el correu és asíncron i lent per a converses ràpides; eines com WhatsApp/Slack impliquen que les dades de l'empresa surten cap a servidors de tercers (problema de privacitat i compliment normatiu).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>XMPP (Extensible Messaging and Presence Protocol): protocol obert i descentralitzat de missatgeria, basat en XML. Servidors: ejabberd, Prosody. Conceptes: JID (Jabber ID, format usuari@domini, anàleg a un email), presència (online/offline/away), MUC (Multi-User Chat = sales de xat grupal).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Matrix: protocol més modern, descentralitzat, amb xifratge end-to-end natiu (Olm/Megolm). Servidor de referència: Synapse. Federació: servidors de diferents organitzacions es poden comunicar entre ells (com el correu electrònic).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Integració amb l'AD del P2: autenticació via LDAP perquè els usuaris facin servir les mateixes credencials de domini (un únic compte per a tot: Windows, correu, xat).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S3 — Llistes de distribució: Mailman</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Diferència entre una llista de distribució i un grup de correu de AD: la llista reenvia un correu a tots els subscrits (amb gestió de subscripcions, moderació, arxiu de missatges); el grup AD només és una llista d'adreces per al "Per a:" o "CC:".</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Mailman 3: gestiona llistes amb adreça pròpia (ex: logistica@netcorp.local). Integració amb Postfix (del P3) com a transport per a aquesta adreça.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Casos d'ús a NetCorp: una llista per departament (per a comunicacions internes) i una llista general (per a comunicats de Direcció a tota l'empresa).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Moderació i control d'spam a les llistes: només membres del domini poden enviar-hi correu (evitar que es converteixin en un vector d'spam extern).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(34,197,94,.07);border-left:3px solid #22C55E">
+      <div class="teoria-sess" style="color:#22C55E">S4–S5 — Videoconferència: WebRTC, SIP/VoIP i Jitsi Meet</div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>WebRTC (Web Real-Time Communication): tecnologia que permet àudio/vídeo en temps real directament des del navegador, sense plugins. Base de Jitsi Meet, Google Meet, etc.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>SIP (Session Initiation Protocol): protocol de senyalització per establir, modificar i finalitzar sessions de veu/vídeo (VoIP). Diferent de WebRTC: SIP s'usa més en telefonia IP tradicional (centraletes, telèfons IP).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Jitsi Meet: plataforma de videoconferència de codi lliure autoallotjable. Components: Jicofo (focus de conferència), Jitsi Videobridge (JVB, encamina els fluxos d'àudio/vídeo entre participants), Prosody (servidor XMPP per a la senyalització, reutilitzable amb el del S1-S2).</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>NAT i WebRTC: els fluxos multimèdia P2P tenen problemes per travessar NAT. Jitsi Videobridge actua de relay central (similar a un servidor TURN) per garantir connectivitat fiable, especialment important per a la connexió amb la seu Azure de Tarragona.</span></div>
+      <div class="teoria-item"><span style="color:#22C55E;flex-shrink:0">›</span><span>Requisits de xarxa: Jitsi necessita ports UDP oberts (per defecte 10000/udp) per al trànsit multimèdia, més els ports HTTP/HTTPS habituals per a la interfície web.</span></div>
+    </div>
+  </div>
+
+  <!-- M06 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🖨️</span>
+      <div>
+        <div class="teoria-title" style="color:#3B82F6">Servidors d'impressió: CUPS i compartició multiplataforma</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">M06</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">3 sessions · ~6h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S1 — El problema de la impressió en xarxa</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Sense servidor d'impressió: cada PC necessita el driver de cada impressora instal·lat localment, i les impressores USB només són accessibles des del PC al qual estan connectades. Inviable amb 45 empleats i múltiples impressores.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Servidor d'impressió centralitzat: les impressores es connecten (USB o xarxa) a un servidor, que gestiona les cues i envia els treballs. Els clients només necessiten saber accedir al servidor, no tenir el driver físic de cada model.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Cues d'impressió (print queues): cada impressora té una cua on s'acumulen els treballs pendents. Permet gestionar prioritats, pausar, cancel·lar i veure l'estat sense dependre que la impressora estigui sempre disponible.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S2 — CUPS i el protocol IPP</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>CUPS (Common Unix Printing System): el sistema d'impressió estàndard a Linux i macOS. Funciona com un servidor web local (interfície d'administració al port 631) que rep treballs i els envia a les impressores.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>IPP (Internet Printing Protocol): protocol estàndard (basat en HTTP) per enviar treballs d'impressió i consultar l'estat d'una impressora a través de la xarxa. És el protocol "universal" que entenen Windows, macOS, Linux, Android i iOS.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Drivers PPD (PostScript Printer Description): fitxers que descriuen les capacitats d'un model d'impressora (mides de paper, qualitat, doble cara). CUPS els usa per traduir els treballs al llenguatge específic de cada impressora.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Impressores virtuals: en absència d'impressores físiques al laboratori, es pot configurar una impressora PDF virtual (CUPS-PDF) que genera un fitxer PDF en lloc d'imprimir, permetent verificar tot el flux sense maquinari.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(59,130,246,.07);border-left:3px solid #3B82F6">
+      <div class="teoria-sess" style="color:#3B82F6">S3 — Compartició entre Windows i Linux</div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Windows pot connectar-se a una impressora compartida via CUPS de dues maneres: directament per IPP (Windows 10/11 ho suporten nativament: Afegeix impressora → "La impressora que vull no està a la llista" → per nom → http://[servidor]:631/printers/[nom]), o via Samba (el mateix servei del P3 pot compartir també impressores amb el protocol SMB tradicional).</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Gestió de permisos: amb CUPS + integració AD (via Samba), es pot restringir quins grups d'usuaris (els del P2: GRP_Logistica, GRP_Vendes...) poden imprimir a cada impressora.</span></div>
+      <div class="teoria-item"><span style="color:#3B82F6;flex-shrink:0">›</span><span>Comandes útils: <code>lpstat -p</code> (estat de les impressores), <code>lpq</code> (cua de treballs), <code>lprm</code> (eliminar un treball), <code>lp -d [impressora] fitxer.pdf</code> (enviar un treball des de línia de comandes).</span></div>
+    </div>
+  </div>
+
+  <!-- C037 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">📱</span>
+      <div>
+        <div class="teoria-title" style="color:#A855F7">Seguretat en dispositius mòbils i IoT</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">C037</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">4 sessions · ~8h</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S1 — BYOD i MDM (Mobile Device Management)</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>BYOD (Bring Your Own Device): els empleats usen els seus propis dispositius mòbils per accedir a recursos corporatius (correu, fitxers). Avantatge: cost. Risc: el departament IT no controla un dispositiu que ja conté dades de l'empresa.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>MDM (Mobile Device Management): solucions que permeten a l'empresa aplicar polítiques de seguretat a dispositius mòbils: xifratge obligatori, bloqueig amb PIN/biometria, esborrat remot en cas de pèrdua/robatori, separació de dades personals i corporatives (containerització).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Protocols associats: Exchange ActiveSync (EAS) per a polítiques bàsiques de correu mòbil (PIN, xifratge, esborrat remot) — compatible amb molts servidors de correu incloent configuracions basades en Dovecot amb els mòduls adequats.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Política MDM per a NetCorp: què s'exigeix als mòbils que accedeixen al correu corporatiu (PIN mínim, xifratge actiu, actualitzacions de seguretat, prohibició de jailbreak/root).</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S2 — Seguretat en xarxes WiFi corporatives</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>WPA2 vs WPA3: WPA2 (encara molt estès) usa AES-CCMP; vulnerable a atacs de captura del 4-way handshake i crack offline si la contrasenya és feble. WPA3 introdueix SAE (Simultaneous Authentication of Equals), resistent als atacs de diccionari offline.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>WPA2/3-Enterprise (802.1X): en lloc d'una contrasenya compartida (PSK), cada usuari s'autentica amb les seves credencials (integrades amb AD via RADIUS). Permet revocar l'accés d'un usuari individual sense canviar la contrasenya de tota la xarxa.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Atacs habituals: Evil Twin (punt d'accés fals amb el mateix SSID per interceptar credencials), deauth attack (desconnectar clients per forçar una reconnexió i capturar el handshake), rogue AP (punt d'accés no autoritzat connectat a la xarxa corporativa).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Xarxa WiFi per a convidats: ha d'estar completament aïllada de la xarxa interna (la seva pròpia VLAN, sense accés a les VLANs de departaments), seguint el principi de mínima exposició vist al P1.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(168,85,247,.07);border-left:3px solid #A855F7">
+      <div class="teoria-sess" style="color:#A855F7">S3–S4 — Seguretat IoT i segmentació</div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Per què IoT és un problema de seguretat: molts dispositius IoT (càmeres, termòstats, bombetes intel·ligents) tenen firmware desactualitzat, credencials per defecte (admin/admin), i interfícies de gestió exposades. Sovint no es poden "bastionar" com un servidor Linux.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Vectors d'atac típics: credencials per defecte no canviades, protocols sense xifratge (HTTP, Telnet oberts), absència d'actualitzacions automàtiques, exposició directa a Internet (UPnP que obre ports automàticament al router).</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Mirai i botnets IoT: cas històric (2016) on centenars de milers de dispositius IoT amb credencials per defecte van ser compromesos i usats per a atacs DDoS massius. Justifica per què la segmentació és imprescindible.</span></div>
+      <div class="teoria-item"><span style="color:#A855F7;flex-shrink:0">›</span><span>Segmentació com a mitigació principal: crear una VLAN IoT (ex: VLAN 60) totalment aïllada de la resta de departaments (ACLs deny-all per defecte), amb accés només a Internet (per a actualitzacions) si cal, i sense accés a servidors interns crítics. Si un dispositiu IoT és compromès, el dany queda contingut.</span></div>
+    </div>
+  </div>
+
+  <!-- C038 -->
+  <div class="panel teoria-mod">
+    <div class="teoria-header">
+      <span class="teoria-icon">🔓</span>
+      <div>
+        <div class="teoria-title" style="color:#EF4444">Hacking ètic: metodologia, normativa i eines de pentest</div>
+        <div class="teoria-badges">
+          <span class="badge" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">C038</span>
+          <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">6 sessions · ~12h</span>
+          <span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Marc legal obligatori</span>
+        </div>
+      </div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S1 — Marc legal del hacking ètic</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span><strong>Codi Penal espanyol, art. 197 bis i 197 ter:</strong> l'accés no autoritzat a sistemes informàtics és delicte, independentment de si es causa dany o no. La diferència entre "hacker ètic" i "delicte" és única i exclusivament l'<strong>autorització explícita</strong> del propietari del sistema.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span><strong>Abast del projecte:</strong> en aquest cas, l'autorització és el propi encàrrec del projecte (NetCorp = entorn fictici controlat pel centre). En un cas real, caldria un document d'autorització signat (Get Out of Jail Free Card / Rules of Engagement) que defineixi l'abast exacte, dates i sistemes autoritzats.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span><strong>LOPD/RGPD:</strong> durant l'auditoria es poden trobar dades personals (els 45 empleats del P2). Cal tractar-les amb confidencialitat i no extreure-les més enllà del que sigui necessari per documentar la vulnerabilitat.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span><strong>Regla d'or:</strong> NOMÉS s'audita la infraestructura pròpia del grup (el seu entorn Proxmox/switch/router). Mai la d'altres grups, ni equips del centre fora de l'abast del projecte. Incomplir-ho és motiu de suspensió immediata del projecte.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S2 — Metodologia de pentesting (PTES)</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>PTES (Penetration Testing Execution Standard) defineix les fases d'una auditoria professional: (1) Pre-engagement (acords i abast), (2) Intelligence Gathering / Reconeixement, (3) Threat Modeling, (4) Vulnerability Analysis, (5) Exploitation, (6) Post-Exploitation, (7) Reporting.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Tipus d'auditoria: Black box (sense informació prèvia, com un atacant extern real), White box (amb accés total a la documentació, com en aquest projecte: els alumnes coneixen la seva pròpia infraestructura), Grey box (informació parcial).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Per al P4, l'auditoria és "White box assistida": els alumnes coneixen la infraestructura (l'han construïda ells) però han d'actuar metòdicament com si no la coneguessin, documentant cada pas com ho faria un auditor extern.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S3 — Reconeixement avançat amb Nmap</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Repàs i ampliació de Nmap (vist al P1): scripts NSE (Nmap Scripting Engine) per a detecció de vulnerabilitats: <code>nmap --script vuln [IP]</code> executa un conjunt de scripts que detecten vulnerabilitats conegudes (CVEs) en els serveis trobats.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Enumeració de serveis específics: <code>nmap -p 21 --script ftp-anon</code> (verifica accés FTP anònim), <code>nmap -p 25 --script smtp-open-relay</code> (verifica open relay, relacionat amb el P3).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Diferència entre escaneig de descobriment (què hi ha) i escaneig de vulnerabilitats (què és explotable): el primer és sempre el primer pas; el segon ja comença a identificar punts d'atac concrets.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S4 — Metasploit Framework</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Metasploit: framework de codi lliure per al desenvolupament i execució d'exploits (codi que explota una vulnerabilitat coneguda). Estructura: exploits (codi que aprofita la vulnerabilitat), payloads (codi que s'executa un cop explotada, ex: una shell remota), auxiliary (mòduls d'escaneig i suport).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>msfconsole: interfície interactiva. Flux bàsic: <code>search [terme]</code> (buscar exploit), <code>use [exploit]</code>, <code>set RHOSTS [IP]</code>, <code>set PAYLOAD [payload]</code>, <code>run</code> o <code>exploit</code>.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Ús en aquest projecte: els alumnes provaran exploits coneguts CONTRA LA SEVA PRÒPIA infraestructura per verificar si els serveis desplegats als P1-P3 (versions de software, configuracions) són vulnerables a atacs documentats. L'objectiu NO és "trencar coses" sinó verificar exposició real.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S5 — Hydra: atacs de força bruta i polítiques de contrasenyes</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Hydra: eina per a atacs de força bruta/diccionari contra serveis d'autenticació (SSH, FTP, HTTP forms, RDP, SMB...). Sintaxi bàsica: <code>hydra -l [usuari] -P [diccionari] [IP] [servei]</code>.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Ús en aquest projecte: verificar que el SSH bastionat del P3 (autenticació per clau, fail2ban) realment impedeix l'accés per força bruta. Comprovar les contrasenyes de l'AD del P2 contra diccionaris habituals (amb permís i en l'entorn propi).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Resultat esperat (i desitjat): Hydra HA de fracassar contra els serveis ben bastionats. Si triomfa, és una vulnerabilitat real a documentar i corregir.</span></div>
+    </div>
+    <div class="teoria-bloc" style="background:rgba(239,68,68,.07);border-left:3px solid #EF4444">
+      <div class="teoria-sess" style="color:#EF4444">S6 — Burp Suite i redacció d'informes professionals</div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Burp Suite: proxy d'intercepció per a auditories web. Permet interceptar, modificar i repetir peticions HTTP/HTTPS entre el navegador i el servidor web del P3. Útil per provar manualment vulnerabilitats OWASP (injeccions, manipulació de paràmetres).</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>Estructura d'un informe de pentest professional: (1) Resum executiu (per a Direcció, sense tecnicismes, amb el risc global), (2) Abast i metodologia, (3) Troballes detallades (cada vulnerabilitat amb: descripció, evidència/captura, risc CVSS, recomanació), (4) Conclusions i pla de remediació prioritzat.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>CVSS (Common Vulnerability Scoring System): sistema estàndard de puntuació de vulnerabilitats (0-10) basat en factors com la complexitat d'explotació, l'impacte i si requereix interacció de l'usuari. Permet prioritzar: una vulnerabilitat CVSS 9.8 és més urgent que una de 3.1.</span></div>
+      <div class="teoria-item"><span style="color:#EF4444;flex-shrink:0">›</span><span>El llenguatge importa: un informe professional descriu fets ("s'ha detectat que..."), no acusa ("heu fet malament..."). El to ha de ser constructiu: l'objectiu és millorar la seguretat, no humiliar qui ha configurat el sistema (en aquest cas, vosaltres mateixos en projectes anteriors).</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RECURSOS ═══ -->
+<div id="view-infra" class="view">
+  <div class="section-title"><h2><span>🛠️</span> Recursos i infraestructura</h2><p>Es reaprofita gairebé tot l'entorn dels P1-P3. Els recursos nous són limitats.</p></div>
+
+  <div class="infra-section-title">🔌 Infraestructura existent (herència P1-P3)</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🔀</span><div><div class="infra-name">Switch Cisco</div><div class="infra-desc">S'afegirà una nova VLAN (60 - IoT) per a la fase F4. La resta sense canvis.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P1/P2</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📡</span><div><div class="infra-name">Router Cisco</div><div class="infra-desc">Nova subinterfície per VLAN 60 (IoT) + ACLs d'aïllament. OSPF ja configurat al P3.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P1/P3</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🏢</span><div><div class="infra-name">Active Directory (DC)</div><div class="infra-desc">S'integraran els nous serveis de missatgeria via LDAP amb els comptes existents.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P2</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🌐</span><div><div class="infra-name">DNS intern (netcorp.local)</div><div class="infra-desc">Nous registres: chat, meet, print apuntant als nous serveis.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Del P2</span></div></div>
+  </div>
+
+  <div class="infra-section-title">🖥️ Proxmox — VMs noves per al P4</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">💬</span><div><div class="infra-name">VM Missatgeria (Ubuntu Server 24)</div><div class="infra-desc">1 GB RAM, 15 GB disc. ejabberd o Synapse (Matrix) + Mailman 3 (es pot compartir amb la VM de correu del P3 si els recursos són limitats).</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📹</span><div><div class="infra-name">VM Videoconferència Jitsi (Ubuntu Server 24)</div><div class="infra-desc">2 GB RAM, 20 GB disc. Jitsi Meet (Jicofo + JVB + Prosody). Recomanable VM dedicada pel consum de CPU del JVB.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🖨️</span><div><div class="infra-name">VM Servidor d'impressió (Ubuntu Server 24)</div><div class="infra-desc">512 MB RAM, 10 GB disc. CUPS + CUPS-PDF (impressora virtual si no hi ha maquinari físic).</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">📱</span><div><div class="infra-name">VM IoT simulada (Ubuntu Server 24 minimal)</div><div class="infra-desc">256 MB RAM. Simula un dispositiu IoT (servei web senzill amb credencials per defecte) per a la VLAN 60.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Disponible a Proxmox</span></div></div>
+  </div>
+
+  <div class="infra-section-title">🔓 Eines de pentest (VM Kali del P1)</div>
+  <div class="infra-grid" style="margin-bottom:24px">
+    <div class="infra-card" style="border:1px solid rgba(0,229,160,.3)"><span class="infra-icon">🧪</span><div><div class="infra-name">VM Kali Linux (ja desplegada al P1)</div><div class="infra-desc">Verificar que Metasploit, Hydra i Burp Suite Community estan instal·lats (venen per defecte a Kali). Actualitzar: apt update && apt upgrade.</div><span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">✓ Reaprofitar del P1</span></div></div>
+    <div class="infra-card" style="border:1px solid rgba(255,209,102,.3)"><span class="infra-icon">📖</span><div><div class="infra-name">Diccionaris de contrasenyes</div><div class="infra-desc">SecLists / rockyou.txt: diccionaris habituals per a Hydra. Sovint preinstal·lats a Kali a /usr/share/wordlists/.</div><span class="badge" style="background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)">⚠ Verificar disponibilitat</span></div></div>
+  </div>
+
+  <div class="infra-section-title" style="color:var(--orange)">📋 Recursos addicionals i decisions a prendre</div>
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px;margin-bottom:12px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">🖨️</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Impressora física (opcional) vs impressora virtual</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Si el centre disposa d'una impressora de xarxa (o USB connectable a una VM via passthrough), es pot fer una prova real. Si no, CUPS-PDF permet validar tot el flux (cua, drivers, permisos) generant PDFs en lloc d'imprimir, sense perdre valor pedagògic.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">CUPS-PDF: gratuït, sempre disponible</span>
+          <span class="badge" style="background:rgba(255,140,66,.15);color:#FF8C42;border:1px solid rgba(255,140,66,.3)">Impressora física: consultar disponibilitat al centre</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:rgba(255,140,66,.06);border:1px solid rgba(255,140,66,.3);border-radius:12px;padding:18px;margin-bottom:12px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">📱</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Dispositiu mòbil real per a proves (opcional)</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Per provar la connexió real a la VPN/correu/Jitsi des d'un mòbil (simulant un comercial en mobilitat), és útil que algun membre del grup usi el seu propi mòbil amb dades. No es demana res al centre; només cal documentar que s'ha provat des d'una xarxa externa.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(0,229,160,.15);color:#00E5A0;border:1px solid rgba(0,229,160,.3)">Gratuït — mòbil propi de l'alumne</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:18px">
+    <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:12px">
+      <span style="font-size:24px">⚠️</span>
+      <div>
+        <div style="color:var(--white);font-weight:800;font-size:14px">Abast de l'auditoria — IMPRESCINDIBLE llegir abans de F5</div>
+        <div style="color:var(--muted);font-size:12px;margin-top:3px">Abans de començar la fase de pentest, el professor ha de signar amb cada grup un document curt d'autorització (Rules of Engagement) que defineixi: quins hosts es poden auditar (només els del propi grup), quines tècniques estan permeses (NO atacs DoS contra el switch/router físic, que afectarien tota l'aula), i les dates de l'auditoria.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <span class="badge" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">Obligatori abans de F5 — el professor ho proporciona</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRÀCTICA ═══ -->
+<div id="view-fases" class="view">
+  <div class="section-title"><h2><span>🔧</span> Pràctica detallada per fases</h2><p>Clica una fase i després cada tasca per veure tots els passos.</p></div>
+  <div id="fases-container"></div>
+</div>
+
+<!-- ═══ AVALUACIÓ ═══ -->
+<div id="view-avaluacio" class="view">
+  <div class="section-title"><h2><span>📊</span> Rúbrica d'avaluació</h2><p>Grups de 3 alumnes. Cadascú ha de poder defensar qualsevol part del projecte.</p></div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Missatgeria i videoconferència</div><div class="aval-pes" style="background:rgba(34,197,94,.15);color:#22C55E;border:1px solid rgba(34,197,94,.3)">25%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(34,197,94,.15)"><div class="aval-bar" style="background:#22C55E;width:25%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Servidor de missatgeria (XMPP/Matrix) funcional amb almenys 5 usuaris autenticats (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Llista de distribució per departament funcional amb Mailman (7%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Jitsi Meet funcional amb videotrucada de prova entre la seu central i la VM Azure (10%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Servidor d'impressió</div><div class="aval-pes" style="background:rgba(59,130,246,.15);color:#3B82F6;border:1px solid rgba(59,130,246,.3)">15%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(59,130,246,.15)"><div class="aval-bar" style="background:#3B82F6;width:15%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">CUPS instal·lat amb almenys 1 impressora (física o virtual) compartida (7%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Impressió accessible des d'un client Windows i un client Linux via IPP (8%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Seguretat mòbils i IoT</div><div class="aval-pes" style="background:rgba(168,85,247,.15);color:#A855F7;border:1px solid rgba(168,85,247,.3)">20%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(168,85,247,.15)"><div class="aval-bar" style="background:#A855F7;width:20%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">VLAN IoT creada i aïllada amb ACLs (verificades amb prova de connectivitat) (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Document de política MDM per a NetCorp (mínim 1 pàgina, criteris concrets) (6%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Anàlisi de seguretat de la xarxa WiFi (configuració actual i recomanacions WPA2/3) (6%)</li></ul>
+  </div>
+
+  <div class="panel aval-card">
+    <div class="aval-header"><div class="aval-area">Pentest i informe de hacking ètic</div><div class="aval-pes" style="background:rgba(239,68,68,.15);color:#EF4444;border:1px solid rgba(239,68,68,.3)">30%</div></div>
+    <div class="aval-bar-bg" style="background:rgba(239,68,68,.15)"><div class="aval-bar" style="background:#EF4444;width:30%"></div></div>
+    <ul style="padding-left:18px"><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Document de Rules of Engagement signat ABANS de començar l'auditoria (sense aquest document, l'àrea es qualifica amb 0) (obligatori)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Escaneig Nmap amb scripts de vulnerabilitats (--script vuln) sobre tota la infraestructura pròpia (6%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Mínim 2 proves amb Metasploit documentades (èxit o fracàs, ambdós són informació vàlida) (8%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Prova de força bruta amb Hydra contra SSH i/o serveis web, amb anàlisi del resultat (6%)</li><li style="font-size:13px;margin-bottom:5px;line-height:1.5">Informe professional complet: resum executiu + troballes amb CVSS + pla de remediació priorizat (10%)</li></ul>
+  </div>
+
+  <div class="panel" style="border-color:rgba(255,209,102,.3);background:rgba(255,209,102,.05);margin-top:10px">
+    <div style="color:#FFD166;font-weight:800;font-size:13px;margin-bottom:10px">📝 Condicions d'avaluació</div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>El document de Rules of Engagement (abast de l'auditoria) ha d'estar signat pel professor ABANS d'iniciar qualsevol activitat de F5. És condició bloquejant.</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>El dia de la demo es realitzarà una videotrucada de prova amb Jitsi entre un PC de la seu central i la VM Azure de Tarragona.</span></div>
+    <div class="aval-note"><span style="color:#FFD166">→</span><span>L'informe de pentest ha de seguir EXACTAMENT l'estructura PTES vista a teoria (resum executiu, abast, troballes amb CVSS, pla de remediació).</span></div>
+    <div class="aval-note"><span style="color:#00E5A0">+</span><span><strong style="color:#00E5A0">Bonus +5%:</strong> si l'auditoria troba una vulnerabilitat real no detectada en projectes anteriors (ex: un servei amb credencials per defecte, un port obert innecessari) i es corregeix abans de la presentació.</span></div>
+    <div class="aval-note"><span style="color:#FF4D6D">-</span><span><strong style="color:#FF4D6D">Malus greu (suspensió del projecte):</strong> qualsevol activitat de pentest fora de l'abast autoritzat (auditar la infraestructura d'un altre grup, el switch/router compartit de l'aula, o sistemes del centre).</span></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+const FASES = [
+  { id:"F1", nom:"Disseny i planificació del P4", setmanes:"S1", color:"#00C2FF", icon:"📐",
+    desc:"Es planifica on s'allotjarà cada nou servei, com s'integraran amb AD/DNS dels projectes anteriors, i es dissenya la nova VLAN IoT amb la seva política d'aïllament. També es fixa el calendari de l'auditoria final.",
+    tasques:[
+      { id:"T1.1", nom:"Planificació de serveis de col·laboració i impressió", responsable:"Tot el grup",
+        entregable:"Diagrama actualitzat (P1-P4) amb les noves VMs i la seva integració amb AD/DNS",
+        passos:["Decidir quina solució de missatgeria s'implementarà (ejabberd/XMPP o Synapse/Matrix) i justificar-ho (complexitat vs funcionalitats)","Assignar IPs estàtiques a les noves VMs (missatgeria, Jitsi, CUPS, IoT simulat) seguint el pla d'adreçament","Definir els nous registres DNS necessaris: chat.netcorp.local, meet.netcorp.local, print.netcorp.local","Planificar quins usuaris de prova s'usaran per a missatgeria i videoconferència (reaprofitant els del P2)"] },
+      { id:"T1.2", nom:"Disseny de la VLAN IoT i política d'aïllament", responsable:"Responsable de xarxa",
+        entregable:"Taula d'adreçament de la VLAN 60 + matriu d'ACLs d'aïllament IoT aprovada",
+        passos:["Afegir la VLAN 60 (IoT) al pla d'adreçament, calculant una subxarxa petita (ex: /28, suficient per a pocs dispositius)","Dissenyar la política d'ACLs per a la VLAN 60: per defecte deny-all cap a la resta de VLANs; permetre només sortida a Internet (per a actualitzacions) si es considera necessari","Decidir si la VLAN IoT necessitarà accés DHCP/DNS dels servidors existents (sí, normalment) i com s'exceptua a les ACLs","El professor valida el disseny abans de F4"] },
+    ]
+  },
+  { id:"F2", nom:"Missatgeria, llistes i videoconferència", setmanes:"S2", color:"#22C55E", icon:"💬",
+    desc:"Es desplega el servidor de missatgeria instantània amb autenticació via AD, una llista de distribució per departament, i el servidor de videoconferència Jitsi Meet, provat amb la seu remota d'Azure.",
+    tasques:[
+      { id:"T2.1", nom:"Desplegament del servidor de missatgeria (XMPP o Matrix)", responsable:"Responsable de servidors",
+        entregable:"Servidor de xat operatiu, almenys 5 usuaris poden iniciar sessió i conversar entre ells",
+        passos:["Crear VM Ubuntu Server 24 (1 GB RAM), IP estàtica, registre DNS chat.netcorp.local","Instal·lar ejabberd (apt o repositori oficial) o Synapse (Matrix), segons la decisió de F1","Configurar el domini del servei com a netcorp.local (perquè els JIDs/usuaris siguin usuari@netcorp.local)","Integrar amb LDAP/AD per a l'autenticació: els usuaris es lloguen amb les credencials del domini (mòdul ejabberd_auth_ldap o equivalent a Synapse)","Instal·lar un client (Pidgin, Element per Matrix, o client web) en 2-3 PCs de VLANs diferents i provar una conversa entre usuaris de departaments diferents","Crear una sala de xat grupal (MUC) per departament, ex: 'logistica@conference.netcorp.local'"] },
+      { id:"T2.2", nom:"Llista de distribució amb Mailman", responsable:"Responsable de servidors",
+        entregable:"Llista funcional: un correu enviat a la llista arriba a tots els subscrits",
+        passos:["Instal·lar Mailman 3 (es pot fer a la mateixa VM de missatgeria o a la VM de correu del P3, segons recursos)","Crear una llista per departament, ex: logistica-list@netcorp.local, amb els usuaris del departament (del llistat del P2) com a subscrits","Integrar amb Postfix (del P3): afegir la configuració de transport perquè els correus a *-list@netcorp.local es lliurin a Mailman","Configurar la llista perquè només membres del domini puguin enviar-hi (evitar spam extern)","Provar: un usuari del departament envia un correu a la llista; verificar que arriba a tots els altres membres"] },
+      { id:"T2.3", nom:"Desplegament de Jitsi Meet", responsable:"Responsable de servidors",
+        entregable:"Sala de videoconferència accessible per HTTPS amb àudio/vídeo funcional",
+        passos:["Crear VM Ubuntu Server 24 (2 GB RAM, 20 GB disc), IP estàtica, registre DNS meet.netcorp.local","Instal·lar Jitsi Meet seguint la guia oficial (script d'instal·lació que configura Jicofo, JVB i Prosody)","Configurar certificat HTTPS (autosignat per a .local, igual que al P3) per a meet.netcorp.local","Obrir els ports necessaris al firewall de la VM: 443/tcp (interfície web), 10000/udp (trànsit multimèdia JVB), 4443/tcp (fallback)","Provar amb 2 PCs de VLANs diferents: crear una sala, comprovar àudio i vídeo bidireccional"] },
+      { id:"T2.4", nom:"Videotrucada amb la seu Azure (Tarragona)", responsable:"Tot el grup",
+        entregable:"Captura/vídeo d'una videotrucada amb almenys un participant des de la VM Azure",
+        passos:["Des de la VM Ubuntu d'Azure (P1), instal·lar un navegador (mode headless amb VNC, o accedir via túnel SSH amb X forwarding) o simplement comprovar la connectivitat: curl -I https://meet.netcorp.local a través del túnel WireGuard","Si la VM Azure no té entorn gràfic, documentar la prova de connectivitat (la VM pot arribar al servidor Jitsi pel túnel) com a evidència, i fer la demo de la videotrucada entre dos PCs de la xarxa local del laboratori","Documentar els resultats i, si cal, els límits trobats (amplada de banda del túnel, latència)"] },
+    ]
+  },
+  { id:"F3", nom:"Servidor d'impressió compartit", setmanes:"S2–S3", color:"#3B82F6", icon:"🖨️",
+    desc:"Es desplega un servidor CUPS amb almenys una impressora (física o virtual via CUPS-PDF), accessible des de clients Windows i Linux per IPP, amb permisos basats en els grups AD del P2.",
+    tasques:[
+      { id:"T3.1", nom:"Desplegament de CUPS i configuració de la impressora", responsable:"Responsable de servidors",
+        entregable:"CUPS operatiu amb almenys una cua d'impressió, interfície d'administració accessible al port 631",
+        passos:["Crear VM Ubuntu Server 24 (512 MB RAM, 10 GB disc), IP estàtica, registre DNS print.netcorp.local","Instal·lar CUPS: apt install cups","Si NO hi ha impressora física: instal·lar CUPS-PDF (apt install printer-driver-cups-pdf) per crear una cua que genera PDFs","Si HI HA impressora física: connectar-la (USB o xarxa) i afegir-la des de la interfície d'administració (https://[IP]:631/admin), seleccionant el driver/PPD correcte","Configurar CUPS perquè escolti a la xarxa (no només localhost): editar /etc/cups/cupsd.conf, Listen *:631, i permetre l'accés des de les VLANs (Allow @LOCAL o IPs concretes)"] },
+      { id:"T3.2", nom:"Accés des de client Windows via IPP", responsable:"Responsable de servidors",
+        entregable:"Captura de pantalla: impressora afegida i treball d'impressió de prova completat des d'un PC Windows",
+        passos:["Des d'un PC Windows (membre del domini, del P2): Configuració → Impressores → Afegeix una impressora → 'La impressora que vull no està a la llista'","Seleccionar 'Afegeix una impressora mitjançant TCP/IP o nom d'amfitrió' o utilitzar la URL IPP directa: http://print.netcorp.local:631/printers/[nom_cua]","Seleccionar/instal·lar el driver corresponent (per a CUPS-PDF, el driver genèric PostScript funciona)","Enviar un document de prova a imprimir i verificar que el treball arriba a la cua (lpstat -p al servidor) i es genera el PDF (o s'imprimeix si és física)"] },
+      { id:"T3.3", nom:"Accés des de client Linux i gestió de permisos", responsable:"Responsable de servidors",
+        entregable:"Impressió de prova des de Linux + document amb la política de permisos per departament",
+        passos:["Des d'un PC/VM Linux, afegir la impressora via la interfície de configuració del sistema (system-config-printer o equivalent) o directament: lpadmin -p [nom] -E -v ipp://print.netcorp.local/printers/[nom]","Provar la impressió: lp -d [nom] fitxer.pdf","Decidir i documentar la política de permisos: per exemple, la impressora de Direcció només l'usen GRP_Direccio i GRP_IT; la resta de departaments tenen accés a una impressora compartida general","Si es disposa de temps, implementar el control d'accés amb la directiva 'Allow'/'Deny' a /etc/cups/cupsd.conf restringint per IP/subxarxa segons la VLAN"] },
+    ]
+  },
+  { id:"F4", nom:"Mòbils, IoT i seguretat WiFi", setmanes:"S3–S4", color:"#A855F7", icon:"📱",
+    desc:"Es crea la VLAN IoT aïllada amb un dispositiu simulat, es documenta la política MDM per a mòbils corporatius i s'analitza la seguretat de la xarxa WiFi de l'empresa.",
+    tasques:[
+      { id:"T4.1", nom:"Creació de la VLAN IoT i aïllament", responsable:"Responsable de xarxa",
+        entregable:"VLAN 60 creada, ACLs aplicades i verificades amb proves de connectivitat",
+        passos:["Crear la VLAN 60 al switch (vlan 60, name IoT) i assignar-li un port d'accés","Crear la subinterfície corresponent al router amb la IP gateway segons el disseny de F1","Aplicar les ACLs dissenyades a F1: deny ip [xarxa_IoT] [totes les VLANs de producció], permit ip [xarxa_IoT] any (per sortida a Internet, si s'ha decidit permetre-la)","Verificar: un dispositiu a la VLAN 60 NO pot fer ping a cap altra VLAN (10,20,30,40,50,99), però sí (si s'ha permès) a una IP externa"] },
+      { id:"T4.2", nom:"Desplegament d'un dispositiu IoT simulat", responsable:"Responsable de servidors",
+        entregable:"VM 'IoT' connectada a la VLAN 60, amb un servei web simple accessible per HTTP",
+        passos:["Crear VM Ubuntu minimal (256 MB RAM) connectada a la VLAN 60","Instal·lar un servei web senzill (ex: un servidor HTTP bàsic amb Python: python3 -m http.server, o una pàgina d'administració de mentida amb credencials per defecte admin/admin)","Documentar que aquesta VM representa, per exemple, una càmera IP o un termòstat intel·ligent de l'oficina","Verificar des de la VLAN IT que NO es pot accedir a aquest servei (confirmant que les ACLs funcionen)"] },
+      { id:"T4.3", nom:"Document de política MDM per a mòbils corporatius", responsable:"Responsable de seguretat",
+        entregable:"Document (1-2 pàgines) amb la política MDM de NetCorp",
+        passos:["Investigar quines opcions de gestió mòbil existeixen (ActiveSync, MDM de codi lliure com els basats en OMA-DM, o solucions comercials) i triar-ne un enfocament per a NetCorp (no cal implementar-lo tècnicament, sinó documentar la política)","Redactar la política: requisits mínims (PIN/biometria, xifratge actiu, versió mínima de SO), prohibicions (jailbreak/root), procediment d'esborrat remot en cas de pèrdua","Relacionar la política amb el correu del P3: especificar que només els dispositius que compleixin la política poden configurar el compte de correu corporatiu","Document final en format llegible per a Direcció (llenguatge no excessivament tècnic)"] },
+      { id:"T4.4", nom:"Anàlisi de seguretat de la xarxa WiFi", responsable:"Responsable de seguretat",
+        entregable:"Informe d'anàlisi WiFi amb recomanacions concretes per a NetCorp",
+        passos:["Si l'aula disposa d'un punt d'accés WiFi configurable: revisar la configuració actual (tipus de seguretat: WEP/WPA/WPA2/WPA3, PSK vs Enterprise)","Si no es pot configurar maquinari WiFi real, redactar l'anàlisi de forma teòrica: descriure quina configuració hauria de tenir NetCorp (WPA2/3, idealment Enterprise amb RADIUS integrat amb l'AD del P2) i per què","Proposar la segmentació de xarxes WiFi: una SSID per a empleats (accés a VLANs corporatives via 802.1X) i una SSID 'Convidats' totalment aïllada (la seva pròpia VLAN, sense accés intern)","Si es disposa d'un punt d'accés real i de temps, es pot demostrar amb la VM Kali un escaneig passiu de xarxes properes (aircrack-ng / iwlist) NOMÉS sobre l'equipament propi del centre, mai contra xarxes alienes"] },
+    ]
+  },
+  { id:"F5", nom:"Auditoria de hacking ètic i informe", setmanes:"S4–S6", color:"#EF4444", icon:"🔓",
+    desc:"Amb autorització signada, els alumnes realitzen una auditoria de seguretat completa sobre la seva pròpia infraestructura (P1-P4) seguint la metodologia PTES, i redacten un informe professional amb pla de remediació.",
+    tasques:[
+      { id:"T5.1", nom:"Signatura del document de Rules of Engagement", responsable:"Tot el grup",
+        entregable:"Document signat pel professor — CONDICIÓ BLOQUEJANT per continuar",
+        passos:["Llegir conjuntament el document d'autorització proporcionat pel professor","Confirmar l'abast: únicament els hosts/VMs/dispositius del propi grup (llistar les IPs concretes)","Confirmar les tècniques permeses i prohibides (sense atacs DoS contra el switch/router físic compartit de l'aula)","Signar i datar el document. NO es pot començar T5.2 sense aquest pas"] },
+      { id:"T5.2", nom:"Reconeixement i escaneig de vulnerabilitats", responsable:"Tot el grup",
+        entregable:"Informe d'escaneig: tots els hosts, ports oberts, serveis i CVEs detectats",
+        passos:["Des de la VM Kali, executar nmap -sn contra tota la xarxa pròpia per confirmar l'inventari d'actius (tots els servidors creats als P1-P4)","Per a cada host actiu: nmap -sV -p- per identificar serveis i versions","Executar nmap --script vuln contra els hosts amb serveis exposats (web, FTP, correu) per detectar CVEs coneguts associats a les versions trobades","Compilar una taula: Host | IP | Ports oberts | Servei i versió | CVEs detectats (si n'hi ha)"] },
+      { id:"T5.3", nom:"Proves d'explotació amb Metasploit", responsable:"Responsable de seguretat",
+        entregable:"Documentació d'almenys 2 intents d'explotació (èxit o fracàs) amb captures i anàlisi",
+        passos:["A partir dels CVEs detectats a T5.2, buscar a Metasploit (search [CVE o nom del servei]) si existeix un exploit corresponent","Configurar i executar l'exploit contra el host propi (set RHOSTS, set PAYLOAD, run)","Si l'exploit té èxit: documentar quin accés s'ha obtingut (ex: shell remota) i ATURAR (no fer post-explotació destructiva)","Si l'exploit fracassa: documentar per què (versió no vulnerable, mitigació ja aplicada en projectes anteriors, etc.) — un fracàs ben documentat també és una troballa positiva per a l'informe"] },
+      { id:"T5.4", nom:"Atac de força bruta amb Hydra", responsable:"Responsable de seguretat",
+        entregable:"Resultat de l'atac Hydra contra SSH i/o un formulari web, amb anàlisi",
+        passos:["Provar Hydra contra SSH d'un dels servidors del P1/P3: hydra -l [usuari] -P /usr/share/wordlists/[diccionari] [IP] ssh","Resultat esperat: ha de fracassar (autenticació per clau, sense contrasenya). Documentar-ho com a verificació positiva del bastionament","Si hi ha algun formulari de login web (ex: interfície d'administració de CUPS o Jitsi), provar hydra amb el mòdul http-post-form","Analitzar: si Hydra triomfa en algun servei, és una vulnerabilitat crítica a incloure a l'informe amb prioritat màxima"] },
+      { id:"T5.5", nom:"Anàlisi web amb Burp Suite", responsable:"Responsable de seguretat",
+        entregable:"Captures de Burp Suite mostrant la inspecció d'almenys una petició HTTP del servidor web propi",
+        passos:["Configurar el navegador per usar Burp Suite com a proxy (127.0.0.1:8080)","Navegar pel servidor web del P3 (intranet.netcorp.local) amb la intercepció activa","Inspeccionar les capçaleres de resposta: verificar que les capçaleres de seguretat del P3 (HSTS, X-Content-Type-Options...) hi són presents","Provar de modificar algun paràmetre d'una petició (si n'hi ha algun formulari) i observar la resposta del servidor i del WAF (ModSecurity del P3)"] },
+      { id:"T5.6", nom:"Redacció de l'informe professional i pla de remediació", responsable:"Tot el grup",
+        entregable:"Informe PTES complet (PDF) + presentació final 15 min",
+        passos:["Resum executiu: 1 paràgraf, llenguatge per a Direcció, valoració global del risc","Abast i metodologia: referència al document de Rules of Engagement, eines usades","Troballes detallades: cada vulnerabilitat trobada a T5.2-T5.5 amb descripció, evidència (captura), puntuació CVSS estimada i recomanació concreta","Pla de remediació: taula amb totes les troballes ordenades per prioritat (CVSS), amb una acció concreta i, si és possible, qui ho hauria d'aplicar (servirà de punt de partida per al P5)","Presentació (15+5 min): 3 min context i Rules of Engagement, 5 min demo en directe (missatgeria, Jitsi, impressió), 5 min troballes principals de l'auditoria, 2 min pla de remediació i conclusions"] },
+    ]
+  },
+];
+
+function buildFases() {
+  const container = document.getElementById('fases-container');
+  FASES.forEach(f => {
+    const wrap = document.createElement('div');
+    wrap.className = 'fase-wrap';
+    let tascuesHtml = `<div class="fase-body" id="fb-${f.id}" style="display:none;border:1px solid ${f.color};border-top:none;background:${f.color}06">
+      <div class="fase-desc">${f.desc}</div>`;
+    f.tasques.forEach(t => {
+      const passosHtml = t.passos.map((p,i) => `<div class="tasca-pas"><span class="tasca-pas-num" style="color:${f.color}">${i+1}.</span><span>${p}</span></div>`).join('');
+      tascuesHtml += `
+        <div class="tasca-header" id="th-${t.id}" onclick="toggleTasca('${t.id}')">
+          <span class="tasca-id" style="background:${f.color}22;color:${f.color}">${t.id}</span>
+          <div style="flex:1"><div class="tasca-name">${t.nom}</div><div class="tasca-preview" id="tp-${t.id}">${t.passos[0].substring(0,90)}…</div></div>
+          <span class="tasca-arrow" id="ta-${t.id}">▾</span>
+        </div>
+        <div class="tasca-detail" id="td-${t.id}" style="display:none">
+          <div class="tasca-inner">
+            <div class="tasca-passos">
+              <div class="tasca-passos-title">📋 Passos detallats</div>${passosHtml}
+            </div>
+            <div class="tasca-footer">
+              <div class="tasca-footer-block"><div class="tasca-footer-label">📦 Entregable</div><div class="tasca-entregable">${t.entregable}</div></div>
+              <div class="tasca-footer-block"><div class="tasca-footer-label">👤 Responsable</div><div class="tasca-responsable">${t.responsable}</div></div>
+            </div>
+          </div>
+        </div>`;
+    });
+    tascuesHtml += '</div>';
+    wrap.innerHTML = `
+      <div class="fase-header" id="fh-${f.id}" onclick="toggleFase('${f.id}')"
+           style="background:rgba(0,0,0,.3);border:1px solid ${f.color}33">
+        <span class="fase-icon">${f.icon}</span>
+        <div style="flex:1">
+          <div class="fase-meta">
+            <span class="fase-num" style="color:${f.color}">${f.id}</span>
+            <span class="fase-name">${f.nom}</span>
+            <span class="badge" style="background:${f.color}22;color:${f.color};border:1px solid ${f.color}44">${f.setmanes}</span>
+            <span class="badge" style="background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)">${f.tasques.length} tasques</span>
+          </div>
+          <div class="fase-preview">${f.desc.substring(0,110)}…</div>
+        </div>
+        <span class="fase-arrow" id="fa-${f.id}">▾</span>
+      </div>${tascuesHtml}`;
+    container.appendChild(wrap);
+  });
+}
+
+function toggleFase(id) {
+  const body = document.getElementById('fb-'+id);
+  const arrow = document.getElementById('fa-'+id);
+  const header = document.getElementById('fh-'+id);
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  const faseColor = FASES.find(f=>f.id===id).color;
+  header.style.background = isOpen ? 'rgba(0,0,0,.3)' : `${faseColor}18`;
+  header.classList.toggle('open', !isOpen);
+}
+
+function toggleTasca(id) {
+  const detail = document.getElementById('td-'+id);
+  const arrow = document.getElementById('ta-'+id);
+  const preview = document.getElementById('tp-'+id);
+  const isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  arrow.classList.toggle('open', !isOpen);
+  if(preview) preview.style.display = isOpen ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', buildFases);
+</script>
+</body>
+</html>
