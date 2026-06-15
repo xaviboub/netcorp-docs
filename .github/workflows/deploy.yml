@@ -1,0 +1,27 @@
+name: Publica documentació a GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clona el repositori
+        uses: actions/checkout@v4
+
+      - name: Configura Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Instal·la MkDocs
+        run: pip install -r requirements.txt
+
+      - name: Construeix i publica
+        run: mkdocs gh-deploy --force
